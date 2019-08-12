@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 namespace SillyGlasses
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.2")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.3")]
     public class MainGlas : BaseUnityPlugin
     {
         public static ConfigWrapper<float> ItemDistanceMultiplier;
@@ -27,7 +27,8 @@ namespace SillyGlasses
         private Inventory _copiedItemsInventory;
 
         private bool _swooceRightIn;
-        private bool _engi;
+
+        private string _logString;
 
         //test spawn items
         private int _currentRandomIndex;
@@ -135,18 +136,24 @@ namespace SillyGlasses
 
             if (self.isPlayerControlled || self.inventory == _copiedItemsInventory)
             {
+                if (self.hurtBoxGroup == null)
+                {
+                    Utils.Log($"[ ~1] IT WAS FUCKIN SELF.HURTBOXGROUP");
+                    return;
+                }
+
+                Utils.Log($"[  3] WE'RE AT AFTER THOSE TWO(one now). WE'RE RIGHT BEFORE self.hurtBoxGroup.gameObject.GetComponent");
+
                 if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceManager>() == null)
                 {
+                    Utils.Log($"[if 4] IT WAS FUCKIN IDK BUT WE'RE AT AFTER self.hurtBoxGroup.gameObject.GetComponent");
                     CharacterSwooceManager man = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceManager>();
+                    Utils.Log($"[if 5] IT WAS FUCKIN IDK BUT WE'RE AT AFTER self.hurtBoxGroup.gameObject.AddComponent");
                     _swooceManagers.Add(man);
-                    man.Engi = _engi;
-                    if (_engi)
-                    {
-                        _engi = false;
-                    }
+                    man.Engi = self.inventory == _copiedItemsInventory;
                 }
+                Utils.Log($"[  6]IT WAS FUCKIN I DON'T KNOW BUT WE'RE AT THE END OF THE IF");
             }
-
             orig(self);
             _buildDropTable = false;
         }
@@ -215,7 +222,7 @@ namespace SillyGlasses
 
                 if (Input.GetKeyDown(KeyCode.F7))
                 {
-                    TestSpawnItem(7);
+                    TestSpawnItem(CheatItem.Value);
                 }
 
                 if (Input.GetKeyDown(KeyCode.F9))
@@ -228,77 +235,16 @@ namespace SillyGlasses
         private void TestSpawnItem(int item = -1)
         {
             List<PickupIndex> dropList = Run.instance.availableTier1DropList;
-            TestSpawnItemm(dropList, item, true);
-
-            //Transform transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
-
-            //PickupIndex pickupIndex = new PickupIndex();
-
-            //if(item == -1)
-            //{
-            //    List<PickupIndex> dropList = Run.instance.availableTier1DropList;
-            //    if (dropList.Count < 0)
-            //        return;
-
-            //    if (_spawnedRandomItems >= 3)
-            //    {
-            //        //Randomly get the next item:
-            //        _currentRandomIndex = Run.instance.treasureRng.RangeInt(0, dropList.Count);
-            //        _spawnedRandomItems = 0;
-            //    }
-            //    else
-            //    {
-            //        _spawnedRandomItems++;
-            //    }
-
-            //    pickupIndex = dropList[_currentRandomIndex];
-            //}
-            //else
-            //{
-            //    pickupIndex = new PickupIndex((ItemIndex)item);
-            //}
-
-            //Vector3 dir = UnityEngine.Random.insideUnitSphere;
-            //dir.y = Mathf.Abs(dir.y * 3);
-            //dir /= 3;
-
-            //PickupDropletController.CreatePickupDroplet(pickupIndex, transform.position + Vector3.up * 69, dir * 20f);
+            TestSpawnItem(dropList, item, true);
         }
 
         private void TestSpawnItemRed()
         {
             List<PickupIndex> dropList = Run.instance.availableTier3DropList;
-            TestSpawnItemm(dropList, -1, false);
-
-            //Transform transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
-
-            //PickupIndex pickupIndex = new PickupIndex();
-            
-            //List<PickupIndex> dropList = Run.instance.availableTier3DropList;
-            //if (dropList.Count < 0)
-            //    return;
-
-            //pickupIndex = dropList[_currentRedIndex];
-
-            //_spawnedRedItems++;
-            //if (_spawnedRedItems >= 3)
-            //{
-            //    _spawnedRedItems = 0;
-            //    _currentRedIndex++;
-            //}
-            //if(_currentRedIndex >= dropList.Count)
-            //{
-            //    _currentRedIndex = 0;
-            //}
-
-            //Vector3 dir = UnityEngine.Random.insideUnitSphere;
-            //dir.y = Mathf.Abs(dir.y * 3);
-            //dir /= 3;
-
-            //PickupDropletController.CreatePickupDroplet(pickupIndex, transform.position + Vector3.up * 69, dir * 20f);
+            TestSpawnItem(dropList, -1, false);
         }
 
-        private void TestSpawnItemm(List<PickupIndex> dropList, int item = -1, bool random = true)
+        private void TestSpawnItem(List<PickupIndex> dropList, int item = -1, bool random = true)
         {
             Transform transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
 
@@ -363,3 +309,18 @@ namespace SillyGlasses
 //  at (wrapper delegate-invoke) <Module>.invoke_void()
 //  at RoR2.Inventory.GiveItem(RoR2.ItemIndex itemIndex, System.Int32 count) [0x0005f] in <8ec438c5119444dda414344ec5746409>:0 
 //  at RoR2.CharacterMaster.RespawnExtraLife() [0x00006] in <8ec438c5119444dda414344ec5746409>:0 
+
+//NullReferenceException
+//  at(wrapper managed-to-native) UnityEngine.Component.get_gameObject(UnityEngine.Component)
+// at SillyGlasses.MainGlas.InvChangedHook(On.RoR2.CharacterBody+orig_OnInventoryChanged orig, RoR2.CharacterBody self) [0x00034] in <63ae21683c2d4ec7b5bdf097e539a29f>:0 
+//  at DMD<>?-1610392832._Hook<RoR2_CharacterBody::OnInventoryChanged>?513439488 (RoR2.CharacterBody )[0x00014] in <63be2b6433b240a5827767d9ee1ad880>:0 
+//  at RoR2.Inventory.GiveItem (RoR2.ItemIndex itemIndex, System.Int32 count)[0x0005f] in <8ec438c5119444dda414344ec5746409>:0 
+//  at RoR2.CharacterMaster.RespawnExtraLife ()[0x00006] in <8ec438c5119444dda414344ec5746409>:0 
+
+
+//NullReferenceException
+//  at(wrapper managed-to-native) UnityEngine.Component.get_gameObject(UnityEngine.Component)
+// at SillyGlasses.MainGlas.InvChangedHook(On.RoR2.CharacterBody+orig_OnInventoryChanged orig, RoR2.CharacterBody self) [0x00055] in <7d0cbc08d6be4162afa7139dca046c5f>:0 
+//  at DMD<>?-443845376._Hook<RoR2_CharacterBody::OnInventoryChanged>?955787008 (RoR2.CharacterBody )[0x00014] in <8a3e36af7f1e4bcf9b5f421d08ccd673>:0 
+//  at RoR2.Inventory.GiveItem (RoR2.ItemIndex itemIndex, System.Int32 count)[0x0005f] in <8ec438c5119444dda414344ec5746409>:0 
+//  at RoR2.CharacterMaster.RespawnExtraLife ()[0x00006] in <8ec438c5119444dda414344ec5746409>:0 

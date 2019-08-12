@@ -120,29 +120,6 @@ namespace SillyGlasses
             }
         }
 
-        //private void AlterDisplayRule(ref ItemDisplayRule displayRule, Transform parent, int moveMult)
-        //{
-        //    Vector3 DisplayRuleLocalPos = displayRule.localPos;
-        //    Quaternion DisplayRuleLocalRotation = Quaternion.Euler(displayRule.localAngles);
-
-        //    if (_swoocePointer == null)
-        //        _swoocePointer = new GameObject("swooce").transform;
-
-        //    _swoocePointer.parent = parent;
-        //    _swoocePointer.position = DisplayRuleLocalPos;
-        //    _swoocePointer.rotation = DisplayRuleLocalRotation;
-
-        //    Vector3 pointerForward = _swoocePointer.forward;
-        //    _swoocePointer.parent = null;
-
-        //    DisplayRuleLocalPos += pointerForward * moveMult * MainGlas.ItemDistanceMultiplier.Value;
-
-
-        //    displayRule.localPos = DisplayRuleLocalPos;
-
-        //    //ShowFunnyCube(parent, DisplayRuleLocalPos, DisplayRuleLocalRotation);
-        //}
-
         //copied from ParentedPrefabDisplay.Apply
         private GameObject InstantiateExtraItem(CharacterModel characterModel, ItemDisplayRule displayRule, ChildLocator childLocator, Transform parent, int moveMult)
         {
@@ -157,7 +134,7 @@ namespace SillyGlasses
             instantiatedDisplay.transform.localPosition = displayRuleLocalPosition;
             instantiatedDisplay.transform.localRotation = displayRuleLocalRotation;
             instantiatedDisplay.transform.localScale = displayRuleLocalScale;
-            instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * moveMult * MainGlas.ItemDistanceMultiplier.Value * (Engi ? 2 : 1);
+            instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * moveMult * MainGlas.ItemDistanceMultiplier.Value * (Engi ? 1.5f : 1);
 
             LimbMatcher component = instantiatedDisplay.GetComponent<LimbMatcher>();
             if (component && childLocator)
