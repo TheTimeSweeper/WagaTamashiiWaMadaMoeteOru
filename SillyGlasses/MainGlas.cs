@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 namespace SillyGlasses
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.3")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.4")]
     public class MainGlas : BaseUnityPlugin
     {
         public static ConfigWrapper<float> ItemDistanceMultiplier;
@@ -27,8 +27,6 @@ namespace SillyGlasses
         private Inventory _copiedItemsInventory;
 
         private bool _swooceRightIn;
-
-        private string _logString;
 
         //test spawn items
         private int _currentRandomIndex;
@@ -130,8 +128,6 @@ namespace SillyGlasses
 
         private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
         {
-            //Utils.Log($"player {self.isPlayerControlled}");
-
             _swooceManagers.TrimExcess();
 
             if (self.isPlayerControlled || self.inventory == _copiedItemsInventory)
@@ -139,20 +135,19 @@ namespace SillyGlasses
                 if (self.hurtBoxGroup == null)
                 {
                     Utils.Log($"[ ~1] IT WAS FUCKIN SELF.HURTBOXGROUP");
+                    Utils.Log("did it bug?", true);
+                    Utils.Log("if not", true);
+                    Utils.Log("WE DID IT BOIS", true);
+                    Utils.Log("DIO'S IS SAFE", true);
                     return;
                 }
 
-                Utils.Log($"[  3] WE'RE AT AFTER THOSE TWO(one now). WE'RE RIGHT BEFORE self.hurtBoxGroup.gameObject.GetComponent");
-
                 if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceManager>() == null)
                 {
-                    Utils.Log($"[if 4] IT WAS FUCKIN IDK BUT WE'RE AT AFTER self.hurtBoxGroup.gameObject.GetComponent");
                     CharacterSwooceManager man = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceManager>();
-                    Utils.Log($"[if 5] IT WAS FUCKIN IDK BUT WE'RE AT AFTER self.hurtBoxGroup.gameObject.AddComponent");
                     _swooceManagers.Add(man);
                     man.Engi = self.inventory == _copiedItemsInventory;
                 }
-                Utils.Log($"[  6]IT WAS FUCKIN I DON'T KNOW BUT WE'RE AT THE END OF THE IF");
             }
             orig(self);
             _buildDropTable = false;

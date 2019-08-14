@@ -13,6 +13,8 @@ namespace SillyGlasses
         private Dictionary<ItemIndex, Transform> _instantiatedGlasParents = new Dictionary<ItemIndex, Transform>();
         private Dictionary<ItemIndex, int> _instantiatedGlasAmounts = new Dictionary<ItemIndex, int>();
 
+        //private Dictionary<string, Transform> _instantiatedGlasParentsExtra = new Dictionary<string, Transform>();
+
         private CharacterModel _swoocedModel;
         private ChildLocator _swooceChildLocator;
         private Inventory _swoocedCurrentInventory;
@@ -66,9 +68,27 @@ namespace SillyGlasses
             int difference = currentCount - displayOriginalPrefabsCount;
             //Utils.Log($"{itemIndex_} diff: {difference} = current: {currentCount} - orig: {displayOriginalPrefabsCount}");
 
-            if (difference <= 0)
+            //works aitght but doesn't remove the base one. read more into removeitemdisplay or whatever it's called
+            // also hey try <= see what happens
+            //  see if you need `&& _instantiatedGlasParents[itemIndex_] != 1`
+            //eh pretty sure you don't, upon actual thought
+            // so if it's -1... let's write this down
+
+            //retool above [] = 1 to 0
+            //and if it's more than 1 make it 1
+            // if we delete it and set back to zero, then the contains key will be true, and it'll start at zero, and we'll have that extra
+            // so that was a hack/magic number, and gotta make it better
+            // put the = 1 into the for loop below. that's when we check if we want to instantiate a new one or not
+
+            //well the hasitem thing being always true is what's throwing a wrench in removing things
+            if (difference < 0)
             {
-                //TODO: delete parent and respawn
+                if (_instantiatedGlasParents[itemIndex_])
+                {
+                    Destroy(_instantiatedGlasParents[itemIndex_].gameObject);
+                    _instantiatedGlasAmounts[itemIndex_] = 1;
+                    difference = currentCount - 1;
+                }
                 return;
             }
 
@@ -99,7 +119,6 @@ namespace SillyGlasses
                 
                     Transform displayParent = _swooceChildLocator.FindChild(swoocedDisplayRule.childName);
 
-                    //AlterDisplayRule(ref swoocedDisplayRule, displayParent, currentCountIterated);
                     IterInstantiatedItem = InstantiateExtraItem(self, swoocedDisplayRule, _swooceChildLocator, displayParent, currentCountIterated);
                     IterInstantiatedItem.name += currentCountIterated.ToString(); 
 
