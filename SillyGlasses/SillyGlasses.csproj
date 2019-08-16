@@ -98,7 +98,7 @@
     <Compile Include="CharacterSwooceManager.cs" />
     <Compile Include="CommandHelper.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="MainGlas.cs" />
+    <Compile Include="SillyGlasse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

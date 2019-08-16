@@ -8,8 +8,8 @@ using UnityEngine.Networking;
 namespace SillyGlasses
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.4")]
-    public class MainGlas : BaseUnityPlugin
+    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.5")]
+    public class SillyGlasse : BaseUnityPlugin
     {
         public static ConfigWrapper<float> ItemDistanceMultiplier;
         private float _defaultSwooceDistanceMultiplier = 0.0420f;
@@ -39,25 +39,6 @@ namespace SillyGlasses
         public void Awake()
         {
             InitConfig();
-            
-            On.RoR2.Run.BuildDropTable += BuildDropTableHook;
-
-            //On.RoR2.GenericPickupController.GrantItem += (orig, self, body, inventory) =>
-            //{
-            //    orig(self, body, inventory);
-            //};
-
-            //On.RoR2.Inventory.GiveItem += (orig, self, itemIndex, count) =>
-            //{
-            //    orig(self, itemIndex, count);
-            //};
-
-            //On.RoR2.Inventory.RemoveItem += (orig, self, itemIndex, count) =>
-            //{
-            //    orig(self, itemIndex, count);
-            //};
-
-            //item amount has been applied
 
             On.RoR2.Inventory.CopyItemsFrom += CopyItemsHook;
 
@@ -65,9 +46,9 @@ namespace SillyGlasses
 
             On.RoR2.CharacterModel.UpdateItemDisplay += UpdateItemDisplayHook;
 
-            On.RoR2.ItemMask.HasItem += HasItemHook;
+            On.RoR2.CharacterModel.EnableItemDisplay += EnableItemDisplayHook;
 
-            On.RoR2.CharacterModel.InstantiateDisplayRuleGroup += InstantiateDisplayRuleGroupHook;
+            On.RoR2.CharacterModel.DisableItemDisplay += DisableItemDisplayHook;
         }
 
         private void InitConfig()
@@ -100,12 +81,6 @@ namespace SillyGlasses
                                    7);
         }
 
-        private void BuildDropTableHook(On.RoR2.Run.orig_BuildDropTable orig, Run self)
-        {
-            _buildDropTable = true;
-            orig(self);
-        }
-
         private void CopyItemsHook(On.RoR2.Inventory.orig_CopyItemsFrom orig, Inventory self, Inventory other)
         {
             CharacterBody copiedItemsBody = null;
@@ -134,7 +109,7 @@ namespace SillyGlasses
             {
                 if (self.hurtBoxGroup == null)
                 {
-                    Utils.Log($"[ ~1] IT WAS FUCKIN SELF.HURTBOXGROUP");
+                    Utils.Log("[ ~1] IT WAS FUCKIN SELF.HURTBOXGROUP");
                     Utils.Log("did it bug?", true);
                     Utils.Log("if not", true);
                     Utils.Log("WE DID IT BOIS", true);
@@ -149,13 +124,14 @@ namespace SillyGlasses
                     man.Engi = self.inventory == _copiedItemsInventory;
                 }
             }
+
             orig(self);
             _buildDropTable = false;
         }
 
         public void UpdateItemDisplayHook(On.RoR2.CharacterModel.orig_UpdateItemDisplay orig,
-                                             CharacterModel self,
-                                             Inventory inventory)
+                                          CharacterModel self,
+                                          Inventory inventory)
         {
             for (int i = 0; i < _swooceManagers.Count; i++)
             {
@@ -164,37 +140,28 @@ namespace SillyGlasses
             orig(self, inventory);
         }
 
-        public bool HasItemHook(On.RoR2.ItemMask.orig_HasItem orig, ref ItemMask self, ItemIndex itemIndex)
+        private void DisableItemDisplayHook(On.RoR2.CharacterModel.orig_DisableItemDisplay orig, CharacterModel self, ItemIndex itemIndex)
         {
-            if (_buildDropTable)
-            {
-                return orig(ref self, itemIndex);
-            }
+            orig(self, itemIndex);
 
-            _swooceRightIn = orig(ref self, itemIndex);
-
-            return false;
+            UpdateSwooceManagerDisplays(self, itemIndex);
         }
 
-        private void InstantiateDisplayRuleGroupHook(On.RoR2.CharacterModel.orig_InstantiateDisplayRuleGroup orig, 
-                                                     CharacterModel self, 
-                                                     DisplayRuleGroup displayRuleGroup_, 
-                                                     ItemIndex itemIndex_, 
-                                                     EquipmentIndex equipmentIndex_)
+        private void EnableItemDisplayHook(On.RoR2.CharacterModel.orig_EnableItemDisplay orig, CharacterModel self, ItemIndex itemIndex)
         {
-            //Utils.Log($"{itemIndex_}: orig, swooce {_swooceRightIn}, build {_buildDropTable}");
+            orig(self, itemIndex);
+
+            UpdateSwooceManagerDisplays(self, itemIndex);
+        }
+
+        private void UpdateSwooceManagerDisplays(CharacterModel self, ItemIndex itemIndex)
+        {
             for (int i = 0; i < _swooceManagers.Count; i++)
             {
-                _swooceManagers[i].HookedInstantiateDisplayRuleGroup(self, displayRuleGroup_, itemIndex_);
+                _swooceManagers[i].HookedEnableDisableDisplay(self, itemIndex);
             }
-            if (_swooceRightIn)
-            {
-                _swooceRightIn = false;
-                return;
-            }
-            orig(self, displayRuleGroup_, itemIndex_, equipmentIndex_);
         }
-        
+
         public void Update()
         {
             if (PlantsForHire.Value)
@@ -296,26 +263,3 @@ namespace SillyGlasses
         }
     }
 }
-
-//NullReferenceException
-//  at(wrapper managed-to-native) UnityEngine.Component.get_gameObject(UnityEngine.Component)
-// at SillyGlasses.MainGlas.InvChangedHook(On.RoR2.CharacterBody+orig_OnInventoryChanged orig, RoR2.CharacterBody self) [0x00034] in <1db70481bff74a93896578b58ada899f>:0 
-//  at DMD<>?1945817088._Hook<RoR2_CharacterBody::OnInventoryChanged>?-1710622976 (RoR2.CharacterBody )[0x00014] in <a1a17e560e4d4bc2aa2ab6f1b55ce402>:0 
-//  at (wrapper delegate-invoke) <Module>.invoke_void()
-//  at RoR2.Inventory.GiveItem(RoR2.ItemIndex itemIndex, System.Int32 count) [0x0005f] in <8ec438c5119444dda414344ec5746409>:0 
-//  at RoR2.CharacterMaster.RespawnExtraLife() [0x00006] in <8ec438c5119444dda414344ec5746409>:0 
-
-//NullReferenceException
-//  at(wrapper managed-to-native) UnityEngine.Component.get_gameObject(UnityEngine.Component)
-// at SillyGlasses.MainGlas.InvChangedHook(On.RoR2.CharacterBody+orig_OnInventoryChanged orig, RoR2.CharacterBody self) [0x00034] in <63ae21683c2d4ec7b5bdf097e539a29f>:0 
-//  at DMD<>?-1610392832._Hook<RoR2_CharacterBody::OnInventoryChanged>?513439488 (RoR2.CharacterBody )[0x00014] in <63be2b6433b240a5827767d9ee1ad880>:0 
-//  at RoR2.Inventory.GiveItem (RoR2.ItemIndex itemIndex, System.Int32 count)[0x0005f] in <8ec438c5119444dda414344ec5746409>:0 
-//  at RoR2.CharacterMaster.RespawnExtraLife ()[0x00006] in <8ec438c5119444dda414344ec5746409>:0 
-
-
-//NullReferenceException
-//  at(wrapper managed-to-native) UnityEngine.Component.get_gameObject(UnityEngine.Component)
-// at SillyGlasses.MainGlas.InvChangedHook(On.RoR2.CharacterBody+orig_OnInventoryChanged orig, RoR2.CharacterBody self) [0x00055] in <7d0cbc08d6be4162afa7139dca046c5f>:0 
-//  at DMD<>?-443845376._Hook<RoR2_CharacterBody::OnInventoryChanged>?955787008 (RoR2.CharacterBody )[0x00014] in <8a3e36af7f1e4bcf9b5f421d08ccd673>:0 
-//  at RoR2.Inventory.GiveItem (RoR2.ItemIndex itemIndex, System.Int32 count)[0x0005f] in <8ec438c5119444dda414344ec5746409>:0 
-//  at RoR2.CharacterMaster.RespawnExtraLife ()[0x00006] in <8ec438c5119444dda414344ec5746409>:0 
