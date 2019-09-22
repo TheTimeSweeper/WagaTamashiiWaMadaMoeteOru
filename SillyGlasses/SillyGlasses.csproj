@@ -73,9 +73,6 @@
     <Reference Include="MonoMod.Utils">
       <HintPath>..\..\sln References\MonoMod.Utils.dll</HintPath>
     </Reference>
-    <Reference Include="R2API">
-      <HintPath>..\..\sln References\R2API.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -96,7 +93,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CharacterSwooceManager.cs" />
-    <Compile Include="CommandHelper.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="SillyGlasse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

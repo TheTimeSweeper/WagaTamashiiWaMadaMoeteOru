@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
 using RoR2;
@@ -11,16 +12,15 @@ namespace SillyGlasses
     [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.2.5")]
     public class SillyGlasse : BaseUnityPlugin
     {
-        public static ConfigWrapper<float> ItemDistanceMultiplier;
-        private float _defaultSwooceDistanceMultiplier = 0.0420f;
+        public static ConfigWrapper<int> CfgInt_ItemStackMax;
 
-        public static ConfigWrapper<int> ItemStackMax;
+        public static ConfigWrapper<float> CfgFloat_ItemSwooceDistanceMultiplier;
 
-        public static ConfigWrapper<bool> PlantsForHire;
+        public static ConfigWrapper<bool> CfgBool_UtilsLog;
 
-        public static ConfigWrapper<int> CheatItem;
+        public static ConfigWrapper<bool> CfgBool_PlantsForHire;
 
-        public static ConfigWrapper<bool> UtilsLog;
+        public static ConfigWrapper<int> CfgBool_CheatItem;
 
         private List<CharacterSwooceManager> _swooceManagers = new List<CharacterSwooceManager>();
 
@@ -55,30 +55,37 @@ namespace SillyGlasses
         {
             string sectionName = "hope you're having a lovely day";
 
-            ItemStackMax = Config.Wrap(sectionName,
-                                       "ItemStackMax",
-                                       "Maximum item displays that can be spawned (-1 for infinite).",
-                                       -1);
+            CfgInt_ItemStackMax = 
+                Config.Wrap(sectionName,
+                            "ItemStackMax",
+                            "Maximum item displays that can be spawned (-1 for infinite).",
+                            -1);
 
-            ItemDistanceMultiplier = Config.Wrap(sectionName,
-                                                 "ItemDistanceMultiplier",
-                                                 "The distance between extra displays that spawns.",
-                                                 _defaultSwooceDistanceMultiplier);
+            CfgFloat_ItemSwooceDistanceMultiplier = 
+                Config.Wrap(sectionName,
+                            "ItemDistanceMultiplier",
+                            "The distance between extra displays that spawns.",
+                            0.0420f);
 
-            PlantsForHire = Config.Wrap(sectionName,
-                                        "Cheats",
-                                        "Press f2 f3 f6 and f9 to rain items from the sky.",
-                                        false);
+            CfgBool_UtilsLog = 
+                Config.Wrap(sectionName,
+                            "Output Logs",
+                            "because I keep forgetting to remove logs from my builds haha woops.",
+                            false);
 
-            UtilsLog = Config.Wrap(sectionName,
-                                   "Output Logs",
-                                   "because I keep forgetting to remove logs from my builds haha woops.",
-                                   false);
+            string cheatSection = "liar liar plants for hire";
 
-            CheatItem = Config.Wrap(sectionName,
-                                   "Cheat Item",
-                                   "The item to spawn when you press f7",
-                                   7);
+            CfgBool_PlantsForHire = 
+                Config.Wrap(cheatSection,
+                            "Cheats",
+                            "Press f2 f3 f6 and f9 to rain items from the sky.",
+                            false);
+
+            CfgBool_CheatItem = 
+                Config.Wrap(cheatSection,
+                            "Cheat Item",
+                            "The item to spawn when you press f7",
+                            7);
         }
 
         private void CopyItemsHook(On.RoR2.Inventory.orig_CopyItemsFrom orig, Inventory self, Inventory other)
@@ -164,7 +171,7 @@ namespace SillyGlasses
 
         public void Update()
         {
-            if (PlantsForHire.Value)
+            if (CfgBool_PlantsForHire.Value)
             {
                 if (Input.GetKeyDown(KeyCode.F2))
                 {
@@ -184,7 +191,7 @@ namespace SillyGlasses
 
                 if (Input.GetKeyDown(KeyCode.F7))
                 {
-                    TestSpawnItem(CheatItem.Value);
+                    TestSpawnItem(CfgBool_CheatItem.Value);
                 }
 
                 if (Input.GetKeyDown(KeyCode.F9))

@@ -70,31 +70,38 @@ namespace SillyGlasses
             if (_swoocedCurrentInventory == null)
                 return;
 
-            int currentCount = _swoocedCurrentInventory.GetItemCount(itemIndex_);
-
             if (!_instantiatedExtraGlasAmounts.ContainsKey(itemIndex_))
             {
                 _instantiatedExtraGlasAmounts.Add(itemIndex_, 0);
             }
-            
-            int previousTotalItemDisplays = _instantiatedExtraGlasAmounts[itemIndex_] + 1;
+
+            int currentCount = _swoocedCurrentInventory.GetItemCount(itemIndex_);
+
+            int extraItemDisplays = _instantiatedExtraGlasAmounts[itemIndex_];
+
+            int previousTotalItemDisplays = extraItemDisplays + (currentCount > 0 ? 1 : 0);
 
             int difference = currentCount - previousTotalItemDisplays;
-            //Utils.Log($"{itemIndex_} diff: {difference} = current: {currentCount} - orig: {displayOriginalPrefabsCount}");
-
+              
             if (difference < 0)
             {
+                Utils.Log($"{itemIndex_} diff: {difference} = current: {currentCount} - orig: {previousTotalItemDisplays}");
                 if (_instantiatedGlasParents.ContainsKey(itemIndex_) && _instantiatedGlasParents[itemIndex_] != null)
                 {
-                    //Destroy(_instantiatedGlasParents[itemIndex_].gameObject);
-                    //_instantiatedGlasAmounts[itemIndex_] = 0;
-                    //difference = currentCount;
+                    Destroy(_instantiatedGlasParents[itemIndex_].gameObject);
+                    _instantiatedGlasParents.Remove(itemIndex_);
+                    _instantiatedExtraGlasAmounts.Remove(itemIndex_);
+                    PseudoInstantiateDisplayRuleGroup(self, displayRuleGroup_, itemIndex_);
+                    return;
                 }
-                return;
             }
 
-            if(currentCount == 1)
+            if(currentCount == 1 && difference >= 0) //this is the first item, let the game spawn it normally
                 return;
+
+            //
+            //all clear, let's get to swoocing
+            //
 
             if (_swooceChildLocator == null)
             {
@@ -103,28 +110,29 @@ namespace SillyGlasses
 
             GameObject iterInstantiatedItem = null;
 
-            for (int j = 0; j < difference; j++)
+            for (int i = 0; i < difference; i++)
             {
-                if (SillyGlasse.ItemStackMax.Value != -1 && _instantiatedExtraGlasAmounts[itemIndex_] + 1 >= SillyGlasse.ItemStackMax.Value)
+                int maxItems = SillyGlasse.CfgInt_ItemStackMax.Value;
+                if (maxItems != -1 && (_instantiatedExtraGlasAmounts[itemIndex_] + 1) >= maxItems)
                     return;
             
-                int currentCountIterated = previousTotalItemDisplays + j;
+                int currentCountIterated = previousTotalItemDisplays + i;
 
-                Utils.Log($"swoocing new prefab {itemIndex_}: {j} ");
+                Utils.Log($"swoocing new prefab {itemIndex_}: {i} ");
                 _instantiatedExtraGlasAmounts[itemIndex_]++;
 
-                for (int i = 0; i < displayRuleGroup_.rules.Length; i++)
+                for (int j = 0; j < displayRuleGroup_.rules.Length; j++)
                 {
-                    ItemDisplayRule swoocedDisplayRule = displayRuleGroup_.rules[i];
+                    ItemDisplayRule swoocedDisplayRule = displayRuleGroup_.rules[j];
 
                     if (swoocedDisplayRule.ruleType != ItemDisplayRuleType.ParentedPrefab)
                         continue;
-                
+
                     Transform displayParent = _swooceChildLocator.FindChild(swoocedDisplayRule.childName);
 
                     iterInstantiatedItem = InstantiateExtraItem(self, swoocedDisplayRule, _swooceChildLocator, displayParent, currentCountIterated);
                     iterInstantiatedItem.name += currentCountIterated.ToString();
-                    
+
                     if (!_instantiatedGlasParents.ContainsKey(itemIndex_) || _instantiatedGlasParents[itemIndex_] == null)
                     {
                         Transform parentTransform = new GameObject(iterInstantiatedItem.gameObject.name + "Parent").transform;
@@ -133,24 +141,14 @@ namespace SillyGlasses
                         parentTransform.localRotation = Quaternion.identity;
                         parentTransform.localScale = Vector3.one;
 
-                        if (!_instantiatedGlasParents.ContainsKey(itemIndex_))
-                        {
-                            _instantiatedGlasParents.Add(itemIndex_, parentTransform);
-                        }
-                        if (_instantiatedGlasParents[itemIndex_] == null)
-                        {
-                            _instantiatedGlasParents[itemIndex_] = parentTransform;
-                        }
+                        _instantiatedGlasParents[itemIndex_] = parentTransform;
                     }
-                    else
-                    {
                         iterInstantiatedItem.transform.parent = _instantiatedGlasParents[itemIndex_];
-                    }
                 }
             }
         }
 
-        //copied from ParentedPrefabDisplay.Apply
+        //copied from CharacterModel.ParentedPrefabDisplay.Apply
         private GameObject InstantiateExtraItem(CharacterModel characterModel_, ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform parent_, int moveMult_)
         {
             GameObject prefab = displayRule_.followerPrefab;
@@ -164,7 +162,7 @@ namespace SillyGlasses
             instantiatedDisplay.transform.localPosition = displayRuleLocalPosition;
             instantiatedDisplay.transform.localRotation = displayRuleLocalRotation;
             instantiatedDisplay.transform.localScale = displayRuleLocalScale;
-            instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * moveMult_ * SillyGlasse.ItemDistanceMultiplier.Value * (Engi ? 1.5f : 1);
+            instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * moveMult_ * SillyGlasse.CfgFloat_ItemSwooceDistanceMultiplier.Value * (Engi ? 1.5f : 1);
 
             LimbMatcher component = instantiatedDisplay.GetComponent<LimbMatcher>();
             if (component && childLocator_)
@@ -178,19 +176,36 @@ namespace SillyGlasses
 
         private static void ShowFunnyCube(Transform parent, Vector3 DisplayRuleLocalPos, Quaternion DisplayRuleLocalRotation)
         {
-            Type[] cubeComponents = new Type[] { typeof(MeshRenderer), typeof(MeshFilter) };
-
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            Type[] cubeComponents = new Type[] { typeof(MeshRenderer), typeof(MeshFilter) };
 
             GameObject bruh = new GameObject("bruh", cubeComponents);
             bruh.GetComponent<MeshFilter>().mesh = cube.GetComponent<MeshFilter>().mesh;
             bruh.GetComponent<MeshRenderer>().material = new Material(cube.GetComponent<MeshRenderer>().material);
+
             bruh.transform.parent = parent;
             bruh.transform.localScale = new Vector3(0.169f, 0.01f, 0.1f);
             bruh.transform.localPosition = DisplayRuleLocalPos;
             bruh.transform.localRotation = DisplayRuleLocalRotation;
 
             Destroy(cube);
+        }
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F10))
+            {
+                TestRemoveGlasses();
+            }
+        }
+
+        private void TestRemoveGlasses()
+        {
+            if(_swoocedCurrentInventory != null)
+            {
+                _swoocedCurrentInventory.RemoveItem(ItemIndex.CritGlasses, 1);
+            }
         }
     }
 }
