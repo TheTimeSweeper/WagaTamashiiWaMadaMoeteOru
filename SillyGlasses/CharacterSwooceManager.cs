@@ -78,22 +78,21 @@ namespace SillyGlasses
             int currentCount = _swoocedCurrentInventory.GetItemCount(itemIndex_);
 
             int extraItemDisplays = _instantiatedExtraGlasAmounts[itemIndex_];
-
             int previousTotalItemDisplays = extraItemDisplays + (currentCount > 0 ? 1 : 0);
 
             int difference = currentCount - previousTotalItemDisplays;
               
-            if (difference < 0)
+            if (difference < 0) //removing more than one, just do this it's simpler
             {
                 Utils.Log($"{itemIndex_} diff: {difference} = current: {currentCount} - orig: {previousTotalItemDisplays}");
                 if (_instantiatedGlasParents.ContainsKey(itemIndex_) && _instantiatedGlasParents[itemIndex_] != null)
                 {
                     Destroy(_instantiatedGlasParents[itemIndex_].gameObject);
-                    _instantiatedGlasParents.Remove(itemIndex_);
-                    _instantiatedExtraGlasAmounts.Remove(itemIndex_);
+                    _instantiatedGlasParents[itemIndex_] = null;
+                    _instantiatedExtraGlasAmounts[itemIndex_] = 0;
                     PseudoInstantiateDisplayRuleGroup(self, displayRuleGroup_, itemIndex_);
-                    return;
                 }
+                return;
             }
 
             if(currentCount == 1 && difference >= 0) //this is the first item, let the game spawn it normally
@@ -113,7 +112,7 @@ namespace SillyGlasses
             for (int i = 0; i < difference; i++)
             {
                 int maxItems = SillyGlasse.CfgInt_ItemStackMax.Value;
-                if (maxItems != -1 && (_instantiatedExtraGlasAmounts[itemIndex_] + 1) >= maxItems)
+                if (maxItems != -1 && extraItemDisplays + 1 >= maxItems)
                     return;
             
                 int currentCountIterated = previousTotalItemDisplays + i;
