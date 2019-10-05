@@ -9,7 +9,7 @@ using UnityEngine.Networking;
 namespace SillyGlasses
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.3.2")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.4.0")]
     public class SillyGlasses : BaseUnityPlugin
     {
         public static ConfigWrapper<int> CfgInt_ItemStackMax;
