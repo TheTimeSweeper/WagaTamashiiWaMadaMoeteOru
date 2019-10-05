@@ -7,7 +7,7 @@ namespace SillyGlasses
     {
         public static void Log (string logString, bool chat = false)
         {
-            if (SillyGlasse.CfgBool_UtilsLog.Value)
+            if (SillyGlasses.CfgBool_UtilsLog.Value)
             {
                 Debug.Log(logString);
 

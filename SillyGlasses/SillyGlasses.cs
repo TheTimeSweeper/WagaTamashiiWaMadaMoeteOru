@@ -9,32 +9,30 @@ using UnityEngine.Networking;
 namespace SillyGlasses
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.3.0")]
-    public class SillyGlasse : BaseUnityPlugin
+    [BepInPlugin("com.TheTimeSweeper.SillyItems", "Silly Items", "0.3.2")]
+    public class SillyGlasses : BaseUnityPlugin
     {
         public static ConfigWrapper<int> CfgInt_ItemStackMax;
-
         public static ConfigWrapper<float> CfgFloat_ItemSwooceDistanceMultiplier;
-
         public static ConfigWrapper<bool> CfgBool_UtilsLog;
-
         public static ConfigWrapper<bool> CfgBool_PlantsForHire;
-
         public static ConfigWrapper<int> CfgBool_CheatItem;
+
+        public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
+        public delegate void EnableDisableDisplayEvent(CharacterModel self, ItemIndex itemIndex);
+
+        public EnableDisableDisplayEvent enableDisableDisplayevent;
+        public UpdateItemDisplayEvent updateItemDisplayEvent;
 
         private List<CharacterSwooceManager> _swooceManagers = new List<CharacterSwooceManager>();
 
         private Inventory _copiedItemsInventory;
-
-        private bool _swooceRightIn;
 
         //test spawn items
         private int _currentRandomIndex;
         private int _spawnedRandomItems;
         private int _currentRedIndex;
         private int _spawnedRedItems;
-
-        private bool _buildDropTable;
 
         public void Awake()
         {
@@ -84,7 +82,7 @@ namespace SillyGlasses
             CfgBool_CheatItem = 
                 Config.Wrap(cheatSection,
                             "Cheat Item",
-                            "The item to spawn when you press f7",
+                            "Press f7 to spawn this item",
                             7);
         }
 
@@ -116,59 +114,53 @@ namespace SillyGlasses
             {
                 if (self.hurtBoxGroup == null)
                 {
-                    Utils.Log("[ ~1] IT WAS FUCKIN SELF.HURTBOXGROUP");
                     Utils.Log("did it bug?", true);
                     Utils.Log("if not", true);
                     Utils.Log("WE DID IT BOIS", true);
                     Utils.Log("DIO'S IS SAFE", true);
+                    //there's still a nullref tho i gotta check out
                     return;
                 }
 
                 if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceManager>() == null)
                 {
-                    CharacterSwooceManager man = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceManager>();
-                    _swooceManagers.Add(man);
-                    man.Engi = self.inventory == _copiedItemsInventory;
+                    CharacterSwooceManager swooceManager = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceManager>();
+                    _swooceManagers.Add(swooceManager);
+                    swooceManager.Init(this, self.inventory == _copiedItemsInventory);
                 }
             }
 
             orig(self);
-            _buildDropTable = false;
         }
 
         public void UpdateItemDisplayHook(On.RoR2.CharacterModel.orig_UpdateItemDisplay orig,
                                           CharacterModel self,
                                           Inventory inventory)
         {
-            for (int i = 0; i < _swooceManagers.Count; i++)
-            {
-                _swooceManagers[i].HookedUpdateItemDisplay(self,inventory);
-            }
+            updateItemDisplayEvent?.Invoke(self, inventory);
+            
             orig(self, inventory);
         }
 
-        private void DisableItemDisplayHook(On.RoR2.CharacterModel.orig_DisableItemDisplay orig, CharacterModel self, ItemIndex itemIndex)
+        private void DisableItemDisplayHook(On.RoR2.CharacterModel.orig_DisableItemDisplay orig, 
+                                            CharacterModel self, 
+                                            ItemIndex itemIndex)
         {
             orig(self, itemIndex);
 
-            UpdateSwooceManagerDisplays(self, itemIndex);
+            enableDisableDisplayevent?.Invoke(self, itemIndex);
         }
 
-        private void EnableItemDisplayHook(On.RoR2.CharacterModel.orig_EnableItemDisplay orig, CharacterModel self, ItemIndex itemIndex)
+        private void EnableItemDisplayHook(On.RoR2.CharacterModel.orig_EnableItemDisplay orig, 
+                                           CharacterModel self, 
+                                           ItemIndex itemIndex)
         {
             orig(self, itemIndex);
 
-            UpdateSwooceManagerDisplays(self, itemIndex);
+            enableDisableDisplayevent?.Invoke(self, itemIndex);
         }
 
-        private void UpdateSwooceManagerDisplays(CharacterModel self, ItemIndex itemIndex)
-        {
-            for (int i = 0; i < _swooceManagers.Count; i++)
-            {
-                _swooceManagers[i].HookedEnableDisableDisplay(self, itemIndex);
-            }
-        }
-
+        #region cheats
         public void Update()
         {
             if (CfgBool_PlantsForHire.Value)
@@ -268,5 +260,6 @@ namespace SillyGlasses
 
             PickupDropletController.CreatePickupDroplet(pickupIndex, transform.position + Vector3.up * 69, dir * 20f);
         }
+        #endregion
     }
 }
