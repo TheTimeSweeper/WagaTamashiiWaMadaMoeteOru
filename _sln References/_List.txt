@@ -1,0 +1,12 @@
+Risk of Rain 2\BepInEx
+ - core, 
+ - monomod, 
+ - patchers,
+ - plugins\R2API
+ - plugins\wildbook-MiniRpcLib
+
+Risk of Rain 2\Risk Of Rain 2_Data\Managed
+ - Assembly-CSharp.dll
+ - UnityEngine.CoreModule.dll
+ - UnityEngine.dll
+ - UnityEngine.Networking.dll
