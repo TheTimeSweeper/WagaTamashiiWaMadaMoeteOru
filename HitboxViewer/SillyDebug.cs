@@ -13,7 +13,7 @@ namespace SillyDebug {
 
     [R2APISubmoduleDependency(nameof(CommandHelper))]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyDebug", "Silly Debug", "0.0.2")]
+    [BepInPlugin("com.TheTimeSweeper.SillyDebug", "Silly Debug", "0.0.3")]
     public class SillyDebugPlugin : BaseUnityPlugin {
 
         private List<HitBox> _seenHitboxes = new List<HitBox>();
