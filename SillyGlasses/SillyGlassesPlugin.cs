@@ -15,10 +15,16 @@ namespace SillyGlasses
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
         public delegate void EnableDisableDisplayEvent(CharacterModel self, ItemIndex itemIndex);
 
-        public EnableDisableDisplayEvent enableDisableDisplayevent;
+        public delegate void UpdateMaterialsEvent(CharacterModel self);
+        public delegate void UpdateCameraEvent(CharacterModel self, CameraRigController cameraRig);
+
+        public EnableDisableDisplayEvent enableDisableDisplayEvent;
         public UpdateItemDisplayEvent updateItemDisplayEvent;
 
-        private List<CharacterSwooceManager> _swooceManagers = new List<CharacterSwooceManager>();
+        public UpdateMaterialsEvent updateMaterialsEvent;
+        public UpdateCameraEvent updateCameraEvent;
+
+        private List<CharacterSwooceHandler> _swooceHandlers = new List<CharacterSwooceHandler>();
 
         //test spawn items
         private int _currentRandomIndex;
@@ -28,7 +34,7 @@ namespace SillyGlasses
 
         private string[] _engiMinionNames = new string[] {
             "EngiTurretBody",
-            "EngiBeamTurretBody",
+            "EngiWalkerTurretBody",
             };
         private string[] _scavGuyNames = new string[] {
             "ScavBody",
@@ -49,39 +55,52 @@ namespace SillyGlasses
             On.RoR2.CharacterModel.EnableItemDisplay += EnableItemDisplayHook;
 
             On.RoR2.CharacterModel.DisableItemDisplay += DisableItemDisplayHook;
+
+            On.RoR2.CharacterModel.UpdateMaterials += UpdateMaterialsHook;
+
+            On.RoR2.CharacterModel.UpdateForCamera += UpdateForCameraHook;
+
+            On.RoR2.CharacterModel.RefreshObstructorsForCamera += RefreshObstructorsForCameraHook;
         }
-        
+
         #region config
 
-        private void InitConfig()
-        {
+        private void InitConfig() {
             string sectionName = "hope youre having a lovely day";
 
-            Utils.Cfg_Int_ItemStackMax =
-                Config.Wrap<int>(sectionName,
-                            "ItemStackMax",
-                            "Maximum item displays that can be spawned (-1 for infinite).",
-                            -1).Value;
+            //ConfigDefinition moveSpeedDef = new ConfigDefinition(sectionName, "Set Move Speed");
+            //ConfigDescription moveSpeedDesc = new ConfigDescription("Damage to Set");
+            ///ConfigEntry<float> MultAttackSpeed;
 
-            Utils.Cfg_Float_ItemSwooceDistanceMultiplier =
+            //SetDamage = Config.Bind<float>(AttackSpeedDef, 8.5f, AttackSpeedDesc);
+            ///Utils.Cfg_Int_ItemStackMax = SetMoveSpeed.Value;
+            ///
+
+            Utils.Cfg_ItemStackMax = AbboosBrandBindConfig(sectionName,
+                                                           "ItemStackMax",
+                                                           "Maximum item displays that can be spawned (-1 for infinite).", 
+                                                           2);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            Utils.Cfg_ItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "ItemDistanceMultiplier",
                             "The distance between extra displays that spawns.",
                             0.0420f).Value;
 
-            Utils.Cfg_Float_EngiTurretItemDistanceMultiplier =
+            Utils.Cfg_EngiTurretItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "EngiTurretItemDistanceMultiplier",
                             "Items are a little bigger on Engis Turrets. Spread them out a bit more.",
                             1.5f).Value;
 
-            Utils.Cfg_Float_ScavengerItemDistanceMultiplier =
+            Utils.Cfg_ScavengerItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "ScavItemDistanceMultiplier",
                             "Items are a little bigger on Scavengers. Spread them out just a tiny bit maybe.",
                             6f).Value;
 
-            Utils.Cfg_Bool_UtilsLog =
+            Utils.Cfg_UseLogs =
                 Config.Wrap(sectionName,
                             "Output Logs",
                             "because I keep forgetting to remove logs from my builds haha woops.",
@@ -89,37 +108,50 @@ namespace SillyGlasses
 
             string cheatSection = "liar liar plants for hire";
 
-            Utils.Cfg_Bool_PlantsForHire =
+            Utils.Cfg_PlantsForHire =
                 Config.Wrap(cheatSection,
                             "Cheats",
                             "Press f2 f3 f6 and f9 to rain items from the sky.",
                             false).Value;
 
-            Utils.Cfg_Int_CheatItem =
+            Utils.Cfg_CheatItem =
                 Config.Wrap(cheatSection,
                             "Cheat Item",
-                            "Press f7 to spawn this item",
+                            "Press f7 to spawn this item (glasses are 7)",
                             7).Value;
 
-            Utils.Cfg_Int_CheatItemBoring =
+            Utils.Cfg_CheatItemBoring =
                 Config.Wrap(cheatSection,
                             "Cheat Item2",
-                            "Press f11 and f10 to add/remove this item boringly",
+                            "Press f11 and f10 to add/remove this item boringly (58 for magazines)",
                             58).Value;
+        }
+
+        private T AbboosBrandBindConfig<T>(string sectionName, string keyname, string description, T def) {
+
+            ConfigDefinition itemStackMaxDef = new ConfigDefinition(sectionName, keyname);
+            ConfigDescription itemstackMaxDesc = new ConfigDescription(description);
+
+            ConfigEntry<T> setItemStackMax = Config.Bind<T>(itemStackMaxDef, def, itemstackMaxDesc);
+
+            return setItemStackMax.Value;
         }
 
         #endregion
 
         private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
         {
-            _swooceManagers.TrimExcess();
+            _swooceHandlers.TrimExcess();
 
             bool isEngineerTurret = false;
             bool isScavenger = false;
 
             for (int i = 0; i < _engiMinionNames.Length; i++) {
 
-                if (self.bodyIndex == BodyCatalog.FindBodyIndex(_engiMinionNames[i])) {
+                int bodyIndex = self.bodyIndex;
+                int engiBodyIndex = BodyCatalog.FindBodyIndex(_engiMinionNames[i]);
+
+                if (bodyIndex == engiBodyIndex) {
                     isEngineerTurret = true;
                 }
             }
@@ -132,7 +164,7 @@ namespace SillyGlasses
 
             if (self.isPlayerControlled || isEngineerTurret || isScavenger)
             {
-                if (self.hurtBoxGroup == null)
+                if (self.characterMotor == null)
                 {
                     Utils.Log("did it bug?", true);
                     Utils.Log("if not", true);
@@ -143,10 +175,10 @@ namespace SillyGlasses
                     return;
                 }
                 
-                if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceManager>() == null)
+                if (self.characterMotor.gameObject.GetComponent<CharacterSwooceHandler>() == null)
                 {
-                    CharacterSwooceManager swooceManager = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceManager>();
-                    _swooceManagers.Add(swooceManager);
+                    CharacterSwooceHandler swooceManager = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceHandler>();
+                    _swooceHandlers.Add(swooceManager);
                     swooceManager.Init(this, isEngineerTurret, isScavenger);
                 }
             }
@@ -169,7 +201,7 @@ namespace SillyGlasses
         {
             orig(self, itemIndex);
 
-            enableDisableDisplayevent?.Invoke(self, itemIndex);
+            enableDisableDisplayEvent?.Invoke(self, itemIndex);
         }
 
         private void EnableItemDisplayHook(On.RoR2.CharacterModel.orig_EnableItemDisplay orig, 
@@ -178,13 +210,51 @@ namespace SillyGlasses
         {
             orig(self, itemIndex);
 
-            enableDisableDisplayevent?.Invoke(self, itemIndex);
+            enableDisableDisplayEvent?.Invoke(self, itemIndex);
+        }
+
+        private void UpdateMaterialsHook(On.RoR2.CharacterModel.orig_UpdateMaterials orig, CharacterModel self) {
+
+            orig(self);
+
+            updateMaterialsEvent?.Invoke(self);
+        }
+
+        private void UpdateForCameraHook(On.RoR2.CharacterModel.orig_UpdateForCamera orig, CharacterModel self, CameraRigController cameraRigController) {
+
+            orig(self, cameraRigController);
+
+            updateCameraEvent?.Invoke(self, cameraRigController);
+        }
+
+        private void RefreshObstructorsForCameraHook(On.RoR2.CharacterModel.orig_RefreshObstructorsForCamera orig, CameraRigController cameraRigController) {
+
+            orig(cameraRigController);
+
+            Vector3 position = cameraRigController.transform.position;
+
+            _swooceHandlers.TrimExcess();
+
+            for (int i = 0; i < _swooceHandlers.Count; i++) {
+
+                if (_swooceHandlers[i] == null)
+                    continue;
+
+                CharacterSwooceHandler swooceHandler = _swooceHandlers[i];
+
+                if (cameraRigController.enableFading) {
+                    float nearestHurtBoxDistance = (position - swooceHandler.swoocedCharacterModel.transform.position).magnitude;
+                    swooceHandler.pseudoFade = Mathf.Clamp01(Util.Remap(nearestHurtBoxDistance, cameraRigController.fadeStartDistance, cameraRigController.fadeEndDistance, 0f, 1f));
+                } else {
+                    swooceHandler.pseudoFade = 1f;
+                }
+            }
         }
 
         #region cheats
         public void Update()
         {
-            if (Utils.Cfg_Bool_PlantsForHire)
+            if (Utils.Cfg_PlantsForHire)
             {
                 if (Input.GetKeyDown(KeyCode.F2))
                 {
@@ -204,7 +274,7 @@ namespace SillyGlasses
 
                 if (Input.GetKeyDown(KeyCode.F7))
                 {
-                    TestSpawnItem(Utils.Cfg_Int_CheatItem);
+                    TestSpawnItem(Utils.Cfg_CheatItem);
                 }
 
                 if (Input.GetKeyDown(KeyCode.F9))

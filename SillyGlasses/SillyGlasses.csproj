@@ -31,7 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CharacterSwooceManager.cs" />
+    <Compile Include="CharacterSwooceHandler.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="SillyGlassesPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -6,38 +6,60 @@ using UnityEngine;
 
 namespace SillyGlasses
 {
-    public class CharacterSwooceManager : MonoBehaviour {
+    public class CharacterSwooceHandler : MonoBehaviour {
         
-
-        private Dictionary<ItemIndex, int> _instantiatedSillyGlassAmounts = new Dictionary<ItemIndex, int>();
-        private Dictionary<ItemIndex, Transform> _instantiatedSillyGlassParents = new Dictionary<ItemIndex, Transform>();
-        private Dictionary<ItemIndex, List<Transform>> _extraGlassParentsLists = new Dictionary<ItemIndex, List<Transform>> ();
-
         private SillyGlassesPlugin _sillyGlasses;
-        private CharacterModel _swoocedModel;
-        private Inventory _swoocedCurrentInventory;
-        private ChildLocator _swooceChildLocator;
 
         private bool _subscribedToEvents;
 
+        #region StackingDisplays
+        private Dictionary<ItemIndex, int> _instantiatedSillyGlassAmounts = new Dictionary<ItemIndex, int>();
+        private Dictionary<ItemIndex, Transform> _instantiatedSillyGlassParents = new Dictionary<ItemIndex, Transform>();
+        private Dictionary<ItemIndex, List<Transform>> _extraGlassParentsLists = new Dictionary<ItemIndex, List<Transform>>();
+
+        private CharacterModel _swoocedCharacterModel;
+        public CharacterModel swoocedCharacterModel { get => _swoocedCharacterModel; }
+
+        private Inventory _swoocedCurrentInventory;
+        private ChildLocator _swoocedChildLocator;
+
         private bool _engiMinion;
         private bool _scavGuy;
+        #endregion
+
+        #region UpdatingMaterials
+        private List<ItemDisplay> _allItemDisplays = new List<ItemDisplay>();
+
+        private MaterialPropertyBlock _propertyStorage = new MaterialPropertyBlock();
+
+        private float _pseudoFade = 1f;
+        public float pseudoFade { get => _pseudoFade; set => _pseudoFade = value; }
+
+        private float _pseudoFirstPersonFade = 1f;
+
+        private static readonly Color hitFlashBaseColor = new Color32(193, 108, 51, byte.MaxValue);
+        private static readonly Color hitFlashShieldColor = new Color32(132, 159, byte.MaxValue, byte.MaxValue);
+        private static readonly Color healFlashColor = new Color32(104, 196, 49, byte.MaxValue);
+
+        private static readonly float hitFlashDuration = 0.15f;
+        private static readonly float healFlashDuration = 0.35f; 
+        #endregion
 
         private int _cfgMaxItems {
             get {
-                return Utils.Cfg_Int_ItemStackMax;
+                return Utils.Cfg_ItemStackMax;
             }
         }
         private float _cfgDistanceMultiplier {
             get {
-                return Utils.Cfg_Float_ItemSwooceDistanceMultiplier;
+                return Utils.Cfg_ItemDistanceMultiplier;
             }
         }
 
         private float _specialCharacterDistanceMultiplier {
             get {
-                float engiDistance = Utils.Cfg_Float_EngiTurretItemDistanceMultiplier;
-                float scavDistance = Utils.Cfg_Float_ScavengerItemDistanceMultiplier;
+                float engiDistance = Utils.Cfg_EngiTurretItemDistanceMultiplier;
+                float scavDistance = Utils.Cfg_ScavengerItemDistanceMultiplier;
 
                 return _engiMinion ? engiDistance : _scavGuy ? scavDistance : 1;
             }
@@ -45,9 +67,9 @@ namespace SillyGlasses
 
         public void Awake() {
 
-            if (_swoocedModel == null)
+            if (_swoocedCharacterModel == null)
             {
-                _swoocedModel = GetComponent<CharacterModel>();
+                _swoocedCharacterModel = GetComponent<CharacterModel>();
             }
         }
 
@@ -76,18 +98,25 @@ namespace SillyGlasses
             if (subscribing)
             {
                 _sillyGlasses.updateItemDisplayEvent += onHookedUpdateItemDisplay;
-                _sillyGlasses.enableDisableDisplayevent += onHookedEnableDisableDisplay;
+                _sillyGlasses.enableDisableDisplayEvent += onHookedEnableDisableDisplay;
+
+                _sillyGlasses.updateMaterialsEvent += onUpdateMaterials;
+                _sillyGlasses.updateCameraEvent += onUpdateCamera;
+
             }
             else
             {
                 _sillyGlasses.updateItemDisplayEvent -= onHookedUpdateItemDisplay;
-                _sillyGlasses.enableDisableDisplayevent -= onHookedEnableDisableDisplay;
+                _sillyGlasses.enableDisableDisplayEvent -= onHookedEnableDisableDisplay;
+
+                _sillyGlasses.updateMaterialsEvent -= onUpdateMaterials;
+                _sillyGlasses.updateCameraEvent -= onUpdateCamera;
             }
         }
 
         private void onHookedUpdateItemDisplay(CharacterModel characterModel_, Inventory inventory_)
         {
-            if (_swoocedModel == characterModel_ && _swoocedCurrentInventory == null)
+            if (_swoocedCharacterModel == characterModel_ && _swoocedCurrentInventory == null)
             {
                 _swoocedCurrentInventory = inventory_;
             }
@@ -106,14 +135,16 @@ namespace SillyGlasses
             }
         }
 
+        #region StackingDisplays
         private void PseudoInstantiateDisplayRuleGroup(CharacterModel CharacterModel_,
                                                       DisplayRuleGroup displayRuleGroup_,
                                                       ItemIndex itemIndex_)
         {
-            //pls don't break pls don't break
+            //check if it breaks
+            //pls don't break
             if (_swoocedCurrentInventory == null)
                 return;
-            if (CharacterModel_ != _swoocedModel)
+            if (CharacterModel_ != _swoocedCharacterModel)
                 return;
             if (displayRuleGroup_.rules == null)
                 return;
@@ -170,9 +201,9 @@ namespace SillyGlasses
                 return;
             }
             
-            if (_swooceChildLocator == null)
+            if (_swoocedChildLocator == null)
             {
-                _swooceChildLocator = CharacterModel_.GetComponent<ChildLocator>();                
+                _swoocedChildLocator = CharacterModel_.GetComponent<ChildLocator>();                
             }
 
             //
@@ -195,16 +226,14 @@ namespace SillyGlasses
                     if (swoocedDisplayRule.ruleType != ItemDisplayRuleType.ParentedPrefab)
                         continue;
 
-                    Transform bodyDisplayParent = _swooceChildLocator.FindChild(swoocedDisplayRule.childName);
+                    Transform bodyDisplayParent = _swoocedChildLocator.FindChild(swoocedDisplayRule.childName);
                     if (bodyDisplayParent == null)
                         continue;
 
                     //create item
-                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swooceChildLocator, bodyDisplayParent, currentCountIterated);
+                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated);
                     if (iterInstantiatedItem == null)
                         continue;
-
-                    iterInstantiatedItem.name += currentCountIterated.ToString();
 
                     //parent item to correct parent transform
                     Transform sillyGlassParent = GetSillyGlassParent(itemIndex_, bodyDisplayParent);
@@ -238,15 +267,19 @@ namespace SillyGlasses
 
             float forwardDistance = _cfgDistanceMultiplier * moveMult_ * _specialCharacterDistanceMultiplier;
             instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * forwardDistance;
+            
+            if (Utils.Cfg_UseLogs) {
+                instantiatedDisplay.name = $"{instantiatedDisplay.name} {moveMult_}";
+            }
 
             LimbMatcher limbMatcher = instantiatedDisplay.GetComponent<LimbMatcher>();
             if (limbMatcher && childLocator_)
             {
                 limbMatcher.SetChildLocator(childLocator_);
             }
-
-            //we can't access 'this.itemDisplay'. hope we don't need it
-            //this.itemDisplay = parentedDisplay.GetComponent<ItemDisplay>();
+            
+            ItemDisplay itemDisplay = instantiatedDisplay.GetComponent<ItemDisplay>();
+            _allItemDisplays.Add(itemDisplay);
 
             return instantiatedDisplay;
         }
@@ -318,6 +351,95 @@ namespace SillyGlasses
 
             return newTransform;
         }
+        #endregion
+
+        #region UpdatingMaterials
+        private void onUpdateMaterials(CharacterModel characterModel_) {
+
+            if (characterModel_ != _swoocedCharacterModel)
+                return;
+
+            pseudoUpdateMaterials(characterModel_);
+        }
+
+        private void onUpdateCamera(CharacterModel characterModel, CameraRigController camera) {
+
+            if (characterModel != _swoocedCharacterModel)
+                return;
+
+            pseudoUpdateForCamera(camera);
+        }
+
+        private void pseudoUpdateForCamera(CameraRigController cameraRig) {
+
+            _swoocedCharacterModel.visibility = VisibilityLevel.Visible;
+            float target = 1f;
+            if (_swoocedCharacterModel.body) {
+                if (cameraRig.firstPersonTarget == _swoocedCharacterModel.body.gameObject) {
+                    target = 0f;
+                }
+                _swoocedCharacterModel.visibility = _swoocedCharacterModel.body.GetVisibilityLevel(cameraRig.targetTeamIndex);
+            }
+            _pseudoFirstPersonFade = Mathf.MoveTowards(_pseudoFirstPersonFade, target, Time.deltaTime / 0.25f);
+            _pseudoFade *= _pseudoFirstPersonFade;
+        }
+
+        private void pseudoRefreshCameraObstructors(CameraRigController cameraRig) {
+
+            Vector3 position = cameraRig.transform.position;
+            foreach (CharacterModel characterModel in InstanceTracker.GetInstancesList<CharacterModel>()) {
+                if (cameraRig.enableFading) {
+                    float nearestHurtBoxDistance = (position - _swoocedCharacterModel.transform.position).magnitude;
+                    _pseudoFade = Mathf.Clamp01(Util.Remap(nearestHurtBoxDistance, cameraRig.fadeStartDistance, cameraRig.fadeEndDistance, 0f, 1f));
+                } else {
+                    _pseudoFade = 1f;
+                }
+            }
+        }
+
+        private void pseudoUpdateMaterials(CharacterModel characterModel_) {
+
+            _allItemDisplays.TrimExcess();
+
+            for (int i = 0; i < _allItemDisplays.Count; i++) {
+
+                ItemDisplay itemDisplay = _allItemDisplays[i];
+                if(itemDisplay == null) {
+                    Utils.Log($"itemDisplay {i} is null");
+                    continue;
+                }
+
+                itemDisplay.SetVisibilityLevel(characterModel_.visibility);
+
+                for (int l = 0; l < itemDisplay.rendererInfos.Length; l++) {
+                    Renderer renderer2 = itemDisplay.rendererInfos[l].renderer;
+                    renderer2.GetPropertyBlock(_propertyStorage);
+                    _propertyStorage.SetColor(CommonShaderProperties._FlashColor, getDisplayColor(characterModel_));
+                    _propertyStorage.SetFloat(CommonShaderProperties._Fade, _pseudoFade);
+                    renderer2.SetPropertyBlock(_propertyStorage);
+                }
+            }
+        }
+
+        private Color getDisplayColor(CharacterModel characterModel_) {
+
+            Color color = Color.black;
+
+            if (characterModel_.body && characterModel_.body.healthComponent) {
+
+                float remainingHitFlash = Mathf.Clamp01(1f - characterModel_.body.healthComponent.timeSinceLastHit / hitFlashDuration);
+                float remainingHealFlash = Mathf.Pow(Mathf.Clamp01(1f - characterModel_.body.healthComponent.timeSinceLastHeal / healFlashDuration), 0.5f);
+                if (remainingHealFlash > remainingHitFlash) {
+                    color = healFlashColor * remainingHealFlash;
+                } else {
+                    color = ((characterModel_.body.healthComponent.shield > 0f) ? hitFlashShieldColor : hitFlashBaseColor) * remainingHitFlash;
+                }
+            }
+            return color;
+        }
+
+
+        #endregion
 
         //creates a cube in the place of where an item will spawn, so I can see in what direction its local transform is oriented
         //not currently used. may be outdaded
@@ -345,7 +467,7 @@ namespace SillyGlasses
         #region cheatsvol2
         void Update()
         {
-            if (Utils.Cfg_Bool_PlantsForHire)
+            if (Utils.Cfg_PlantsForHire)
             {
                 if (Input.GetKeyDown(KeyCode.F10))
                 {
@@ -362,7 +484,7 @@ namespace SillyGlasses
         {
             if (_swoocedCurrentInventory != null)
             {
-                _swoocedCurrentInventory.GiveItem((ItemIndex)Utils.Cfg_Int_CheatItemBoring, 1);
+                _swoocedCurrentInventory.GiveItem((ItemIndex)Utils.Cfg_CheatItemBoring, 1);
             }
         }
 
@@ -370,7 +492,7 @@ namespace SillyGlasses
         {
             if(_swoocedCurrentInventory != null)
             {
-                _swoocedCurrentInventory.RemoveItem((ItemIndex)Utils.Cfg_Int_CheatItemBoring, 1);
+                _swoocedCurrentInventory.RemoveItem((ItemIndex)Utils.Cfg_CheatItemBoring, 1);
             }
         }
         #endregion
