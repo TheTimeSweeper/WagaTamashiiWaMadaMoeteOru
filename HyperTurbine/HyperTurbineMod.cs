@@ -10,25 +10,45 @@ namespace HyperTurbine {
     [BepInDependency("com.bepis.r2api")]
     [BepInPlugin("com.TheTimeSweeper.HyperTurbine", "Hyper Turbine", "0.0.3")]
     public class HyperTurbineMod : BaseUnityPlugin {
+
         //heavy nerf to damage
         //disc always pierces
-        //
+        //overcharge is contained in extra charges
+        //start with 2/3 add 1/2 per stack
+
         private float _pseudoInitialSpin;
         private Run.FixedTimeStamp _pseudoSnapshotTime;
         private float _pseudoInitialCharge;
 
-        private float _baseSpinPerKill;
-        private int _discStacks;
+        private CharacterBody _turbineOwnerBody;
+        private GenericOwnership _turbineGenericOwnership;
 
-        private float _stackedSpinPerKill {
+        private float _baseSpinPerKill = 0.01f;
+
+        private int _discStacks {
             get {
-                return _baseSpinPerKill * _discStacks;
+                int stacks = _turbineOwnerBody ? _turbineOwnerBody.inventory ? _turbineOwnerBody.inventory.GetItemCount(ItemIndex.LaserTurbine) : 1 : 1;
+
+                Utils.Log($"_discStacks: {stacks}");
+
+                return stacks;
             }
         }
 
-        
+        private float _stackedSpinPerKill {    
+            get {
+                if (_baseSpinPerKill == 0.01f) {
+                    Utils.Log("_baseSpinPerKill = 0.01f. either it didn't get the real value or the real value has changed");
+                }
+                float stacked = _baseSpinPerKill * _discStacks;
 
-        Run.FixedTimeStamp runNow {
+                Utils.Log($"_stackedSpinPerKill: {stacked}");
+
+                return stacked;
+            }
+        }
+
+        private Run.FixedTimeStamp _runNow {
             get {
                 return Run.FixedTimeStamp.now;
             }
@@ -36,28 +56,44 @@ namespace HyperTurbine {
 
         public void Awake() {
             //nerf damage (remove stacking)
+            On.EntityStates.LaserTurbine.LaserTurbineBaseState.OnEnter += LaserTurbineBaseState_OnEnter;
+
             On.EntityStates.LaserTurbine.LaserTurbineBaseState.GetDamage += LaserTurbineBaseState_GetDamage;
 
             //stack chargeRate (fuck how do I communicate this)
-
-
-
-            //all for a freakin read
             On.RoR2.LaserTurbineController.Awake += LaserTurbineController_Awake;
-            On.RoR2.LaserTurbineController.FixedUpdate += LaserTurbineController_FixedUpdate;
-
-            On.RoR2.LaserTurbineController.OnStartServer += LaserTurbineController_OnStartServer;
             On.RoR2.LaserTurbineController.OnOwnerKilledOtherServer += LaserTurbineController_OnOwnerKilledOtherServer;
             On.RoR2.LaserTurbineController.ExpendCharge += LaserTurbineController_ExpendCharge;
+
+            //all for a freakin read
+            // k i may need to revisit this for the overcharge mechanic
+            //On.RoR2.LaserTurbineController.FixedUpdate += LaserTurbineController_FixedUpdate;
+            On.RoR2.LaserTurbineController.OnStartServer += LaserTurbineController_OnStartServer;
+        }
+
+        private void LaserTurbineBaseState_OnEnter(On.EntityStates.LaserTurbine.LaserTurbineBaseState.orig_OnEnter orig, EntityStates.LaserTurbine.LaserTurbineBaseState self) {
+            orig(self);
+            getOwnershipAndBody(self);
+        }
+
+        private void getOwnershipAndBody(EntityStates.LaserTurbine.LaserTurbineBaseState self) {
+
+            //see if all these gets were being chached for a reason
+            _turbineGenericOwnership = self.outer.GetComponent<GenericOwnership>();
+            //ownerbody in their property is being cached so they don't run getcomponent all the time.
+            _turbineOwnerBody = (_turbineGenericOwnership != null) ? _turbineGenericOwnership.ownerObject.GetComponent<CharacterBody>() : null;
         }
 
         private float LaserTurbineBaseState_GetDamage(On.EntityStates.LaserTurbine.LaserTurbineBaseState.orig_GetDamage orig, EntityStates.LaserTurbine.LaserTurbineBaseState self) {
 
-            //there's gotta be another way
-            GenericOwnership genericOwnership = self.outer.GetComponent<GenericOwnership>();
-            CharacterBody charBod = self.outer.GetComponent<CharacterBody>();
-
-            return charBod.damage;
+            float num = 1f;
+            if (_turbineGenericOwnership) {
+                if (_turbineOwnerBody.inventory) {
+                    num = _turbineOwnerBody.damage;
+                }
+            }
+            Utils.Log($"LaserTurbineBaseState_GetDamage: {num}");
+            return num;
         }
 
         //
@@ -68,15 +104,16 @@ namespace HyperTurbine {
         }
 
         private void LaserTurbineController_FixedUpdate(On.RoR2.LaserTurbineController.orig_FixedUpdate orig, LaserTurbineController self) {
+
+            Utils.Log($"{self.charge.ToString("0.00")} | {pseudoCalculateSpin(_runNow, self).ToString("0.00")} ({pseudoCalculateCharge(_runNow, self).ToString("0.00")})");
+
             orig(self);
-
-            Run.FixedTimeStamp now = runNow;
-
-            Debug.Log($"{self.charge.ToString("0.00")} | {pseudoCalculateSpin(now, self).ToString("0.00")})");
         }
 
         //well this was a failure. I am very glad we have a public reference to charge
-        //and also the spin calculation wasn't a similarly colossal failure
+        //at least the spin calculation wasn't a similarly colossal failure
+
+        // god fuckin dammit now i need this to work so I can calculate the overcharge
         private float pseudoCalculateCharge(Run.FixedTimeStamp now, LaserTurbineController self) {
 
             float num = now - _pseudoSnapshotTime;
@@ -89,20 +126,20 @@ namespace HyperTurbine {
 
         private float pseudoCalculateSpin(Run.FixedTimeStamp now, LaserTurbineController self) {
 
-            return Mathf.Max(_pseudoInitialSpin - self.spinDecayRate * (runNow - _pseudoSnapshotTime), self.minSpin); ;
+            return Mathf.Max(_pseudoInitialSpin - self.spinDecayRate * (_runNow - _pseudoSnapshotTime), self.minSpin); ;
         }
 
         private void LaserTurbineController_OnStartServer(On.RoR2.LaserTurbineController.orig_OnStartServer orig, LaserTurbineController self) {
 
             _pseudoInitialSpin = self.minSpin;
-            _pseudoSnapshotTime = runNow;
+            _pseudoSnapshotTime = _runNow;
 
             orig(self);
         }
 
         private void LaserTurbineController_OnOwnerKilledOtherServer(On.RoR2.LaserTurbineController.orig_OnOwnerKilledOtherServer orig, LaserTurbineController self) {
 
-            Run.FixedTimeStamp now = runNow;
+            Run.FixedTimeStamp now = _runNow;
             float spin = pseudoCalculateSpin(now, self);
             float charge = pseudoCalculateCharge(now, self);
             spin = Mathf.Min(spin + self.spinPerKill, self.maxSpin);
@@ -111,18 +148,22 @@ namespace HyperTurbine {
             _pseudoInitialCharge = charge;
             _pseudoSnapshotTime = now;
 
+            self.spinPerKill = _stackedSpinPerKill;
+
             orig(self);
         }
 
         private void LaserTurbineController_ExpendCharge(On.RoR2.LaserTurbineController.orig_ExpendCharge orig, LaserTurbineController self) {
 
-            Run.FixedTimeStamp now = runNow;
+            Run.FixedTimeStamp now = _runNow;
             float spin = pseudoCalculateSpin(now, self);
             spin += self.spinPerKill;
 
             _pseudoInitialSpin += spin;
             _pseudoInitialCharge = 0f;
             _pseudoSnapshotTime = now;
+
+            self.spinPerKill = _stackedSpinPerKill;
 
             orig(self);
         }
