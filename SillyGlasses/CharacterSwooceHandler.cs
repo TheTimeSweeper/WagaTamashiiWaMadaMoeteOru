@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BepInEx;
+using R2API.Utils;
 using RoR2;
 using UnityEngine;
 
@@ -18,7 +19,9 @@ namespace SillyGlasses
         private Dictionary<ItemIndex, List<Transform>> _extraGlassParentsLists = new Dictionary<ItemIndex, List<Transform>>();
 
         private CharacterModel _swoocedCharacterModel;
-        public CharacterModel swoocedCharacterModel { get => _swoocedCharacterModel; }
+        public CharacterModel swoocedCharacterModel {
+            get => _swoocedCharacterModel;
+        }
 
         private Inventory _swoocedCurrentInventory;
         private ChildLocator _swoocedChildLocator;
@@ -32,11 +35,15 @@ namespace SillyGlasses
 
         private MaterialPropertyBlock _propertyStorage = new MaterialPropertyBlock();
 
+        #region hopereflectionisasperformantasthiscausegoddamn
         private float _pseudoFade = 1f;
-        public float pseudoFade { get => _pseudoFade; set => _pseudoFade = value; }
+        public float pseudoFade {
+            get => _pseudoFade;
+            set => _pseudoFade = value;
+        }
 
         private float _pseudoFirstPersonFade = 1f;
-
+        #endregion
         private static readonly Color hitFlashBaseColor = new Color32(193, 108, 51, byte.MaxValue);
         private static readonly Color hitFlashShieldColor = new Color32(132, 159, byte.MaxValue, byte.MaxValue);
         private static readonly Color healFlashColor = new Color32(104, 196, 49, byte.MaxValue);
@@ -169,12 +176,13 @@ namespace SillyGlasses
             if (currentCount == 1 && difference >= 0)
                 return;
 
-            //we're removing. destroy all the displays and spawn the right amount (sadly i'm not rad enough to only destroy what is needed to be destroyed. i did the more retard friendly method)
+            //we're removing. destroy all the displays and spawn the right amount 
+            //(sadly i'm not rad enough to only destroy what is needed to be destroyed. i did the more retard friendly method)
             if (difference < 0) 
             {
                 //Utils.Log($"{itemIndex_} diff: {difference} = current: {currentCount} - orig: {previousTotalItemDisplays}");
 
-                //find the glass parent and destroy it
+                //find the glassparent and destroy it
                 if (_instantiatedSillyGlassParents.ContainsKey(itemIndex_) && _instantiatedSillyGlassParents[itemIndex_] != null)
                 {
                     Destroy(_instantiatedSillyGlassParents[itemIndex_].gameObject);
@@ -362,6 +370,7 @@ namespace SillyGlasses
             pseudoUpdateMaterials(characterModel_);
         }
 
+        #region shouldJustUsedReflectionStupid
         private void onUpdateCamera(CharacterModel characterModel, CameraRigController camera) {
 
             if (characterModel != _swoocedCharacterModel)
@@ -396,10 +405,13 @@ namespace SillyGlasses
                 }
             }
         }
+        #endregion
 
         private void pseudoUpdateMaterials(CharacterModel characterModel_) {
 
             _allItemDisplays.TrimExcess();
+
+            float fade = characterModel_.GetFieldValue<float>("fade");
 
             for (int i = 0; i < _allItemDisplays.Count; i++) {
 
@@ -415,7 +427,7 @@ namespace SillyGlasses
                     Renderer renderer2 = itemDisplay.rendererInfos[l].renderer;
                     renderer2.GetPropertyBlock(_propertyStorage);
                     _propertyStorage.SetColor(CommonShaderProperties._FlashColor, getDisplayColor(characterModel_));
-                    _propertyStorage.SetFloat(CommonShaderProperties._Fade, _pseudoFade);
+                    _propertyStorage.SetFloat(CommonShaderProperties._Fade, fade);
                     renderer2.SetPropertyBlock(_propertyStorage);
                 }
             }
@@ -448,6 +460,7 @@ namespace SillyGlasses
             GameObject cubeReference = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
             //I forgot why, but simply creating a primitive wasn't working, so the ugly solution was to create a new gameobject from scratch and copy its properties
+            //wait I think I was a retard and tried creating a blank object and adding these components instead of just making a primitive and removing the collider
             Type[] cubeComponents = new Type[] { typeof(MeshRenderer), typeof(MeshFilter) };
 
             GameObject bruh = new GameObject("bruh", cubeComponents);

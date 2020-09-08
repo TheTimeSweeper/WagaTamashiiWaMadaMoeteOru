@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
+using R2API.Utils;
 using UnityEngine.Networking;
 
-namespace SillyGlasses
-{
+namespace SillyGlasses {
+    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.0.0")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.0.1")]
     public class SillyGlassesPlugin : BaseUnityPlugin
     {
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
@@ -26,27 +28,30 @@ namespace SillyGlasses
 
         private List<CharacterSwooceHandler> _swooceHandlers = new List<CharacterSwooceHandler>();
 
-        //test spawn items
-        private int _currentRandomIndex;
-        private int _spawnedRandomItems;
-        private int _currentRedIndex;
-        private int _spawnedRedItems;
+        private Inventory _copiedItemsInventory;
 
-        private string[] _engiMinionNames = new string[] {
-            "EngiTurretBody",
-            "EngiWalkerTurretBody",
-            };
         private string[] _scavGuyNames = new string[] {
             "ScavBody",
             "ScavLunar1Body",
             "ScavLunar2Body",
             "ScavLunar3Body",
             "ScavLunar4Body",
-            };
+        };
+
+        #region cheats
+        //test spawn items
+        private int _currentRandomIndex;
+        private int _spawnedRandomItems;
+        private int _currentRedIndex;
+        private int _spawnedRedItems;
+        #endregion
 
         public void Awake()
         {
+
             InitConfig();
+
+            On.RoR2.Inventory.CopyItemsFrom += CopyItemsHook;
 
             On.RoR2.CharacterBody.OnInventoryChanged += InvChangedHook;
 
@@ -58,9 +63,9 @@ namespace SillyGlasses
 
             On.RoR2.CharacterModel.UpdateMaterials += UpdateMaterialsHook;
 
-            On.RoR2.CharacterModel.UpdateForCamera += UpdateForCameraHook;
+            //On.RoR2.CharacterModel.UpdateForCamera += UpdateForCameraHook;
 
-            On.RoR2.CharacterModel.RefreshObstructorsForCamera += RefreshObstructorsForCameraHook;
+            //On.RoR2.CharacterModel.RefreshObstructorsForCamera += RefreshObstructorsForCameraHook;
         }
 
         #region config
@@ -81,7 +86,7 @@ namespace SillyGlasses
                                                            "Maximum item displays that can be spawned (-1 for infinite).", 
                                                            2);
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete. sorry I'm lazy
             Utils.Cfg_ItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "ItemDistanceMultiplier",
@@ -139,33 +144,38 @@ namespace SillyGlasses
 
         #endregion
 
-        private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
+        private void CopyItemsHook(On.RoR2.Inventory.orig_CopyItemsFrom orig, Inventory self, Inventory other) 
+        {
+            CharacterBody copiedItemsBody = null;
+
+            for (int i = 0; i < _swooceHandlers.Count; i++) {
+
+                if (_swooceHandlers[i] != null && _swooceHandlers[i].swoocedCharacterModel != null) {
+
+                    copiedItemsBody = _swooceHandlers[i].swoocedCharacterModel.body;
+
+                    if (copiedItemsBody.inventory == other) {
+
+                        _copiedItemsInventory = self;
+                        break;
+                    }
+                }
+            }
+
+            orig(self, other);
+        }
+
+        private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) 
         {
             _swooceHandlers.TrimExcess();
 
-            bool isEngineerTurret = false;
-            bool isScavenger = false;
+            bool isCopiedInventory = self.inventory == _copiedItemsInventory;
+            _copiedItemsInventory = null;
 
-            for (int i = 0; i < _engiMinionNames.Length; i++) {
+            bool isScavenger = checkScavengerNames(self);
 
-                int bodyIndex = self.bodyIndex;
-                int engiBodyIndex = BodyCatalog.FindBodyIndex(_engiMinionNames[i]);
-
-                if (bodyIndex == engiBodyIndex) {
-                    isEngineerTurret = true;
-                }
-            }
-            for (int i = 0; i < _scavGuyNames.Length; i++) {
-
-                if (self.bodyIndex == BodyCatalog.FindBodyIndex(_scavGuyNames[i])) {
-                    isScavenger = true;
-                }
-            }
-
-            if (self.isPlayerControlled || isEngineerTurret || isScavenger)
-            {
-                if (self.characterMotor == null)
-                {
+            if (self.isPlayerControlled || isCopiedInventory || isScavenger) {
+                if (self.hurtBoxGroup == null) {
                     Utils.Log("did it bug?", true);
                     Utils.Log("if not", true);
                     Utils.Log("WE DID IT BOIS", true);
@@ -174,16 +184,29 @@ namespace SillyGlasses
                     //there's still a nullref tho i gotta check out
                     return;
                 }
-                
-                if (self.characterMotor.gameObject.GetComponent<CharacterSwooceHandler>() == null)
-                {
-                    CharacterSwooceHandler swooceManager = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceHandler>();
-                    _swooceHandlers.Add(swooceManager);
-                    swooceManager.Init(this, isEngineerTurret, isScavenger);
+
+                if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceHandler>() == null) {
+                    CharacterSwooceHandler swooceHandler = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceHandler>();
+                    _swooceHandlers.Add(swooceHandler);
+                    swooceHandler.Init(this, isCopiedInventory, isScavenger);
                 }
             }
 
             orig(self);
+        }
+
+        private bool checkScavengerNames(CharacterBody self) 
+        {
+            bool isScavenger = false;
+
+            for (int i = 0; i < _scavGuyNames.Length; i++) {
+
+                if (self.bodyIndex == BodyCatalog.FindBodyIndex(_scavGuyNames[i])) {
+                    isScavenger = true;
+                }
+            }
+
+            return isScavenger;
         }
 
         public void UpdateItemDisplayHook(On.RoR2.CharacterModel.orig_UpdateItemDisplay orig,
@@ -213,22 +236,22 @@ namespace SillyGlasses
             enableDisableDisplayEvent?.Invoke(self, itemIndex);
         }
 
-        private void UpdateMaterialsHook(On.RoR2.CharacterModel.orig_UpdateMaterials orig, CharacterModel self) {
-
+        private void UpdateMaterialsHook(On.RoR2.CharacterModel.orig_UpdateMaterials orig, CharacterModel self) 
+        {
             orig(self);
 
             updateMaterialsEvent?.Invoke(self);
         }
-
-        private void UpdateForCameraHook(On.RoR2.CharacterModel.orig_UpdateForCamera orig, CharacterModel self, CameraRigController cameraRigController) {
-
+        #region allyouhadtodowasaskhowtogetfuckinprivatevariablesgoddamn
+        private void UpdateForCameraHook(On.RoR2.CharacterModel.orig_UpdateForCamera orig, CharacterModel self, CameraRigController cameraRigController) 
+        {
             orig(self, cameraRigController);
 
             updateCameraEvent?.Invoke(self, cameraRigController);
         }
 
-        private void RefreshObstructorsForCameraHook(On.RoR2.CharacterModel.orig_RefreshObstructorsForCamera orig, CameraRigController cameraRigController) {
-
+        private void RefreshObstructorsForCameraHook(On.RoR2.CharacterModel.orig_RefreshObstructorsForCamera orig, CameraRigController cameraRigController) 
+        {
             orig(cameraRigController);
 
             Vector3 position = cameraRigController.transform.position;
@@ -250,7 +273,7 @@ namespace SillyGlasses
                 }
             }
         }
-
+        #endregion
         #region cheats
         public void Update()
         {
