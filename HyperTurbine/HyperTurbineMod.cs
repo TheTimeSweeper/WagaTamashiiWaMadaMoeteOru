@@ -67,6 +67,7 @@ namespace HyperTurbine {
 
             //all for a freakin read
             // k i may need to revisit this for the overcharge mechanic
+            // my god should have just asked for what I now know is reflection
             //On.RoR2.LaserTurbineController.FixedUpdate += LaserTurbineController_FixedUpdate;
             On.RoR2.LaserTurbineController.OnStartServer += LaserTurbineController_OnStartServer;
         }
@@ -100,6 +101,7 @@ namespace HyperTurbine {
 
         private void LaserTurbineController_Awake(On.RoR2.LaserTurbineController.orig_Awake orig, LaserTurbineController self) {
             _baseSpinPerKill = self.spinPerKill;
+
             orig(self);
         }
 
