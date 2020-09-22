@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BepInEx;
 using R2API.Utils;
 using RoR2;
@@ -26,8 +27,7 @@ namespace SillyGlasses
         private Inventory _swoocedCurrentInventory;
         private ChildLocator _swoocedChildLocator;
 
-        private bool _engiMinion;
-        private bool _scavGuy;
+        private float _specialItemDistance;
         #endregion
 
         #region UpdatingMaterials
@@ -63,16 +63,7 @@ namespace SillyGlasses
             }
         }
 
-        private float _specialCharacterDistanceMultiplier {
-            get {
-                float engiDistance = Utils.Cfg_EngiTurretItemDistanceMultiplier;
-                float scavDistance = Utils.Cfg_ScavengerItemDistanceMultiplier;
-
-                return _engiMinion ? engiDistance : _scavGuy ? scavDistance : 1;
-            }
-        }
-
-        public void Awake() {
+        void Awake() {
 
             if (_swoocedCharacterModel == null)
             {
@@ -80,12 +71,11 @@ namespace SillyGlasses
             }
         }
 
-        public void Init(SillyGlassesPlugin sillyGlasses_, bool engi_, bool scav_)
+        public void Init(SillyGlassesPlugin sillyGlasses_, float distance_)
         {
             _sillyGlasses = sillyGlasses_;
 
-            _engiMinion = engi_;
-            _scavGuy = scav_;
+            _specialItemDistance = distance_;
             
             SubscribeToEvents(true);
         }
@@ -153,8 +143,10 @@ namespace SillyGlasses
                 return;
             if (CharacterModel_ != _swoocedCharacterModel)
                 return;
-            if (displayRuleGroup_.rules == null)
+            if (displayRuleGroup_.rules == null || displayRuleGroup_.rules.Length == 0) {
+                Destroy(this);
                 return;
+            }
             if (itemIndex_ == ItemIndex.None)
                 return;
 
@@ -273,7 +265,7 @@ namespace SillyGlasses
             instantiatedDisplay.transform.localRotation = displayRuleLocalRotation;
             instantiatedDisplay.transform.localScale = displayRuleLocalScale;
 
-            float forwardDistance = _cfgDistanceMultiplier * moveMult_ * _specialCharacterDistanceMultiplier;
+            float forwardDistance = _cfgDistanceMultiplier * moveMult_ * _specialItemDistance;
             instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * forwardDistance;
             
             if (Utils.Cfg_UseLogs) {

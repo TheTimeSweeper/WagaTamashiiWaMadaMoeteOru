@@ -7,6 +7,7 @@ using RoR2;
 using UnityEngine;
 using R2API.Utils;
 using UnityEngine.Networking;
+using EntityStates.Engi.EngiWeapon;
 
 namespace SillyGlasses {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
@@ -36,6 +37,13 @@ namespace SillyGlasses {
             "ScavLunar2Body",
             "ScavLunar3Body",
             "ScavLunar4Body",
+        };
+
+        private string[] _moonGuyNames = new string[] {
+            "BrotherBody",
+            "BrotherGlassBody",
+            "BrotherHauntBody",
+            "BrotherHurtBody",
         };
 
         #region cheats
@@ -73,25 +81,18 @@ namespace SillyGlasses {
         private void InitConfig() {
             string sectionName = "hope youre having a lovely day";
 
-            //ConfigDefinition moveSpeedDef = new ConfigDefinition(sectionName, "Set Move Speed");
-            //ConfigDescription moveSpeedDesc = new ConfigDescription("Damage to Set");
-            ///ConfigEntry<float> MultAttackSpeed;
-
-            //SetDamage = Config.Bind<float>(AttackSpeedDef, 8.5f, AttackSpeedDesc);
-            ///Utils.Cfg_Int_ItemStackMax = SetMoveSpeed.Value;
-            ///
-
-            Utils.Cfg_ItemStackMax = AbboosBrandBindConfig(sectionName,
-                                                           "ItemStackMax",
-                                                           "Maximum item displays that can be spawned (-1 for infinite).", 
-                                                           2);
+            //wait i just rewrote the config.wrap function
+            Utils.Cfg_ItemStackMax = ConfigDotWrap2(sectionName,
+                                                    "ItemStacksMax",
+                                                    "Maximum item displays that can be spawned (-1 for infinite).", 
+                                                    -1);
 
 #pragma warning disable CS0618 // Type or member is obsolete. sorry I'm lazy
             Utils.Cfg_ItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "ItemDistanceMultiplier",
                             "The distance between extra displays that spawns.",
-                            0.0420f).Value;
+                            0.0520f).Value;
 
             Utils.Cfg_EngiTurretItemDistanceMultiplier =
                 Config.Wrap(sectionName,
@@ -104,6 +105,12 @@ namespace SillyGlasses {
                             "ScavItemDistanceMultiplier",
                             "Items are a little bigger on Scavengers. Spread them out just a tiny bit maybe.",
                             6f).Value;
+
+            Utils.Cfg_ScavengerItemDistanceMultiplier =
+                Config.Wrap(sectionName,
+                            "BrotherItemDistanceMultiplier",
+                            "Items are a little bigger on big Moon Man. Spread.",
+                            3f).Value;
 
             Utils.Cfg_UseLogs =
                 Config.Wrap(sectionName,
@@ -132,12 +139,12 @@ namespace SillyGlasses {
                             58).Value;
         }
 
-        private T AbboosBrandBindConfig<T>(string sectionName, string keyname, string description, T def) {
+        private T ConfigDotWrap2<T>(string sectionName, string keyName, string description, T defaultValue) {
 
-            ConfigDefinition itemStackMaxDef = new ConfigDefinition(sectionName, keyname);
-            ConfigDescription itemstackMaxDesc = new ConfigDescription(description);
+            ConfigDefinition configSectionAndName = new ConfigDefinition(sectionName, keyName);
+            ConfigDescription conigDesc = new ConfigDescription(description);
 
-            ConfigEntry<T> setItemStackMax = Config.Bind<T>(itemStackMaxDef, def, itemstackMaxDesc);
+            ConfigEntry<T> setItemStackMax = Config.Bind<T>(configSectionAndName, defaultValue, conigDesc);
 
             return setItemStackMax.Value;
         }
@@ -169,30 +176,47 @@ namespace SillyGlasses {
         {
             _swooceHandlers.TrimExcess();
 
-            bool isCopiedInventory = self.inventory == _copiedItemsInventory;
-            _copiedItemsInventory = null;
+            float specialItemDistance = getSpecialItemDistance(self);
 
-            bool isScavenger = checkScavengerNames(self);
-
-            if (self.isPlayerControlled || isCopiedInventory || isScavenger) {
+            //monkaS
+            //if (self.isPlayerControlled) {
                 if (self.hurtBoxGroup == null) {
-                    Utils.Log("did it bug?", true);
-                    Utils.Log("if not", true);
-                    Utils.Log("WE DID IT BOIS", true);
                     Utils.Log("DIO'S IS SAFE", true);
-                    Utils.Log(Environment.StackTrace);
-                    //there's still a nullref tho i gotta check out
+                    //wait how long have i been using hurtBoxGroup? probably a better way to find charactermodel
                     return;
                 }
 
                 if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceHandler>() == null) {
                     CharacterSwooceHandler swooceHandler = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceHandler>();
                     _swooceHandlers.Add(swooceHandler);
-                    swooceHandler.Init(this, isCopiedInventory, isScavenger);
+                    swooceHandler.Init(this, specialItemDistance);
                 }
-            }
+            //}
 
             orig(self);
+        }
+
+        private float getSpecialItemDistance(CharacterBody self) {
+
+            bool isCopiedInventory = self.inventory == _copiedItemsInventory;
+            _copiedItemsInventory = null;
+
+            if (isCopiedInventory) {
+                return Utils.Cfg_EngiTurretItemDistanceMultiplier;
+            }
+
+            bool isScavenger = checkScavengerNames(self);
+
+            if (isScavenger) {
+                return Utils.Cfg_ScavengerItemDistanceMultiplier;
+            }
+
+            bool isMoon = checkMoonNames(self);
+            if (isMoon) {
+                return Utils.Cfg_BrotherItemDistanceMultiplier;
+            }
+
+            return 1;
         }
 
         private bool checkScavengerNames(CharacterBody self) 
@@ -207,6 +231,19 @@ namespace SillyGlasses {
             }
 
             return isScavenger;
+        }
+
+        private bool checkMoonNames(CharacterBody self) {
+            bool isMoon = false;
+
+            for (int i = 0; i < _scavGuyNames.Length; i++) {
+
+                if (self.bodyIndex == BodyCatalog.FindBodyIndex(_moonGuyNames[i])) {
+                    isMoon = true;
+                }
+            }
+
+            return isMoon;
         }
 
         public void UpdateItemDisplayHook(On.RoR2.CharacterModel.orig_UpdateItemDisplay orig,
