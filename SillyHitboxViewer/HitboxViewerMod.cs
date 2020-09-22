@@ -4,6 +4,7 @@ using R2API.Utils;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using System;
 
 namespace SillyHitboxViewer {
 
@@ -14,7 +15,11 @@ namespace SillyHitboxViewer {
 
         private HitboxRevealer _hitboxBoxPrefab;
 
+        private HitboxRevealer _hitboxBoxPrefabSphere;
+
         private List<HitboxGroupRevealer> _hitboxes = new List<HitboxGroupRevealer>();
+
+        public static List<HitboxRevealer> _revealerPool;
 
         private void populateAss() {
             AssetBundle MainAss = null;
@@ -23,6 +28,7 @@ namespace SillyHitboxViewer {
                 }
 
             _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInator").GetComponent<HitboxRevealer>();
+            _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorSphere").GetComponent<HitboxRevealer>();
         }
 
         private void doConfig() {
@@ -31,8 +37,13 @@ namespace SillyHitboxViewer {
             HitboxRevealer.cfg_BoxAlpha =
                 Config.Wrap("be safe",
                             "hitbox alpha",
-                            "under 0.5 is about aight",
-                            0.23f).Value;
+                            "around 0.2 is ok. don't make it higher if you have epilepsy",
+                            0.22f).Value;
+            HitboxRevealer.MercSoften =
+                Config.Wrap("be safe",
+                            "tone down merc",
+                            "make merc's hitboxes lighter cause he's a crazy fool",
+                            true).Value;
         }
 
         void Awake () {
@@ -60,7 +71,7 @@ namespace SillyHitboxViewer {
                 hitboxGroupRevealer = self.hitBoxGroup.gameObject.AddComponent<HitboxGroupRevealer>();
                 _hitboxes.Add(hitboxGroupRevealer);
 
-                hitboxGroupRevealer.init(self.hitBoxGroup, _hitboxes, _hitboxBoxPrefab);
+                hitboxGroupRevealer.init(self.hitBoxGroup, _hitboxes);
             }
 
             hitboxGroupRevealer.reveal(true);
@@ -68,7 +79,7 @@ namespace SillyHitboxViewer {
             return didAHit;
         }
 
-        #region you nothing's easy you gotta practice and lose and keep losing and keep losing
+        #region well nothing's easy you gotta practice and lose and keep losing and keep losing
         private void BasicMeleeAttack_AuthorityFixedUpdate(On.EntityStates.BasicMeleeAttack.orig_AuthorityFixedUpdate orig, EntityStates.BasicMeleeAttack self) {
             orig(self);
         }
@@ -110,18 +121,34 @@ namespace SillyHitboxViewer {
             orig(self);
         }
         #endregion
-
-
+        
         void Update() {
-            if (Input.GetKeyDown(KeyCode.U)) {
-                HitboxRevealer.cfg_BoxAlpha += 0.01f;
-                Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
+            if (Input.GetKeyDown(KeyCode.I)) {
+
+                setTimeScale(Time.timeScale + 0.1f);
+
+                //HitboxRevealer.cfg_BoxAlpha += 0.01f;
+                //Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
             }
-            if (Input.GetKeyDown(KeyCode.J)) {
-                HitboxRevealer.cfg_BoxAlpha -= 0.01f;
-                Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
+            if (Input.GetKeyDown(KeyCode.K)) {
+
+                setTimeScale(Time.timeScale - 0.1f);
+
+                //HitboxRevealer.cfg_BoxAlpha -= 0.01f;
+                //Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
+            }
+            if (Input.GetKeyDown(KeyCode.O)) {
+                setTimeScale(1);
+            }
+            if (Input.GetKeyDown(KeyCode.L)) {
+                setTimeScale(0);
             }
         }
 
+        private void setTimeScale(float tim) {
+            Time.timeScale = tim;
+
+            Chat.AddMessage($"tim: {Time.timeScale}");
+        }
     }
 }

@@ -7,42 +7,50 @@ namespace SillyHitboxViewer {
 
         public HitBoxGroup hitboxGroup { get; set; }
         private List<HitboxGroupRevealer> _hitboxesList;
-        private HitboxRevealer _hitboxPrefab;
+        private bool _isMerc;
 
         private List<HitboxRevealer> _revealers = new List<HitboxRevealer>();
 
-        private int revealCount;
+        private int revealBufferCount;
 
-        void FixedUpdate() {
-            if (revealCount == 0)
-                reveal(false);
-            revealCount -= 1;
-        }
-
-        public void init(HitBoxGroup hitboxGroup_, List<HitboxGroupRevealer> hitboxesList, HitboxRevealer hitboxPrefab) {
+        public void init(HitBoxGroup hitboxGroup_, List<HitboxGroupRevealer> hitboxesList, bool isMerc) {
             hitboxGroup = hitboxGroup_;
             _hitboxesList = hitboxesList;
-            _hitboxPrefab = hitboxPrefab;
 
             addVisaulizinators();
         }
 
         private void addVisaulizinators() {
+
             for (int i = 0; i < hitboxGroup.hitBoxes.Length; i++) {
-                _revealers.Add (Instantiate(_hitboxPrefab, hitboxGroup.hitBoxes[i].transform, false));
+
+                HitboxViewerMod.addPooledRevealer(hitboxGroup.hitBoxes[i].transform);
+
+                HitboxRevealer rev = Instantiate(_hitboxPrefab, hitboxGroup.hitBoxes[i].transform, false).init(_isMerc);
+                
+                _revealers.Add (rev);
             }
         }
 
         public void reveal(bool active) {
-            revealCount = 3;
+            revealBufferCount = 3;
             for (int i = 0; i < _revealers.Count; i++) {
                 _revealers[i].show(active);
             }
         }
 
+        void FixedUpdate() {
+            if (revealBufferCount == 0)
+                reveal(false);
+            revealBufferCount -= 1;
+        }
+
         void OnDestroy() {
             reveal(false);
+            revealBufferCount = -1;
+
             _hitboxesList.Remove(this);
+            _revealers.Clear();
         }
     }
 }
