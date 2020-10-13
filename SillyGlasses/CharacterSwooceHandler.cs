@@ -5,6 +5,7 @@ using BepInEx;
 using R2API.Utils;
 using RoR2;
 using UnityEngine;
+using UnityEngineInternal;
 
 namespace SillyGlasses
 {
@@ -31,7 +32,7 @@ namespace SillyGlasses
         #endregion
 
         #region UpdatingMaterials
-        private List<ItemDisplay> _allItemDisplays = new List<ItemDisplay>();
+        private List<ItemDisplay> _allSillyItemDisplays = new List<ItemDisplay>();
 
         private MaterialPropertyBlock _propertyStorage = new MaterialPropertyBlock();
 
@@ -143,10 +144,8 @@ namespace SillyGlasses
                 return;
             if (CharacterModel_ != _swoocedCharacterModel)
                 return;
-            if (displayRuleGroup_.rules == null || displayRuleGroup_.rules.Length == 0) {
-                Destroy(this);
+            if (displayRuleGroup_.rules == null || displayRuleGroup_.rules.Length == 0) 
                 return;
-            }
             if (itemIndex_ == ItemIndex.None)
                 return;
 
@@ -172,8 +171,6 @@ namespace SillyGlasses
             //(sadly i'm not rad enough to only destroy what is needed to be destroyed. i did the more retard friendly method)
             if (difference < 0) 
             {
-                //Utils.Log($"{itemIndex_} diff: {difference} = current: {currentCount} - orig: {previousTotalItemDisplays}");
-
                 //find the glassparent and destroy it
                 if (_instantiatedSillyGlassParents.ContainsKey(itemIndex_) && _instantiatedSillyGlassParents[itemIndex_] != null)
                 {
@@ -210,12 +207,13 @@ namespace SillyGlasses
             //all clear, we're adding, let's get to swoocing
             //
 
-            for (int i = 0; i < difference; i++)
-            {
-                if (_cfgMaxItems != -1 && sillyItemDisplays + 1 >= _cfgMaxItems)
+            for (int i = 0; i < difference; i++) {
+
+                int currentCountIterated = previousTotalItemDisplays + i;
+
+                if (_cfgMaxItems != -1 && currentCountIterated + 1 >= _cfgMaxItems)
                     return;
             
-                int currentCountIterated = previousTotalItemDisplays + i;
 
                 //Utils.Log($"swoocing new prefab {itemIndex_}: {i} of {extraItemDisplays} ");
                 _instantiatedSillyGlassAmounts[itemIndex_]++;
@@ -279,7 +277,7 @@ namespace SillyGlasses
             }
             
             ItemDisplay itemDisplay = instantiatedDisplay.GetComponent<ItemDisplay>();
-            _allItemDisplays.Add(itemDisplay);
+            _allSillyItemDisplays.Add(itemDisplay);
 
             return instantiatedDisplay;
         }
@@ -354,8 +352,8 @@ namespace SillyGlasses
         #endregion
 
         #region UpdatingMaterials
-        private void onUpdateMaterials(CharacterModel characterModel_) {
-
+        private void onUpdateMaterials(CharacterModel characterModel_) 
+        {
             if (characterModel_ != _swoocedCharacterModel)
                 return;
 
@@ -401,15 +399,22 @@ namespace SillyGlasses
 
         private void pseudoUpdateMaterials(CharacterModel characterModel_) {
 
-            _allItemDisplays.TrimExcess();
+            _allSillyItemDisplays.RemoveAll((item) => {
+                return item == null;
+            });
+
+            if(_allSillyItemDisplays.Count <= 0) {
+                return;
+            }
 
             float fade = characterModel_.GetFieldValue<float>("fade");
 
-            for (int i = 0; i < _allItemDisplays.Count; i++) {
+            for (int i = 0; i < _allSillyItemDisplays.Count; i++) {
 
-                ItemDisplay itemDisplay = _allItemDisplays[i];
+                ItemDisplay itemDisplay = _allSillyItemDisplays[i];
                 if(itemDisplay == null) {
-                    Utils.Log($"itemDisplay {i} is null");
+
+                    //Utils.Log($"itemDisplay {i} is null");
                     continue;
                 }
 

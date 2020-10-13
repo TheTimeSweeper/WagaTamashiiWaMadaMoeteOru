@@ -12,7 +12,7 @@ using EntityStates.Engi.EngiWeapon;
 namespace SillyGlasses {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.0.1")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.1.0")]
     public class SillyGlassesPlugin : BaseUnityPlugin
     {
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
@@ -44,6 +44,7 @@ namespace SillyGlasses {
             "BrotherGlassBody",
             "BrotherHauntBody",
             "BrotherHurtBody",
+            "MithrixBody",
         };
 
         #region cheats
@@ -81,19 +82,20 @@ namespace SillyGlasses {
         private void InitConfig() {
             string sectionName = "hope youre having a lovely day";
 
-            //wait i just rewrote the config.wrap function
-            Utils.Cfg_ItemStackMax = ConfigDotWrap2(sectionName,
-                                                    "ItemStacksMax",
-                                                    "Maximum item displays that can be spawned (-1 for infinite).", 
-                                                    -1);
+            //wait i just rewrote the config.wrap function to the T (no pun intended)
+            Utils.Cfg_ItemStackMax = 
+                ConfigWrapBind(sectionName,
+                               "ItemStacksMax", 
+                               "Maximum item displays that can be spawned (-1 for infinite).",  
+                               -1);
 
-#pragma warning disable CS0618 // Type or member is obsolete. sorry I'm lazy
+#pragma warning disable CS0618 // Type or member is obsolete
+
             Utils.Cfg_ItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "ItemDistanceMultiplier",
                             "The distance between extra displays that spawns.",
-                            0.0520f).Value;
-
+                            0.0480f).Value;
             Utils.Cfg_EngiTurretItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "EngiTurretItemDistanceMultiplier",
@@ -103,14 +105,14 @@ namespace SillyGlasses {
             Utils.Cfg_ScavengerItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "ScavItemDistanceMultiplier",
-                            "Items are a little bigger on Scavengers. Spread them out just a tiny bit maybe.",
+                            "Items are a also bigger on Scavengers I think",
                             6f).Value;
 
-            Utils.Cfg_ScavengerItemDistanceMultiplier =
+            Utils.Cfg_BrotherItemDistanceMultiplier =
                 Config.Wrap(sectionName,
                             "BrotherItemDistanceMultiplier",
-                            "Items are a little bigger on big Moon Man. Spread.",
-                            3f).Value;
+                            "Big Spikes.",
+                            2f).Value;
 
             Utils.Cfg_UseLogs =
                 Config.Wrap(sectionName,
@@ -137,20 +139,22 @@ namespace SillyGlasses {
                             "Cheat Item2",
                             "Press f11 and f10 to add/remove this item boringly (58 for magazines)",
                             58).Value;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
-        private T ConfigDotWrap2<T>(string sectionName, string keyName, string description, T defaultValue) {
+        private T ConfigWrapBind<T>(string sectionName, string keyName, string description, T defaultValue) {
 
             ConfigDefinition configSectionAndName = new ConfigDefinition(sectionName, keyName);
-            ConfigDescription conigDesc = new ConfigDescription(description);
+            ConfigDescription configDesc = new ConfigDescription(description);
 
-            ConfigEntry<T> setItemStackMax = Config.Bind<T>(configSectionAndName, defaultValue, conigDesc);
+            ConfigEntry<T> setItemStackMax = Config.Bind<T>(configSectionAndName, defaultValue, configDesc);
 
             return setItemStackMax.Value;
         }
 
         #endregion
 
+        //check if this inventory is a turret
         private void CopyItemsHook(On.RoR2.Inventory.orig_CopyItemsFrom orig, Inventory self, Inventory other) 
         {
             CharacterBody copiedItemsBody = null;
@@ -174,10 +178,13 @@ namespace SillyGlasses {
 
         private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) 
         {
-            _swooceHandlers.TrimExcess();
+            _swooceHandlers.RemoveAll((handler) => {
+                return handler == null;
+            });
 
             float specialItemDistance = getSpecialItemDistance(self);
 
+            //make this happen once on init rather than using GetComponent every time an inventory changes
             //monkaS
             //if (self.isPlayerControlled) {
                 if (self.hurtBoxGroup == null) {
@@ -206,7 +213,6 @@ namespace SillyGlasses {
             }
 
             bool isScavenger = checkScavengerNames(self);
-
             if (isScavenger) {
                 return Utils.Cfg_ScavengerItemDistanceMultiplier;
             }
@@ -236,7 +242,7 @@ namespace SillyGlasses {
         private bool checkMoonNames(CharacterBody self) {
             bool isMoon = false;
 
-            for (int i = 0; i < _scavGuyNames.Length; i++) {
+            for (int i = 0; i < _moonGuyNames.Length; i++) {
 
                 if (self.bodyIndex == BodyCatalog.FindBodyIndex(_moonGuyNames[i])) {
                     isMoon = true;
@@ -279,38 +285,7 @@ namespace SillyGlasses {
 
             updateMaterialsEvent?.Invoke(self);
         }
-        #region allyouhadtodowasaskhowtogetfuckinprivatevariablesgoddamn
-        private void UpdateForCameraHook(On.RoR2.CharacterModel.orig_UpdateForCamera orig, CharacterModel self, CameraRigController cameraRigController) 
-        {
-            orig(self, cameraRigController);
 
-            updateCameraEvent?.Invoke(self, cameraRigController);
-        }
-
-        private void RefreshObstructorsForCameraHook(On.RoR2.CharacterModel.orig_RefreshObstructorsForCamera orig, CameraRigController cameraRigController) 
-        {
-            orig(cameraRigController);
-
-            Vector3 position = cameraRigController.transform.position;
-
-            _swooceHandlers.TrimExcess();
-
-            for (int i = 0; i < _swooceHandlers.Count; i++) {
-
-                if (_swooceHandlers[i] == null)
-                    continue;
-
-                CharacterSwooceHandler swooceHandler = _swooceHandlers[i];
-
-                if (cameraRigController.enableFading) {
-                    float nearestHurtBoxDistance = (position - swooceHandler.swoocedCharacterModel.transform.position).magnitude;
-                    swooceHandler.pseudoFade = Mathf.Clamp01(Util.Remap(nearestHurtBoxDistance, cameraRigController.fadeStartDistance, cameraRigController.fadeEndDistance, 0f, 1f));
-                } else {
-                    swooceHandler.pseudoFade = 1f;
-                }
-            }
-        }
-        #endregion
         #region cheats
         public void Update()
         {
@@ -360,7 +335,7 @@ namespace SillyGlasses {
         {
             Transform transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
 
-            PickupIndex pickupIndex = new PickupIndex();
+            PickupIndex pickupIndex;
 
             if (item > -1)
             {
