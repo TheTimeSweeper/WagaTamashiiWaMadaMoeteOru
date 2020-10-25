@@ -12,9 +12,11 @@ namespace SillyHitboxViewer {
 
         private MaterialPropertyBlock _matProperties;
         private Color _clr;
-        private bool _isMerc;
+        private float setAlpha;
 
         void Awake() {
+
+            Debug.Log("this happens second");
 
             _matProperties = new MaterialPropertyBlock();
 
@@ -22,7 +24,7 @@ namespace SillyHitboxViewer {
 
             _clr = Random.ColorHSV(0.00f, 1.00f, 0.5f, 0.5f, 0.7f, 0.7f);
             
-            _clr.a = _isMerc && MercSoften ? 0.1f : cfg_BoxAlpha;
+            _clr.a = setAlpha;
 
             _matProperties.SetColor("_Color", _clr);
 
@@ -30,7 +32,14 @@ namespace SillyHitboxViewer {
         }
 
         public HitboxRevealer init(bool isMerc) {
-            _isMerc = isMerc;
+
+            Debug.Log("this happens first");
+
+            setAlpha = cfg_BoxAlpha;
+            if (isMerc && MercSoften) {
+                setAlpha = 0.1f;
+            }
+            
             return this;
         }
 

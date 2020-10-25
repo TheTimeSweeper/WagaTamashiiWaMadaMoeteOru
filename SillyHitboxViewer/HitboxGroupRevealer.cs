@@ -13,10 +13,15 @@ namespace SillyHitboxViewer {
 
         private int revealBufferCount;
 
-        public void init(HitBoxGroup hitboxGroup_, List<HitboxGroupRevealer> hitboxesList, bool isMerc) {
+        public void init(HitBoxGroup hitboxGroup_, List<HitboxGroupRevealer> hitboxesList) {
             hitboxGroup = hitboxGroup_;
             _hitboxesList = hitboxesList;
 
+            var bod = GetComponent<CharacterBody>();
+            Debug.Log($"bod: {bod}");
+            if (bod) {
+                _isMerc = GetComponent<CharacterBody>().bodyIndex == BodyCatalog.FindBodyIndex("Mercenary");
+            }
             addVisaulizinators();
         }
 
@@ -24,10 +29,10 @@ namespace SillyHitboxViewer {
 
             for (int i = 0; i < hitboxGroup.hitBoxes.Length; i++) {
 
-                HitboxViewerMod.addPooledRevealer(hitboxGroup.hitBoxes[i].transform);
-
                 HitboxRevealer rev = Instantiate(_hitboxPrefab, hitboxGroup.hitBoxes[i].transform, false).init(_isMerc);
-                
+
+                //HitboxViewerMod.addPooledRevealer(hitboxGroup.hitBoxes[i].transform);
+
                 _revealers.Add (rev);
             }
         }
