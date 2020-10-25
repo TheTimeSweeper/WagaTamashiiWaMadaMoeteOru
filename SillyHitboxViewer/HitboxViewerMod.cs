@@ -13,13 +13,18 @@ namespace SillyHitboxViewer {
     [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Melee Hitbox Viewer", "0.0.1")]
     public class HitboxViewerMod : BaseUnityPlugin {
 
+        public static Queue<HitboxRevealer> _revealerPool;
+
+        public static HitboxViewerMod instance;
+
         private HitboxRevealer _hitboxBoxPrefab;
 
         private HitboxRevealer _hitboxBoxPrefabSphere;
 
-        private List<HitboxGroupRevealer> _hitboxes = new List<HitboxGroupRevealer>();
+        private List<HitboxGroupRevealer> _hitboxGroupRevealers = new List<HitboxGroupRevealer>();
 
-        public static List<HitboxRevealer> _revealerPool;
+        private static int poolStart = 100;
+        private static int totalPool = 0;
 
         private void populateAss() {
             AssetBundle MainAss = null;
@@ -42,18 +47,28 @@ namespace SillyHitboxViewer {
             HitboxRevealer.MercSoften =
                 Config.Wrap("be safe",
                             "tone down merc",
-                            "make merc's hitboxes lighter cause he's a crazy fool",
+                            "make merc's hitboxes lighter cause he's a crazy fool (and might actually hurt your eyes)",
                             true).Value;
+            Utils.useDebug =
+                Config.Wrap("be safe",
+                            "debug",
+                            "welcom 2m y twisted mind",
+                            false).Value;
         }
 
         void Awake () {
+
+            instance = this;
 
             populateAss();
             if (_hitboxBoxPrefab == null) {
                 Debug.LogError("hitboxBoxPrefab not assigned. Timesweeper did an oops");
                 return;
             }
+
             doConfig();
+
+            createPool();
 
             On.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
         }
@@ -62,21 +77,59 @@ namespace SillyHitboxViewer {
 
             bool didAHit = orig(self, hitResults);
 
-            HitboxGroupRevealer hitboxGroupRevealer = _hitboxes.Find((revealer) => {
+            HitboxGroupRevealer hitboxGroupRevealer = _hitboxGroupRevealers.Find((revealer) => {
                 return revealer != null && revealer.hitboxGroup == self.hitBoxGroup;
             });
 
             if (hitboxGroupRevealer == null) {
 
                 hitboxGroupRevealer = self.hitBoxGroup.gameObject.AddComponent<HitboxGroupRevealer>();
-                _hitboxes.Add(hitboxGroupRevealer);
+                _hitboxGroupRevealers.Add(hitboxGroupRevealer);
 
-                hitboxGroupRevealer.init(self.hitBoxGroup, _hitboxes);
+                hitboxGroupRevealer.init(self.hitBoxGroup, _hitboxGroupRevealers);
             }
 
             hitboxGroupRevealer.reveal(true);
 
             return didAHit;
+        }
+
+        private void createPool() {
+
+            for (int i = 0; i < poolStart; i++) {
+                createPooledRevealer();
+            }
+        }
+
+        private void createPooledRevealer() {
+
+            HitboxRevealer rev = Instantiate(_hitboxBoxPrefab, transform);
+
+            _revealerPool.Enqueue(rev);
+            totalPool++;
+        }
+
+        public static HitboxRevealer requestPooledRevealer() {
+
+            if (_revealerPool.Count <= 0) {
+                instance.createPooledRevealer();
+                Utils.Log($"pool full. adding {totalPool}");
+
+            }
+
+            return _revealerPool.Dequeue();
+        }
+
+        public static void returnPooledRevealers(HitboxRevealer[] revs) {
+            //if revs[i] == null count killed revealers
+            for (int i = 0; i < revs.Length; i++) {
+                returnPooledRevealer(revs[i]);
+            }
+        }
+
+        public static void returnPooledRevealer(HitboxRevealer rev) {
+            rev.transform.parent = transform;
+            _revealerPool.Enqueue(rev);
         }
 
         #region well nothing's easy you gotta practice and lose and keep losing and keep losing
@@ -97,16 +150,16 @@ namespace SillyHitboxViewer {
 
             Debug.Log("uh");
 
-            HitboxGroupRevealer hitboxGroupRevealer = _hitboxes.Find((revealer) => { 
+            HitboxGroupRevealer hitboxGroupRevealer = _hitboxGroupRevealers.Find((revealer) => { 
                 return revealer != null && revealer.transform == attack.hitBoxGroup.transform; 
             });
 
             if (hitboxGroupRevealer == null) {
 
                 hitboxGroupRevealer = attack.hitBoxGroup.gameObject.AddComponent<HitboxGroupRevealer>();
-                _hitboxes.Add(hitboxGroupRevealer);
+                _hitboxGroupRevealers.Add(hitboxGroupRevealer);
 
-                hitboxGroupRevealer.init(attack.hitBoxGroup, _hitboxes, _hitboxBoxPrefab);
+                hitboxGroupRevealer.init(attack.hitBoxGroup, _hitboxGroupRevealers, _hitboxBoxPrefab);
             }
 
             bool hitboxActive = animator && animator.GetFloat(mecanimHitboxActiveParameter) > 0.1f;
@@ -121,8 +174,13 @@ namespace SillyHitboxViewer {
             orig(self);
         }
         #endregion
-        
+
+        #region debug
         void Update() {
+
+            if (!Utils.useDebug)
+                return;
+
             if (Input.GetKeyDown(KeyCode.I)) {
 
                 setTimeScale(Time.timeScale + 0.1f);
@@ -150,5 +208,6 @@ namespace SillyHitboxViewer {
 
             Chat.AddMessage($"tim: {Time.timeScale}");
         }
+        #endregion
     }
 }

@@ -16,30 +16,34 @@ namespace SillyHitboxViewer {
 
         void Awake() {
 
-            Debug.Log("this happens second");
-
             _matProperties = new MaterialPropertyBlock();
 
             rend.GetPropertyBlock(_matProperties);
 
-            _clr = Random.ColorHSV(0.00f, 1.00f, 0.5f, 0.5f, 0.7f, 0.7f);
-            
-            _clr.a = setAlpha;
+            rend.enabled = false;
 
-            _matProperties.SetColor("_Color", _clr);
-
-            rend.SetPropertyBlock(_matProperties);
         }
 
-        public HitboxRevealer init(bool isMerc) {
+        public HitboxRevealer init(Transform transform, bool isMerc) {
 
-            Debug.Log("this happens first");
+            transform.parent = transform;
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
 
             setAlpha = cfg_BoxAlpha;
             if (isMerc && MercSoften) {
                 setAlpha = 0.1f;
             }
-            
+
+            _clr = Random.ColorHSV(0.00f, 1.00f, 0.5f, 0.5f, 0.7f, 0.7f);
+
+            _clr.a = setAlpha;
+
+            _matProperties.SetColor("_Color", _clr);
+
+            rend.SetPropertyBlock(_matProperties);
+
             return this;
         }
 
