@@ -10,6 +10,30 @@ using UnityEngine.Networking;
 using EntityStates.Engi.EngiWeapon;
 
 namespace SillyGlasses {
+
+    public class SillyItemDisplayRules : List<SillyItemDisplayRule> {
+        
+    }
+
+    public enum SillyItemDisplayBehavior {
+        NONE,
+        BOTH_WAYS,
+        SCATTER,
+        //SPIRAL
+        //GROW
+    }
+
+    public class SillyItemDisplayRule {
+        public string character;
+
+        public ItemIndex item;
+
+        public Vector3 positionShift;
+        public Vector3 rotationShift;
+        public float distanceMult = 1;
+        public SillyItemDisplayBehavior specialBehavior;
+    }
+
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
     [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.1.0")]

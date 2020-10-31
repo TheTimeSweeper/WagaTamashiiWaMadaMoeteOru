@@ -135,8 +135,8 @@ namespace SillyGlasses
 
         #region StackingDisplays
         private void PseudoInstantiateDisplayRuleGroup(CharacterModel CharacterModel_,
-                                                      DisplayRuleGroup displayRuleGroup_,
-                                                      ItemIndex itemIndex_)
+                                                       DisplayRuleGroup displayRuleGroup_,
+                                                       ItemIndex itemIndex_)
         {
             //check if it breaks
             //pls don't break
@@ -247,7 +247,7 @@ namespace SillyGlasses
         }
 
         //copied from CharacterModel.ParentedPrefabDisplay.Apply
-        private GameObject InstantiateSillyItem(ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform bodyDisplayParent_, int moveMult_)
+        private GameObject InstantiateSillyItem(ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform bodyDisplayParent_, int instanceMult_)
         {
             GameObject prefab = displayRule_.followerPrefab;
             if (prefab == null)
@@ -263,11 +263,11 @@ namespace SillyGlasses
             instantiatedDisplay.transform.localRotation = displayRuleLocalRotation;
             instantiatedDisplay.transform.localScale = displayRuleLocalScale;
 
-            float forwardDistance = _cfgDistanceMultiplier * moveMult_ * _specialItemDistance;
+            float forwardDistance = instanceMult_ * _cfgDistanceMultiplier * _specialItemDistance;
             instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * forwardDistance;
             
             if (Utils.Cfg_UseLogs) {
-                instantiatedDisplay.name = $"{instantiatedDisplay.name} {moveMult_}";
+                instantiatedDisplay.name = $"{instantiatedDisplay.name} {instanceMult_}";
             }
 
             LimbMatcher limbMatcher = instantiatedDisplay.GetComponent<LimbMatcher>();
