@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace AcridHitbox {
 
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)]
+    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)] 
     //TODO: see if only host needs it
     [BepInDependency("com.bepis.r2api")]
     [BepInPlugin("com.TheTimeSweeper.AcridHitboxBuff", "Acrid Slash Hitbox Buff", "1.0.0")]
@@ -67,7 +67,7 @@ namespace AcridHitbox {
                                        "orig is 17.8").Value;
 
             cfg_newHtboxPosition = new Vector3(positX, positY, positZ);
-
+             
             cfg_keepVisuals = Config.Bind(sectionName,
                                       "disable beef visuals",
                                       false,
@@ -117,7 +117,7 @@ namespace AcridHitbox {
             slash3.localRotation = Quaternion.Euler(282, 180, 90);
 
             Transform mouth = childLocator.FindChild("MouthMuzzle");
-            slash2.localScale = new Vector3(1.2f, 1, 1.2f);
+            mouth.localScale = new Vector3(1.2f, 1, 1.2f);
         }
     }
 }
