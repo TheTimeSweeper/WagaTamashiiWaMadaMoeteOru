@@ -4,27 +4,60 @@ using R2API.Utils;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using RiskOfOptions;
 using System;
 
 namespace SillyHitboxViewer {
 
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Melee Hitbox Viewer", "0.0.1")]
+    [BepInDependency("com.rune580.riskofoptions")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "0.4.0")]
     public class HitboxViewerMod : BaseUnityPlugin {
-
-        public static Queue<HitboxRevealer> _revealerPool;
 
         public static HitboxViewerMod instance;
 
-        private HitboxRevealer _hitboxBoxPrefab;
-
-        private HitboxRevealer _hitboxBoxPrefabSphere;
+        public static BepInEx.Logging.ManualLogSource log;
 
         private List<HitboxGroupRevealer> _hitboxGroupRevealers = new List<HitboxGroupRevealer>();
+        private Queue<HitboxRevealer> _revealerPool = new Queue<HitboxRevealer>();
 
-        private static int poolStart = 100;
+        private List<HitboxRevealer> _hurtboxRevealers = new List<HitboxRevealer>();
+        private static int poolStart = 50;
         private static int totalPool = 0;
+
+        private HitboxRevealer _hitboxBoxPrefab; 
+        private HitboxRevealer _hitboxNotBoxPrefab;
+        private HitboxRevealer _hitboxNotBoxPrefabTall;
+
+
+        void Awake() {
+
+            instance = this;
+
+            log = Logger;
+
+            populateAss();
+
+            if (_hitboxBoxPrefab == null || _hitboxNotBoxPrefabTall == null || _hitboxNotBoxPrefab == null) { 
+                Logger.LogError($"unable to get a hitboxprefab from the bundle. Timesweeper did an oops | {_hitboxBoxPrefab != null}, {_hitboxNotBoxPrefabTall != null}, {_hitboxNotBoxPrefab != null}");
+                return;
+            }
+
+            doConfig();
+
+            doOptions();
+
+            createPool();
+
+            On.RoR2.BodyCatalog.Init += BodyCatalog_Init;
+
+            On.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
+
+            if (Utils.cfg_doHurtbox) {
+                On.RoR2.HurtBox.Awake += HurtBox_Awake;
+            }
+        }
 
         private void populateAss() {
             AssetBundle MainAss = null;
@@ -32,45 +65,108 @@ namespace SillyHitboxViewer {
                     MainAss = AssetBundle.LoadFromStream(assetStream);
                 }
 
-            _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInator").GetComponent<HitboxRevealer>();
-            _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorSphere").GetComponent<HitboxRevealer>();
+            _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInator")?.GetComponent<HitboxRevealer>();
+            _hitboxNotBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorSphere")?.GetComponent<HitboxRevealer>();
+            _hitboxNotBoxPrefabTall = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorCapsule")?.GetComponent<HitboxRevealer>();
         }
 
+        #region config
         private void doConfig() {
 
-            #pragma warning disable CS0618 // Type or member is obsolete. sorry I'm lazy
             HitboxRevealer.cfg_BoxAlpha =
-                Config.Wrap("be safe",
+                Config.Bind("hitbox",
                             "hitbox alpha",
-                            "around 0.2 is ok. don't make it higher if you have epilepsy",
-                            0.22f).Value;
-            HitboxRevealer.MercSoften =
-                Config.Wrap("be safe",
+                            0.22f,
+                            "0-1. Around 0.22 is ok. don't make it higher if you have epilepsy").Value;
+
+            HitboxRevealer.cfg_mercSoften =
+                Config.Bind("hitbox",
                             "tone down merc",
-                            "make merc's hitboxes lighter cause he's a crazy fool (and might actually hurt your eyes)",
-                            true).Value;
-            Utils.useDebug =
-                Config.Wrap("be safe",
+                            true,
+                            "Make merc's hitboxes lighter cause he's a crazy fool (and might actually hurt your eyes)\n - overrides alpha brightness to 0.1 and keeps colors cool blue-ish range").Value;
+
+            Utils.cfg_softenedCharactersString =
+                Config.Bind("hitbox",
+                            "tone-down characters",
+                            "MercBody, MinerBody, MiniMushroomBody, NemesisEnforcerBody",
+                            "The wacky characters who need softening, separated by commas.\n - Character's internal names are: CommandoBody, HuntressBody, ToolbotBody, EngiBody, MageBody, MercBody, TreebotBody, LoaderBody, CrocoBody, Captainbody\n - Use the DebugToolkit mod's body_list command to see a complete list (including enemies and moddeds)").Value;
+
+            HitboxRevealer.cfg_HurtAlpha =
+                Config.Bind("hurtbox",
+                            "hurtbox capsule alpha",
+                            0.169f,
+                            "0-1. Around 0.16 is ok.").Value;
+
+            Utils.cfg_doHurtbox =
+                Config.Bind("hurtbox",
+                            "show hurtboxes",
+                            true,
+                            "set false to disable hurtbox viewer.").Value;
+
+            Utils.cfg_toggleKey =
+                Config.Bind("pls be safe",
+                            "hitbox toggle Key",
+                            KeyCode.Semicolon,
+                            "press this key to toggle hitbox viewer on and off in game").Value;
+
+            Utils.cfg_useDebug =
+                Config.Bind("pls be safe",
                             "debug",
-                            "welcom 2m y twisted mind",
-                            false).Value;
+                            false,
+                            "welcom 2m y twisted mind").Value;
+
         }
+        #endregion
 
-        void Awake () {
+        #region options
+        private void doOptions() {
 
-            instance = this;
+            ModSettingsManager.setPanelTitle("Hitbox Viewer");
+            ModSettingsManager.setPanelDescription("Enable/disable hitbox or hurtbox viewer");
 
-            populateAss();
-            if (_hitboxBoxPrefab == null) {
-                Debug.LogError("hitboxBoxPrefab not assigned. Timesweeper did an oops");
-                return;
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hitboxes", "self explanatory"));
+            ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hitboxes"), new UnityEngine.Events.UnityAction<bool>(hitboxBoolEvent));
+
+
+            string hitboxDisable = ModSettingsManager.getOptionValue("Disable Hitboxes");
+            if (!string.IsNullOrEmpty(hitboxDisable)) {
+                HitboxRevealer.showingHitBoxes = hitboxDisable == "0";
+                Debug.LogWarning($"getting hitbox setting {hitboxDisable} setting {HitboxRevealer.showingHitBoxes}");
             }
 
-            doConfig();
+            if (Utils.cfg_doHurtbox) {
+                ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hurtboxes", "self explanatory2"));
+                ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hurtboxes"), new UnityEngine.Events.UnityAction<bool>(hurtboxBoolEvent));
 
-            createPool();
+                string nigg = ModSettingsManager.getOptionValue("Disable Hurtboxes");
+                if (!string.IsNullOrEmpty(nigg)) {
+                    HitboxRevealer.showingHurtBoxes = nigg == "0";
+                    Debug.LogWarning($"getting Hurtbox setting {hitboxDisable} setting {HitboxRevealer.showingHurtBoxes}");
+                }
+            }
+        }
 
-            On.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
+        public void hitboxBoolEvent(bool active) {
+
+            HitboxRevealer.showingHitBoxes = active;
+
+            Debug.LogWarning($"option set {active}, showing hitboxes {HitboxRevealer.showingHitBoxes}");
+        }
+        public void hurtboxBoolEvent(bool active) {
+
+            HitboxRevealer.showingHurtBoxes = active;
+
+            Debug.LogWarning($"option set {active}, showing hurtboxes{HitboxRevealer.showingHurtBoxes}");
+            showAllHurtboxes();
+
+        }
+        #endregion
+
+        #region hooks
+        private void BodyCatalog_Init(On.RoR2.BodyCatalog.orig_Init orig) {
+            orig();
+
+            Utils.setSoftenedCharacters();
         }
 
         private bool OverlapAttack_Fire(On.RoR2.OverlapAttack.orig_Fire orig, OverlapAttack self, List<HealthComponent> hitResults) {
@@ -86,7 +182,7 @@ namespace SillyHitboxViewer {
                 hitboxGroupRevealer = self.hitBoxGroup.gameObject.AddComponent<HitboxGroupRevealer>();
                 _hitboxGroupRevealers.Add(hitboxGroupRevealer);
 
-                hitboxGroupRevealer.init(self.hitBoxGroup, _hitboxGroupRevealers);
+                hitboxGroupRevealer.init(self.hitBoxGroup, self.attacker);
             }
 
             hitboxGroupRevealer.reveal(true);
@@ -94,6 +190,22 @@ namespace SillyHitboxViewer {
             return didAHit;
         }
 
+        private void HurtBox_Awake(On.RoR2.HurtBox.orig_Awake orig, HurtBox self) {
+            orig(self);
+
+            if (self.collider is CapsuleCollider) {
+                _hurtboxRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initHurtbox(self.collider.transform, self.collider as CapsuleCollider));
+            }
+            if (self.collider is SphereCollider) {
+                _hurtboxRevealers.Add(Instantiate(_hitboxNotBoxPrefab).initHurtbox(self.collider.transform, self.collider as SphereCollider));
+            }
+            if (self.collider is BoxCollider) {
+                _hurtboxRevealers.Add(Instantiate(_hitboxBoxPrefab).initHurtbox(self.collider.transform, self.collider as BoxCollider));
+            }
+        }
+        #endregion
+
+        #region pool
         private void createPool() {
 
             for (int i = 0; i < poolStart; i++) {
@@ -109,81 +221,55 @@ namespace SillyHitboxViewer {
             totalPool++;
         }
 
-        public static HitboxRevealer requestPooledRevealer() {
+        public HitboxRevealer requestPooledRevealer() {
 
             if (_revealerPool.Count <= 0) {
                 instance.createPooledRevealer();
-                Utils.Log($"pool full. adding {totalPool}");
-
+                Utils.Log($"pool full. adding rev {totalPool} to total {_revealerPool.Count}");
+            }
+            HitboxRevealer revealer = _revealerPool.Dequeue();
+            if(revealer == null) {
+                Utils.Log($"pooled revealer is null. trying again");
+                return requestPooledRevealer();
             }
 
-            return _revealerPool.Dequeue();
+            return revealer;
         }
 
-        public static void returnPooledRevealers(HitboxRevealer[] revs) {
+        public void returnPooledRevealers(HitboxRevealer[] revs) {
             //if revs[i] == null count killed revealers
             for (int i = 0; i < revs.Length; i++) {
                 returnPooledRevealer(revs[i]);
             }
         }
 
-        public static void returnPooledRevealer(HitboxRevealer rev) {
-            rev.transform.parent = transform;
+        public void returnPooledRevealer(HitboxRevealer rev) {
+            rev.transform.parent = instance.transform;
             _revealerPool.Enqueue(rev);
         }
 
-        #region well nothing's easy you gotta practice and lose and keep losing and keep losing
-        private void BasicMeleeAttack_AuthorityFixedUpdate(On.EntityStates.BasicMeleeAttack.orig_AuthorityFixedUpdate orig, EntityStates.BasicMeleeAttack self) {
-            orig(self);
-        }
-
-        //old
-        private bool BaseState_FireMeleeOverlap(On.EntityStates.BaseState.orig_FireMeleeOverlap orig, 
-                                                EntityStates.BaseState self, 
-                                                OverlapAttack attack,
-                                                Animator animator, 
-                                                string mecanimHitboxActiveParameter,
-                                                float forceMagnitude, 
-                                                bool calculateForceVector) {
-
-            bool hit = orig(self, attack, animator, mecanimHitboxActiveParameter, forceMagnitude, calculateForceVector);
-
-            Debug.Log("uh");
-
-            HitboxGroupRevealer hitboxGroupRevealer = _hitboxGroupRevealers.Find((revealer) => { 
-                return revealer != null && revealer.transform == attack.hitBoxGroup.transform; 
-            });
-
-            if (hitboxGroupRevealer == null) {
-
-                hitboxGroupRevealer = attack.hitBoxGroup.gameObject.AddComponent<HitboxGroupRevealer>();
-                _hitboxGroupRevealers.Add(hitboxGroupRevealer);
-
-                hitboxGroupRevealer.init(attack.hitBoxGroup, _hitboxGroupRevealers, _hitboxBoxPrefab);
-            }
-
-            bool hitboxActive = animator && animator.GetFloat(mecanimHitboxActiveParameter) > 0.1f;
-
-            hitboxGroupRevealer.reveal(hitboxActive);
-
-            return hit;
-        }
-
-        private void BasicMeleeAttack_OnEnter(On.EntityStates.BasicMeleeAttack.orig_OnEnter orig, EntityStates.BasicMeleeAttack self) {
-
-            orig(self);
+        public void removeHitBoxGroupRevealer(HitboxGroupRevealer rev) {
+            _hitboxGroupRevealers.Remove(rev);
         }
         #endregion
 
         #region debug
         void Update() {
 
-            if (!Utils.useDebug)
+            if (Input.GetKeyDown(Utils.cfg_toggleKey)) {
+                HitboxRevealer.showingBoxes = !HitboxRevealer.showingBoxes;
+                showAllHurtboxes();
+            }
+
+            if (!Utils.cfg_useDebug)
                 return;
 
             if (Input.GetKeyDown(KeyCode.I)) {
-
-                setTimeScale(Time.timeScale + 0.1f);
+                if (Time.timeScale == 0) {
+                    setTimeScale(Time.timeScale + 0.1f);
+                } else {
+                    setTimeScale(Time.timeScale + 0.5f);
+                }
 
                 //HitboxRevealer.cfg_BoxAlpha += 0.01f;
                 //Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
@@ -200,6 +286,30 @@ namespace SillyHitboxViewer {
             }
             if (Input.GetKeyDown(KeyCode.L)) {
                 setTimeScale(0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.P)) {
+                Utils.Log($"pool count: {_revealerPool.Count}");
+                HitboxRevealer rev;
+                for (int i = 1; i <= _revealerPool.Count; i++) {
+                    rev = _revealerPool.Dequeue();
+                    Utils.Log($"{rev != null}, {i} revs checked ");
+                    _revealerPool.Enqueue(rev);
+                }
+            }
+        }
+
+        private void showAllHurtboxes() {
+
+            bool shouldShow = HitboxRevealer.showingBoxes && HitboxRevealer.showingHurtBoxes;
+            Debug.LogWarning($"{HitboxRevealer.showingBoxes}, {HitboxRevealer.showingHurtBoxes}");
+
+            for (int i = _hurtboxRevealers.Count - 1; i >= 0; i--) {
+                if (_hurtboxRevealers[i] == null) {
+                    _hurtboxRevealers.RemoveAt(i);
+                    continue;
+                }
+                _hurtboxRevealers[i].showHurtboxes(shouldShow);
             }
         }
 

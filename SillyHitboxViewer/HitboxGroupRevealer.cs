@@ -1,5 +1,6 @@
 ﻿using RoR2;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace SillyHitboxViewer {
@@ -7,57 +8,70 @@ namespace SillyHitboxViewer {
 
         public HitBoxGroup hitboxGroup { get; set; }
 
-        private List<HitboxGroupRevealer> _modHitboxesList;
-        private bool _isMerc;
-
         private HitboxRevealer[] _revealers;
 
-        private int revealBufferCount;
+        private bool _isMerc;
 
-        public void init(HitBoxGroup hitboxGroup_, List<HitboxGroupRevealer> hitboxesList) {
+        private int _revealBufferCount;
+        private bool _revealed;
+
+        public void init(HitBoxGroup hitboxGroup_, GameObject attacker) {
             hitboxGroup = hitboxGroup_;
-            _modHitboxesList = hitboxesList;
 
-            var bod = GetComponent<CharacterBody>();
-            Utils.Log($"bod: {bod}");
-            if (bod) {
-                _isMerc = GetComponent<CharacterBody>().bodyIndex == BodyCatalog.FindBodyIndex("Mercenary");
+            if (attacker) {
+                CharacterBody bod = attacker.GetComponent<CharacterBody>();
+                if (bod) {
+                    _isMerc = checkMerc(bod.bodyIndex);
+                }
             }
 
-            addVisaulizinators();
+            initVisaulizinators();
         }
 
-        private void addVisaulizinators() {
+        private bool checkMerc(int index) {
+
+            return Utils.cfg_softenedCharacters.Contains(index);
+        }
+
+        private void initVisaulizinators() {
 
             HitboxRevealer rev;
             _revealers = new HitboxRevealer[hitboxGroup.hitBoxes.Length];
             for (int i = 0; i < hitboxGroup.hitBoxes.Length; i++) {
 
-                rev = HitboxViewerMod.requestPooledRevealer();
+                rev = HitboxViewerMod.instance.requestPooledRevealer();
                 rev.init(hitboxGroup.hitBoxes[i].transform, _isMerc);
                 _revealers[i] = rev;
             }
         }
 
         public void reveal(bool active) {
-            revealBufferCount = 3;
+
+            if (active) {
+                _revealBufferCount = 3;
+            }
+
+            if (_revealed == active)
+                return;
+
+            _revealed = active;
             for (int i = 0; i < _revealers.Length; i++) {
-                _revealers[i].show(active);
+                _revealers[i]?.show(active);
             }
         }
 
         void FixedUpdate() {
-            if (revealBufferCount == 0)
+            if (_revealBufferCount == 0)
                 reveal(false);
-            revealBufferCount -= 1;
+            _revealBufferCount -= 1;
         }
 
         void OnDestroy() {
             reveal(false);
-            revealBufferCount = -1;
+            _revealBufferCount = -1;
 
-            _modHitboxesList.Remove(this);
-            HitboxViewerMod.returnPooledRevealers(_revealers);
+            HitboxViewerMod.instance.removeHitBoxGroupRevealer(this);
+            HitboxViewerMod.instance.returnPooledRevealers(_revealers);
         }
     }
 }
