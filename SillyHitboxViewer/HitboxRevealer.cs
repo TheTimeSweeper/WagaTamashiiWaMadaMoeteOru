@@ -59,13 +59,13 @@ namespace SillyHitboxViewer {
 
         public void show(bool active) {
 
-            active &= showingHitBoxes &= showingBoxes;
+            active &= showingBoxes && showingHitBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
                 rend.enabled = active;
             }
         }
-
+        #region hurtbox
         public HitboxRevealer initHurtbox(Transform capsuleTransform, CapsuleCollider capsuleCollider) {
             init(capsuleTransform, false, true);
 
@@ -108,11 +108,12 @@ namespace SillyHitboxViewer {
 
         public void showHurtboxes(bool active) {
 
-            active &= showingHurtBoxes &= showingBoxes;
+            active &= showingBoxes && showingHurtBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
                 rend.enabled = active;
             }
         }
+        #endregion
     }
 }

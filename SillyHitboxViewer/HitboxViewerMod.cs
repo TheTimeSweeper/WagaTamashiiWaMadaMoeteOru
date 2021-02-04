@@ -12,7 +12,7 @@ namespace SillyHitboxViewer {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions")]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "0.4.0")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "0.3.0")]
     public class HitboxViewerMod : BaseUnityPlugin {
 
         public static HitboxViewerMod instance;
@@ -39,7 +39,7 @@ namespace SillyHitboxViewer {
 
             populateAss();
 
-            if (_hitboxBoxPrefab == null || _hitboxNotBoxPrefabTall == null || _hitboxNotBoxPrefab == null) { 
+            if (_hitboxBoxPrefab == null || _hitboxNotBoxPrefabTall == null || _hitboxNotBoxPrefab == null) {
                 Logger.LogError($"unable to get a hitboxprefab from the bundle. Timesweeper did an oops | {_hitboxBoxPrefab != null}, {_hitboxNotBoxPrefabTall != null}, {_hitboxNotBoxPrefab != null}");
                 return;
             }
@@ -54,9 +54,11 @@ namespace SillyHitboxViewer {
 
             On.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
 
-            if (Utils.cfg_doHurtbox) {
-                On.RoR2.HurtBox.Awake += HurtBox_Awake;
-            }
+            On.RoR2.HurtBox.Awake += HurtBox_Awake;
+        }
+
+        void Start() {
+            readOptions();
         }
 
         private void populateAss() {
@@ -74,40 +76,34 @@ namespace SillyHitboxViewer {
         private void doConfig() {
 
             HitboxRevealer.cfg_BoxAlpha =
-                Config.Bind("hitbox",
+                Config.Bind("hitboxes",
                             "hitbox alpha",
                             0.22f,
                             "0-1. Around 0.22 is ok. don't make it higher if you have epilepsy").Value;
 
             HitboxRevealer.cfg_mercSoften =
-                Config.Bind("hitbox",
+                Config.Bind("hitboxes",
                             "tone down merc",
                             true,
                             "Make merc's hitboxes lighter cause he's a crazy fool (and might actually hurt your eyes)\n - overrides alpha brightness to 0.1 and keeps colors cool blue-ish range").Value;
 
             Utils.cfg_softenedCharactersString =
-                Config.Bind("hitbox",
+                Config.Bind("hitboxes",
                             "tone-down characters",
                             "MercBody, MinerBody, MiniMushroomBody, NemesisEnforcerBody",
                             "The wacky characters who need softening, separated by commas.\n - Character's internal names are: CommandoBody, HuntressBody, ToolbotBody, EngiBody, MageBody, MercBody, TreebotBody, LoaderBody, CrocoBody, Captainbody\n - Use the DebugToolkit mod's body_list command to see a complete list (including enemies and moddeds)").Value;
 
             HitboxRevealer.cfg_HurtAlpha =
-                Config.Bind("hurtbox",
+                Config.Bind("hitboxes",
                             "hurtbox capsule alpha",
                             0.169f,
                             "0-1. Around 0.16 is ok.").Value;
-
-            Utils.cfg_doHurtbox =
-                Config.Bind("hurtbox",
-                            "show hurtboxes",
-                            true,
-                            "set false to disable hurtbox viewer.").Value;
 
             Utils.cfg_toggleKey =
                 Config.Bind("pls be safe",
                             "hitbox toggle Key",
                             KeyCode.Semicolon,
-                            "press this key to toggle hitbox viewer on and off in game").Value;
+                            "press this key to toggle hitbox viewer on and off in game. Overrides setting in options menu").Value;
 
             Utils.cfg_useDebug =
                 Config.Bind("pls be safe",
@@ -124,41 +120,35 @@ namespace SillyHitboxViewer {
             ModSettingsManager.setPanelTitle("Hitbox Viewer");
             ModSettingsManager.setPanelDescription("Enable/disable hitbox or hurtbox viewer");
 
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hitboxes", "self explanatory"));
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hitboxes", ""));
             ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hitboxes"), new UnityEngine.Events.UnityAction<bool>(hitboxBoolEvent));
 
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hurtboxes", ""));
+            ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hurtboxes"), new UnityEngine.Events.UnityAction<bool>(hurtboxBoolEvent));
+        
+        }
 
-            string hitboxDisable = ModSettingsManager.getOptionValue("Disable Hitboxes");
-            if (!string.IsNullOrEmpty(hitboxDisable)) {
-                HitboxRevealer.showingHitBoxes = hitboxDisable == "0";
-                Debug.LogWarning($"getting hitbox setting {hitboxDisable} setting {HitboxRevealer.showingHitBoxes}");
+        private static void readOptions() {
+
+            string disableHit = ModSettingsManager.getOptionValue("Disable Hitboxes");
+            if (!string.IsNullOrEmpty(disableHit)) {
+                HitboxRevealer.showingHitBoxes = disableHit == "0";
             }
 
-            if (Utils.cfg_doHurtbox) {
-                ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hurtboxes", "self explanatory2"));
-                ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hurtboxes"), new UnityEngine.Events.UnityAction<bool>(hurtboxBoolEvent));
-
-                string nigg = ModSettingsManager.getOptionValue("Disable Hurtboxes");
-                if (!string.IsNullOrEmpty(nigg)) {
-                    HitboxRevealer.showingHurtBoxes = nigg == "0";
-                    Debug.LogWarning($"getting Hurtbox setting {hitboxDisable} setting {HitboxRevealer.showingHurtBoxes}");
-                }
+            string disableHurt = ModSettingsManager.getOptionValue("Disable Hurtboxes");
+            if (!string.IsNullOrEmpty(disableHurt)) {
+                HitboxRevealer.showingHurtBoxes = disableHurt == "0";
             }
         }
 
         public void hitboxBoolEvent(bool active) {
 
             HitboxRevealer.showingHitBoxes = active;
-
-            Debug.LogWarning($"option set {active}, showing hitboxes {HitboxRevealer.showingHitBoxes}");
         }
         public void hurtboxBoolEvent(bool active) {
 
             HitboxRevealer.showingHurtBoxes = active;
-
-            Debug.LogWarning($"option set {active}, showing hurtboxes{HitboxRevealer.showingHurtBoxes}");
             showAllHurtboxes();
-
         }
         #endregion
 
