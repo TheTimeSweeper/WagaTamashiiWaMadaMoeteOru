@@ -13,15 +13,18 @@ namespace SillyHitboxViewer {
         public static string cfg_softenedCharactersString;
         public static List<int> cfg_softenedCharacters = new List<int>();
 
-        public static void Log(object log) {
+        public static void Log(object log, bool chat = false) {
             if (cfg_useDebug) {
                 HitboxViewerMod.log.LogMessage(log);
+                if (chat) {
+                    RoR2.Chat.AddMessage(log.ToString());
+                }
             }
         }
 
         public static void setSoftenedCharacters() {
 
-            if (!HitboxRevealer.cfg_mercSoften)
+            if (!HitboxRevealer.cfg_MercSoften)
                 return;
 
             cfg_softenedCharactersString = cfg_softenedCharactersString.Replace(" ", "");

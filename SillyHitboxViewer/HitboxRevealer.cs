@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace SillyHitboxViewer {
@@ -6,8 +7,12 @@ namespace SillyHitboxViewer {
     public class HitboxRevealer : MonoBehaviour {
 
         public static float cfg_BoxAlpha = 0.22f;
+        public static bool cfg_MercSoften;
+
         public static float cfg_HurtAlpha = 0.22f;
-        public static bool cfg_mercSoften;
+
+        public static float cfg_BlastShowTime = 0.2f;
+
         public static bool showingBoxes = true;
         public static bool showingHitBoxes = true;
         public static bool showingHurtBoxes = true;
@@ -16,6 +21,7 @@ namespace SillyHitboxViewer {
         private Renderer rend;
 
         private MaterialPropertyBlock _matProperties;
+        private Color _matColor;
 
         void Awake() {
             _matProperties = new MaterialPropertyBlock();
@@ -25,19 +31,19 @@ namespace SillyHitboxViewer {
             rend.enabled = false;
         }
 
-        public HitboxRevealer init(Transform boxTransform, bool isMerc, bool isHurtbox = false) {
+        public HitboxRevealer init(Transform boxTransform, bool isMerc, bool isHitbox = true) {
 
             transform.parent = boxTransform;
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
             transform.localScale = Vector3.one;
 
-            float setAlpha = isHurtbox ? cfg_HurtAlpha : cfg_BoxAlpha; 
+            float setAlpha = isHitbox ? cfg_HurtAlpha : cfg_BoxAlpha; 
             float setLum = 0.6f;
             float setHue = 0.00f;
             float setHueHue = 1.00f;
 
-            if (isMerc && cfg_mercSoften) { 
+            if (isMerc && cfg_MercSoften) { 
                 //low alpha, and colors in cool blue-ish range
                 setAlpha = 0.12f;
                 setLum = 0.4f;
@@ -45,12 +51,12 @@ namespace SillyHitboxViewer {
                 setHueHue = 0.90f;
             }
 
-            Color clr = Random.ColorHSV(setHue, setHueHue, 0.5f, 0.5f, setLum, setLum);  
+            _matColor = Random.ColorHSV(setHue, setHueHue, 0.5f, 0.5f, setLum, setLum);  
 
-            clr.a = setAlpha;
-            Utils.Log($"init box alpha {setAlpha}");
+            _matColor.a = setAlpha;
+            Utils.Log($"init box. alpha: {setAlpha}");
 
-            _matProperties.SetColor("_Color", clr);
+            _matProperties.SetColor("_Color", _matColor);
 
             rend.SetPropertyBlock(_matProperties);
 
@@ -67,7 +73,7 @@ namespace SillyHitboxViewer {
         }
         #region hurtbox
         public HitboxRevealer initHurtbox(Transform capsuleTransform, CapsuleCollider capsuleCollider) {
-            init(capsuleTransform, false, true);
+            init(capsuleTransform, false, false);
 
             transform.localPosition = capsuleCollider.center;
             transform.localScale = new Vector3(capsuleCollider.radius * 2, capsuleCollider.height / 2, capsuleCollider.radius * 2);
@@ -87,7 +93,7 @@ namespace SillyHitboxViewer {
         }
 
         public HitboxRevealer initHurtbox(Transform sphereTransform, SphereCollider sphereCollider) {
-            init(sphereTransform, false, true);
+            init(sphereTransform, false, false);
 
             transform.localPosition = sphereCollider.center;
             transform.localScale = Vector3.one * sphereCollider.radius * 2;
@@ -113,6 +119,48 @@ namespace SillyHitboxViewer {
             if (rend) {
                 rend.enabled = active;
             }
+        }
+        #endregion
+
+        #region blast
+
+
+        public HitboxRevealer initBlastBox(Vector3 blastPosition, float radius) {
+            init(null, false, true);
+
+            transform.position = blastPosition;
+            transform.localScale = Vector3.one * radius * 2;
+
+            showBlastBox(true);
+            return this;
+        }
+
+        public void showBlastBox(bool active) {
+
+            active &= showingBoxes && showingHitBoxes;
+            //Color color = active ? onColor : offColor;
+            if (rend) {
+                rend.enabled = active;
+            }
+
+            StartCoroutine(removeBlast());
+        } 
+
+        private IEnumerator removeBlast() {
+
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            _matColor *= 0.69f;
+            _matColor.a /= 0.69f;
+
+            _matProperties.SetColor("_Color", _matColor);
+            rend.SetPropertyBlock(_matProperties);
+
+            yield return new WaitForFixedUpdate();
+
+            if (gameObject)
+                Destroy(gameObject);
         }
         #endregion
     }

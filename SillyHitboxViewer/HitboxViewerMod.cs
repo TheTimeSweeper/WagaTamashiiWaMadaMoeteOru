@@ -30,6 +30,7 @@ namespace SillyHitboxViewer {
         private HitboxRevealer _hitboxNotBoxPrefab;
         private HitboxRevealer _hitboxNotBoxPrefabTall;
 
+        private bool keyDisable;
 
         void Awake() {
 
@@ -55,6 +56,8 @@ namespace SillyHitboxViewer {
             On.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
 
             On.RoR2.HurtBox.Awake += HurtBox_Awake;
+
+            On.RoR2.BlastAttack.Fire += BlastAttack_Fire;
         }
 
         void Start() {
@@ -81,7 +84,7 @@ namespace SillyHitboxViewer {
                             0.22f,
                             "0-1. Around 0.22 is ok. don't make it higher if you have epilepsy").Value;
 
-            HitboxRevealer.cfg_mercSoften =
+            HitboxRevealer.cfg_MercSoften =
                 Config.Bind("hitboxes",
                             "tone down merc",
                             true,
@@ -99,6 +102,12 @@ namespace SillyHitboxViewer {
                             0.169f,
                             "0-1. Around 0.16 is ok.").Value;
 
+            HitboxRevealer.cfg_BlastShowTime =
+                Config.Bind("hitboxes",
+                            "blast attack visual time",
+                            0.2f,
+                            "the amount of time blast hitboxes show up (their actual damage happens in one frame)").Value;
+
             Utils.cfg_toggleKey =
                 Config.Bind("pls be safe",
                             "hitbox toggle Key",
@@ -109,7 +118,7 @@ namespace SillyHitboxViewer {
                 Config.Bind("pls be safe",
                             "debug",
                             false,
-                            "welcom 2m y twisted mind").Value;
+                            "welcom 2m y twisted mind\ntimescale hotkeys on I, K, O, and L. press quote key to disable").Value;
 
         }
         #endregion
@@ -120,10 +129,10 @@ namespace SillyHitboxViewer {
             ModSettingsManager.setPanelTitle("Hitbox Viewer");
             ModSettingsManager.setPanelDescription("Enable/disable hitbox or hurtbox viewer");
 
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hitboxes", ""));
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hitboxes", "", "0"));
             ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hitboxes"), new UnityEngine.Events.UnityAction<bool>(hitboxBoolEvent));
 
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hurtboxes", ""));
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Disable Hurtboxes", "", "1"));
             ModSettingsManager.addListener(ModSettingsManager.getOption("Disable Hurtboxes"), new UnityEngine.Events.UnityAction<bool>(hurtboxBoolEvent));
         
         }
@@ -193,6 +202,16 @@ namespace SillyHitboxViewer {
                 _hurtboxRevealers.Add(Instantiate(_hitboxBoxPrefab).initHurtbox(self.collider.transform, self.collider as BoxCollider));
             }
         }
+
+        private BlastAttack.Result BlastAttack_Fire(On.RoR2.BlastAttack.orig_Fire orig, BlastAttack self) {
+            BlastAttack.Result result = orig(self);
+
+            HitboxRevealer box = Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
+
+            Utils.Log($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
+
+            return result;
+        }
         #endregion
 
         #region pool
@@ -251,7 +270,12 @@ namespace SillyHitboxViewer {
                 showAllHurtboxes();
             }
 
-            if (!Utils.cfg_useDebug)
+            if (Input.GetKeyDown(KeyCode.Quote)) {
+                keyDisable = !keyDisable;
+                Utils.Log($"hitbox debug hotkeys toggled {!keyDisable}", true);
+            }
+
+            if (!Utils.cfg_useDebug || keyDisable)
                 return;
 
             if (Input.GetKeyDown(KeyCode.I)) {
@@ -260,16 +284,10 @@ namespace SillyHitboxViewer {
                 } else {
                     setTimeScale(Time.timeScale + 0.5f);
                 }
-
-                //HitboxRevealer.cfg_BoxAlpha += 0.01f;
-                //Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
             }
             if (Input.GetKeyDown(KeyCode.K)) {
 
                 setTimeScale(Time.timeScale - 0.1f);
-
-                //HitboxRevealer.cfg_BoxAlpha -= 0.01f;
-                //Chat.AddMessage(HitboxRevealer.cfg_BoxAlpha.ToString());
             }
             if (Input.GetKeyDown(KeyCode.O)) {
                 setTimeScale(1);
@@ -292,7 +310,6 @@ namespace SillyHitboxViewer {
         private void showAllHurtboxes() {
 
             bool shouldShow = HitboxRevealer.showingBoxes && HitboxRevealer.showingHurtBoxes;
-            Debug.LogWarning($"{HitboxRevealer.showingBoxes}, {HitboxRevealer.showingHurtBoxes}");
 
             for (int i = _hurtboxRevealers.Count - 1; i >= 0; i--) {
                 if (_hurtboxRevealers[i] == null) {
@@ -306,7 +323,7 @@ namespace SillyHitboxViewer {
         private void setTimeScale(float tim) {
             Time.timeScale = tim;
 
-            Chat.AddMessage($"tim: {Time.timeScale}");
+            Utils.Log($"tim: {Time.timeScale}", true);
         }
         #endregion
     }
