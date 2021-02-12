@@ -150,8 +150,17 @@
       <HintPath>..\..\_sln References\Wwise.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
+    <None Include="Release\manifest.json" />
+    <None Include="Release\README.md" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-SillyItems"</PostBuildEvent>
+    <PostBuildEvent>if "$(Username)" == "Erikbir" mkdir                       "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-SillyItems"
+if "$(Username)" == "Erikbir" copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-SillyItems"
+if "$(Username)" == "Erikbir" copy "$(TargetPath)" "$(ProjectDir)Release"</PostBuildEvent>
   </PropertyGroup>
 </Project>

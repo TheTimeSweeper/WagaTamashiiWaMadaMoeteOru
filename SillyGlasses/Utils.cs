@@ -6,6 +6,7 @@ namespace SillyGlasses
     public class Utils
     {
         public static int Cfg_ItemStackMax = -1;
+        public static bool Cfg_ClassicStackType;
         public static float Cfg_ItemDistanceMultiplier = 0.0420f;
         public static float Cfg_EngiTurretItemDistanceMultiplier = 1.5f;
         public static float Cfg_ScavengerItemDistanceMultiplier = 6;

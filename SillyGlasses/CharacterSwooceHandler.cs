@@ -229,7 +229,7 @@ namespace SillyGlasses
                         continue;
 
                     //create item
-                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated);
+                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated, itemIndex_ == ItemIndex.CritGlasses);
                     if (iterInstantiatedItem == null)
                         continue;
 
@@ -247,7 +247,7 @@ namespace SillyGlasses
         }
 
         //copied from CharacterModel.ParentedPrefabDisplay.Apply
-        private GameObject InstantiateSillyItem(ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform bodyDisplayParent_, int instanceMult_)
+        private GameObject InstantiateSillyItem(ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform bodyDisplayParent_, int instanceMult_, bool glas)
         {
             GameObject prefab = displayRule_.followerPrefab;
             if (prefab == null)
@@ -264,8 +264,30 @@ namespace SillyGlasses
             instantiatedDisplay.transform.localScale = displayRuleLocalScale;
 
             float forwardDistance = instanceMult_ * _cfgDistanceMultiplier * _specialItemDistance;
-            instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * forwardDistance;
-            
+
+            if (glas || Utils.Cfg_ClassicStackType) {
+                if (glas) {
+                    forwardDistance = Mathf.Abs(forwardDistance);
+                }
+
+                instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * forwardDistance;
+            } else {
+
+                if (displayRule_.childName != "Head") {
+                    Vector3 outwardVect = (instantiatedDisplay.transform.position - bodyDisplayParent_.position).normalized;
+
+                    Vector3 perpVec = Vector3.Cross(bodyDisplayParent_.transform.up, outwardVect).normalized;
+
+                    perpVec = Vector3.Cross(bodyDisplayParent_.transform.up, perpVec).normalized;
+
+                    Vector3 adjustedDirection = ((outwardVect - perpVec) * 0.5f).normalized;
+
+                    instantiatedDisplay.transform.position += adjustedDirection * forwardDistance;
+                } else {
+                    instantiatedDisplay.transform.position += (instantiatedDisplay.transform.position - bodyDisplayParent_.position).normalized * forwardDistance;
+                }
+            }
+
             if (Utils.Cfg_UseLogs) {
                 instantiatedDisplay.name = $"{instantiatedDisplay.name} {instanceMult_}";
             }
@@ -348,6 +370,29 @@ namespace SillyGlasses
             newTransform.localScale = Vector3.one;
 
             return newTransform;
+        }
+
+        //creates a cube in the place of where an item will spawn, so I can see in what direction its local transform is oriented
+        //not currently used. may be outdaded
+        private void ShowFunnyCube(Transform parent_, Vector3 displayRuleLocalPos_, Quaternion displayRuleLocalRotation_, float forwardDistance_) {
+            GameObject cubeReference = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            //I forgot why, but simply creating a primitive wasn't working, so the ugly solution was to create a new gameobject from scratch and copy its properties
+            //wait I think I was a retard and tried creating a blank object and adding these components instead of just making a primitive and removing the collider
+            Type[] cubeComponents = new Type[] { typeof(MeshRenderer), typeof(MeshFilter) };
+
+            GameObject bruh = new GameObject("bruh", cubeComponents);
+            bruh.GetComponent<MeshFilter>().mesh = cubeReference.GetComponent<MeshFilter>().mesh;
+            bruh.GetComponent<MeshRenderer>().material = new Material(cubeReference.GetComponent<MeshRenderer>().material);
+
+            bruh.transform.parent = parent_;
+
+            bruh.transform.localPosition = displayRuleLocalPos_;
+            bruh.transform.localRotation = displayRuleLocalRotation_;
+            bruh.transform.localScale = new Vector3(0.169f, 0.01f, 0.1f);
+            bruh.transform.position += bruh.transform.forward * forwardDistance_;
+
+            Destroy(cubeReference);
         }
         #endregion
 
@@ -449,30 +494,6 @@ namespace SillyGlasses
 
 
         #endregion
-
-        //creates a cube in the place of where an item will spawn, so I can see in what direction its local transform is oriented
-        //not currently used. may be outdaded
-        private void ShowFunnyCube(Transform parent_, Vector3 displayRuleLocalPos_, Quaternion displayRuleLocalRotation_, float forwardDistance_)
-        {
-            GameObject cubeReference = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-            //I forgot why, but simply creating a primitive wasn't working, so the ugly solution was to create a new gameobject from scratch and copy its properties
-            //wait I think I was a retard and tried creating a blank object and adding these components instead of just making a primitive and removing the collider
-            Type[] cubeComponents = new Type[] { typeof(MeshRenderer), typeof(MeshFilter) };
-
-            GameObject bruh = new GameObject("bruh", cubeComponents);
-            bruh.GetComponent<MeshFilter>().mesh = cubeReference.GetComponent<MeshFilter>().mesh;
-            bruh.GetComponent<MeshRenderer>().material = new Material(cubeReference.GetComponent<MeshRenderer>().material);
-
-            bruh.transform.parent = parent_;
-
-            bruh.transform.localPosition = displayRuleLocalPos_;
-            bruh.transform.localRotation = displayRuleLocalRotation_;
-            bruh.transform.localScale = new Vector3(0.169f, 0.01f, 0.1f);
-            bruh.transform.position += bruh.transform.forward * forwardDistance_;
-
-            Destroy(cubeReference);
-        }
 
         #region cheatsvol2
         void Update()

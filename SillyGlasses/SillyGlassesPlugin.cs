@@ -95,10 +95,6 @@ namespace SillyGlasses {
             On.RoR2.CharacterModel.DisableItemDisplay += DisableItemDisplayHook;
 
             On.RoR2.CharacterModel.UpdateMaterials += UpdateMaterialsHook;
-
-            //On.RoR2.CharacterModel.UpdateForCamera += UpdateForCameraHook;
-
-            //On.RoR2.CharacterModel.RefreshObstructorsForCamera += RefreshObstructorsForCameraHook;
         }
 
         #region config
@@ -106,74 +102,66 @@ namespace SillyGlasses {
         private void InitConfig() {
             string sectionName = "hope youre having a lovely day";
 
-            //wait i just rewrote the config.wrap function to the T (no pun intended)
             Utils.Cfg_ItemStackMax = 
-                ConfigWrapBind(sectionName,
-                               "ItemStacksMax", 
-                               "Maximum item displays that can be spawned (-1 for infinite).",  
-                               -1);
+                Config.Bind(sectionName,
+                            "ItemStacksMax",
+                            -1, 
+                            "Maximum item displays that can be spawned (-1 for infinite).").Value;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+            Utils.Cfg_ClassicStackType =
+                Config.Bind(sectionName,
+                            "Classic Stacking",
+                            false,
+                            "Makes item stack based on their object's forward facing direction (as it used to do), rather than what it does now, which always stacks outward from the bone it's attached to.").Value;
 
             Utils.Cfg_ItemDistanceMultiplier =
-                Config.Wrap(sectionName,
+                Config.Bind(sectionName,
                             "ItemDistanceMultiplier",
-                            "The distance between extra displays that spawns.",
-                            0.0480f).Value;
+                            0.0480f,
+                            "The distance between extra displays that spawns.").Value;
             Utils.Cfg_EngiTurretItemDistanceMultiplier =
-                Config.Wrap(sectionName,
+                Config.Bind(sectionName,
                             "EngiTurretItemDistanceMultiplier",
-                            "Items are a little bigger on Engis Turrets. Spread them out a bit more.",
-                            1.5f).Value;
+                            1.5f,
+                            "Items are a little bigger on Engis Turrets. Spread them out a bit more.").Value;
 
             Utils.Cfg_ScavengerItemDistanceMultiplier =
-                Config.Wrap(sectionName,
+                Config.Bind(sectionName,
                             "ScavItemDistanceMultiplier",
-                            "Items are a also bigger on Scavengers I think",
-                            6f).Value;
+                            6f,
+                            "Items are a also bigger on Scavengers I think").Value;
 
             Utils.Cfg_BrotherItemDistanceMultiplier =
-                Config.Wrap(sectionName,
+                Config.Bind(sectionName,
                             "BrotherItemDistanceMultiplier",
-                            "Big Spikes.",
-                            2f).Value;
+                            2f,
+                            "Big Spikes.").Value;
 
             Utils.Cfg_UseLogs =
-                Config.Wrap(sectionName,
+                Config.Bind(sectionName,
                             "Output Logs",
-                            "because I keep forgetting to remove logs from my builds haha woops.",
-                            false).Value;
+                            false,
+                            "because I keep forgetting to remove logs from my builds haha woops.").Value;
 
             string cheatSection = "liar liar plants for hire";
 
             Utils.Cfg_PlantsForHire =
-                Config.Wrap(cheatSection,
+                Config.Bind(cheatSection,
                             "Cheats",
-                            "Press f2 f3 f6 and f9 to rain items from the sky.",
-                            false).Value;
+                            false,
+                            "Press f2 f3 f6 and f9 to rain items from the sky.").Value;
 
             Utils.Cfg_CheatItem =
-                Config.Wrap(cheatSection,
+                Config.Bind(cheatSection,
                             "Cheat Item",
-                            "Press f7 to spawn this item (glasses are 7)",
-                            7).Value;
+                            7,
+                            "Press f7 to spawn this item (glasses are 7)").Value;
 
             Utils.Cfg_CheatItemBoring =
-                Config.Wrap(cheatSection,
+                Config.Bind(cheatSection,
                             "Cheat Item2",
-                            "Press f11 and f10 to add/remove this item boringly (58 for magazines)",
-                            58).Value;
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        private T ConfigWrapBind<T>(string sectionName, string keyName, string description, T defaultValue) {
-
-            ConfigDefinition configSectionAndName = new ConfigDefinition(sectionName, keyName);
-            ConfigDescription configDesc = new ConfigDescription(description);
-
-            ConfigEntry<T> setItemStackMax = Config.Bind<T>(configSectionAndName, defaultValue, configDesc);
-
-            return setItemStackMax.Value;
+                            58,
+                            "Press f11 and f10 to add/remove this item boringly (58 for magazines)").Value;
         }
 
         #endregion
@@ -200,8 +188,7 @@ namespace SillyGlasses {
             orig(self, other);
         }
 
-        private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) 
-        {
+        private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) {
             _swooceHandlers.RemoveAll((handler) => {
                 return handler == null;
             });
@@ -209,24 +196,20 @@ namespace SillyGlasses {
             float specialItemDistance = getSpecialItemDistance(self);
 
             //make this happen once on init rather than using GetComponent every time an inventory changes
-            //monkaS
-            //if (self.isPlayerControlled) {
-                if (self.hurtBoxGroup == null) {
-                    Utils.Log("DIO'S IS SAFE", true);
-                    //wait how long have i been using hurtBoxGroup? probably a better way to find charactermodel
-                    return;
-                }
+            if (self.modelLocator.modelTransform == null) {
+                return;
+            }
 
-                if (self.hurtBoxGroup.gameObject.GetComponent<CharacterSwooceHandler>() == null) {
-                    CharacterSwooceHandler swooceHandler = self.hurtBoxGroup.gameObject.AddComponent<CharacterSwooceHandler>();
-                    _swooceHandlers.Add(swooceHandler);
-                    swooceHandler.Init(this, specialItemDistance);
-                }
-            //}
+            if (self.modelLocator.modelTransform.gameObject.GetComponent<CharacterSwooceHandler>() == null) {
+                CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
+                _swooceHandlers.Add(swooceHandler);
+                swooceHandler.Init(this, specialItemDistance);
+            }
 
             orig(self);
         }
 
+        //move this to swoocehandler. 
         private float getSpecialItemDistance(CharacterBody self) {
 
             bool isCopiedInventory = self.inventory == _copiedItemsInventory;
