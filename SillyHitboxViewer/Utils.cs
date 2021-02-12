@@ -7,13 +7,21 @@ namespace SillyHitboxViewer {
 
         public static bool cfg_doHurtbox;
         public static bool cfg_useDebug;
+        public static bool cfg_showLogs;
 
         public static KeyCode cfg_toggleKey;
 
         public static string cfg_softenedCharactersString;
         public static List<int> cfg_softenedCharacters = new List<int>();
 
-        public static void Log(object log, bool chat = false) {
+        public static void LogReadout(object log) {
+
+            if (cfg_showLogs) {
+                Log(log, false);
+            }
+        }
+
+        public static void Log(object log, bool chat) {
             if (cfg_useDebug) {
                 HitboxViewerMod.log.LogMessage(log);
                 if (chat) {

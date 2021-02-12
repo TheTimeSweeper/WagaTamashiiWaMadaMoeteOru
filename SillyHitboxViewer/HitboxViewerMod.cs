@@ -112,13 +112,19 @@ namespace SillyHitboxViewer {
                 Config.Bind("pls be safe",
                             "hitbox toggle Key",
                             KeyCode.Semicolon,
-                            "press this key to toggle hitbox viewer on and off in game. Overrides setting in options menu").Value;
+                            "press this key to toggle disabling hitbox viewer on and off in game. Overrides settings in options menu").Value;
 
             Utils.cfg_useDebug =
                 Config.Bind("pls be safe",
                             "debug",
                             false,
                             "welcom 2m y twisted mind\ntimescale hotkeys on I, K, O, and L. press quote key to disable").Value;
+
+            Utils.cfg_showLogs=
+                Config.Bind("pls be safe",
+                            "logs",
+                            false,
+                            "print debug logs").Value;
 
         }
         #endregion
@@ -208,7 +214,7 @@ namespace SillyHitboxViewer {
 
             HitboxRevealer box = Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
 
-            Utils.Log($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
+            Utils.LogReadout($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
 
             return result;
         }
@@ -234,11 +240,11 @@ namespace SillyHitboxViewer {
 
             if (_revealerPool.Count <= 0) {
                 instance.createPooledRevealer();
-                Utils.Log($"pool full. adding rev {totalPool} to total {_revealerPool.Count}");
+                Utils.LogReadout($"pool full. adding rev {totalPool} to total {_revealerPool.Count}");
             }
             HitboxRevealer revealer = _revealerPool.Dequeue();
             if(revealer == null) {
-                Utils.Log($"pooled revealer is null. trying again");
+                Utils.LogReadout($"pooled revealer is null. trying again");
                 return requestPooledRevealer();
             }
 
@@ -267,15 +273,23 @@ namespace SillyHitboxViewer {
 
             if (Input.GetKeyDown(Utils.cfg_toggleKey)) {
                 HitboxRevealer.showingBoxes = !HitboxRevealer.showingBoxes;
+                if (HitboxRevealer.showingBoxes) {
+                    Utils.Log($"hitboxes enabled", true);
+                } else {
+                    Utils.Log($"all hitboxes disabled", true);
+                }
                 showAllHurtboxes();
             }
+
+            if (!Utils.cfg_useDebug)
+                return;
 
             if (Input.GetKeyDown(KeyCode.Quote)) {
                 keyDisable = !keyDisable;
                 Utils.Log($"hitbox debug hotkeys toggled {!keyDisable}", true);
             }
 
-            if (!Utils.cfg_useDebug || keyDisable)
+            if (keyDisable)
                 return;
 
             if (Input.GetKeyDown(KeyCode.I)) {
@@ -297,11 +311,11 @@ namespace SillyHitboxViewer {
             }
 
             if (Input.GetKeyDown(KeyCode.P)) {
-                Utils.Log($"pool count: {_revealerPool.Count}");
+                Utils.LogReadout($"pool count: {_revealerPool.Count}");
                 HitboxRevealer rev;
                 for (int i = 1; i <= _revealerPool.Count; i++) {
                     rev = _revealerPool.Dequeue();
-                    Utils.Log($"{rev != null}, {i} revs checked ");
+                    Utils.LogReadout($"{rev != null}, {i} revs checked ");
                     _revealerPool.Enqueue(rev);
                 }
             }
