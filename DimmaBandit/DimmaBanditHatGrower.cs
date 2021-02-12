@@ -33,18 +33,17 @@ namespace DimmaBandit {
 
             CharacterModel.RendererInfo[] hatInfos = new CharacterModel.RendererInfo[2];
 
+            Material banditMaterial = Reflection.GetFieldValue<SkinnedMeshRenderer>(model, "mainSkinnedMeshRenderer").material;
+
             for (int i = 0; i < _hatRescale.hatRenderers.Length; i++) {
                 hatInfos[i] = new CharacterModel.RendererInfo {
-                    defaultMaterial = _hatRescale.hatRenderers[i].material,
+                    defaultMaterial = banditMaterial,
                     renderer = _hatRescale.hatRenderers[i],
                     defaultShadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On,
                     ignoreOverlays = false
                 };
             }
-
             model.baseRendererInfos = modelInfos.Concat(hatInfos).ToArray();
-
-            Reflection.InvokeMethod(model, "UpdateMaterials");
         }
 
         private void grow(float growScale) {

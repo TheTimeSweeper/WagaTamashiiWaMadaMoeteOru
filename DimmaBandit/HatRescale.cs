@@ -8,9 +8,7 @@ namespace DimmaBandit {
 
         [SerializeField]
         private Renderer[] _hatRenderers;
-        public Renderer[] hatRenderers { 
-            get => _hatRenderers;
-        }
+        public Renderer[] hatRenderers { get => _hatRenderers; }
 
         public void RescaleTop() {
 

@@ -39,18 +39,17 @@ namespace DimmaBandit {
             using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DimmaBandit.dimmabandit")) {
                 MainAss = AssetBundle.LoadFromStream(assetStream);
             }
-
+             
             dimmadomePrefab = MainAss.LoadAsset<GameObject>("the name's doug dimmadome");
         }
 
         private void doConfig() {
 
-#pragma warning disable CS0618 // Type or member is obsolete. sorry I'm lazy
             growAmount =
-                Config.Wrap("The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome",
+                Config.Bind("The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome",
                             "hat grow amount",
-                            "multiplier of size gain per kill",
-                            0.169f).Value;
+                            0.169f,
+                            "multiplier of size gain per kill").Value;
             //moveCamera =
             //    Config.Wrap("The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome",
             //                "move camera",
@@ -64,35 +63,32 @@ namespace DimmaBandit {
             populateAss();
             doConfig();
 
-            On.RoR2.CharacterBody.Start += CharacterBody_Start;
+            On.RoR2.ModelSkinController.ApplySkin += ModelSkinController_ApplySkin;
 
             On.RoR2.CharacterBody.OnDeathStart += CharacterBody_OnDeathStart;
-        }        
-
+        }
         private void CharacterBody_OnDeathStart(On.RoR2.CharacterBody.orig_OnDeathStart orig, CharacterBody self) {
             orig(self);
 
-            //config healthscale
-            onHatGrow?.Invoke(self.maxHealth/100);
+            onHatGrow?.Invoke(self.maxHealth * 0.01f);
         }
 
-        private void CharacterBody_Start(On.RoR2.CharacterBody.orig_Start orig, CharacterBody self) {
+        private void ModelSkinController_ApplySkin(On.RoR2.ModelSkinController.orig_ApplySkin orig, ModelSkinController self, int skinIndex) {
 
-            orig(self);
+            orig(self, skinIndex);
 
-            bool doug = _dougs.Contains(self.name);
+            CharacterModel model = self.GetComponent<CharacterModel>();
 
-            if(doug) {
-                Chat.AddMessage("The name's Doug Dimmadome,");
+            if (_dougs.Contains(model.body.name) || model.name == "mdlBandit") {
 
-                ModelLocator modelLocator = self.modelLocator;
+                Chat.AddMessage("<color=#fd2>The name's Doug Dimmadome,</color>");
 
-                DimmaBanditHatGrower hatGrower = modelLocator.modelTransform.GetComponent<ChildLocator>()
-                    .FindChild("Head").gameObject
+                DimmaBanditHatGrower hatGrower = model.GetComponent<ChildLocator>()
+                    .FindChild("Head").transform.Find("hat").gameObject
                     .AddComponent<DimmaBanditHatGrower>()
-                    .init(modelLocator.modelTransform.GetComponent<CharacterModel>());
+                    .init(model);
 
-                Chat.AddMessage("owner of the Dimmsdale immadome");
+                Chat.AddMessage("<color=#fd2>owner of the Dimmsdale dimmadome</color>");
             }
         }
     }

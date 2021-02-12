@@ -124,8 +124,14 @@
   <ItemGroup>
     <EmbeddedResource Include="dimmabandit" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Release\manifest.json" />
+    <None Include="Release\README.md" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-DimmaBandit\"</PostBuildEvent>
+    <PostBuildEvent>if "$(Username)" == "Erikbir" mkdir                       "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-DimmaBandit
+if "$(Username)" == "Erikbir" copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-DimmaBandit
+if "$(Username)" == "Erikbir" copy "$(TargetPath)" "$(ProjectDir)Release"</PostBuildEvent>
   </PropertyGroup>
 </Project>
