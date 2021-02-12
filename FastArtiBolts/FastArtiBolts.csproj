@@ -13,6 +13,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\_sln References\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\_sln References\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp.R2API.mm">
+      <HintPath>..\..\_sln References\Assembly-CSharp.R2API.mm.dll</HintPath>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\..\_sln References\BepInEx.dll</HintPath>
     </Reference>
@@ -24,9 +33,6 @@
     </Reference>
     <Reference Include="BepInEx.Preloader">
       <HintPath>..\..\_sln References\BepInEx.Preloader.dll</HintPath>
-    </Reference>
-    <Reference Include="ConfigurationManager">
-      <HintPath>..\..\_sln References\ConfigurationManager.dll</HintPath>
     </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>..\..\_sln References\MMHOOK_Assembly-CSharp.dll</HintPath>
@@ -88,7 +94,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\BepInEx\plugins\TheTimesweeper-FastArtificerBolts&quot;" />
+    <Exec Command="if &quot;$(Username)&quot; == &quot;Erikbir&quot; mkdir                       &quot;C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-FastArtificerBolts&quot;&#xD;&#xA;if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-FastArtificerBolts&quot;&#xD;&#xA;if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)Release&quot;" />
   </Target>
 
 </Project>
