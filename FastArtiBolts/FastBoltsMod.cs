@@ -51,14 +51,13 @@ namespace FastArtiBolts {
 
             fastFireBoltPrefab = PrefabAPI.InstantiateClone(Resources.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic"), "FastFireBolt", true);
             GameObject fastBoltGhost = PrefabAPI.InstantiateClone(Resources.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic").GetComponent<ProjectileController>().ghostPrefab, "FastFireBoltGhost", false);
-            fastBoltGhost.transform.localScale = new Vector3(0.69f, 0.69f, 0.8f);
+            fastBoltGhost.transform.localScale = new Vector3(0.72f, 0.72f, 1f);
             fastBoltGhost.transform.Find("Spinner").localScale = Vector3.one * 0.87f;
 
             var rends = fastBoltGhost.GetComponentsInChildren<TrailRenderer>();
             for (int i = 0; i < rends.Length; i++) {
-                rends[i].time = 0.12f;
+                rends[i].time = 0.14f;
             }
-            //even i'm like this is too much 69 right now, but they're actually workin alright
             fastFireBoltPrefab.GetComponent<ProjectileController>().ghostPrefab = fastBoltGhost;
 
             ProjectileCatalog.getAdditionalEntries += list => {
@@ -123,16 +122,16 @@ namespace FastArtiBolts {
         }
 
         void Update() {
-            if (Input.GetKeyDown(KeyCode.U)) {
+            //if (Input.GetKeyDown(KeyCode.U)) {
 
-                FireFastBolt._originShift += 0.1f;
-                Chat.AddMessage(FireFastBolt._originShift.ToString());
-            }
-            if (Input.GetKeyDown(KeyCode.J)) {
+            //    FireFastBolt._originShiftForward += 0.1f;
+            //    Chat.AddMessage(FireFastBolt._originShiftForward.ToString("0.00"));
+            //}
+            //if (Input.GetKeyDown(KeyCode.J)) {
 
-                FireFastBolt._originShift -= 0.1f;
-                Chat.AddMessage(FireFastBolt._originShift.ToString());
-            }
+            //    FireFastBolt._originShiftForward -= 0.1f;
+            //    Chat.AddMessage(FireFastBolt._originShiftForward.ToString("0.00"));
+            //}
         }
 
 

@@ -43,14 +43,14 @@ namespace FastArtiBolts {
             Cfg_DamageMulti = 
                 Config.Bind(sectionName,
                             "FastBoltsDamageMulti",
-                            0.4f,
-                            "The damage (and proccoefficient) of Fast Bolts is the damage of original Flame Bolts * this multiplier").Value;
+                            0.5f,
+                            "The damage of Fast Bolts is the damage of original Flame Bolts * this multiplier").Value;
 
             Cfg_ProcMulti = 
                 Config.Bind(sectionName,
                             "FastBoltsProcMulti",
-                            0.6f,
-                            "The damage (and proccoefficient) of Fast Bolts is the damage of original Flame Bolts * this multiplier").Value;
+                            0.5f,
+                            "The Proc Coefficient of Fast Bolts is the Proc Coefficient of original Flame Bolts * this multiplier").Value;
 
             Cfg_AttackSpeedMulti = 
                 Config.Bind(sectionName,
@@ -58,7 +58,7 @@ namespace FastArtiBolts {
                             3f,
                             "Multiplier of attack speed that decides how fast you shoot flame bolts (which decides how many bolts you shoot within the window of the move)").Value;
 
-            Cfg_DurationMulti = 
+            Cfg_DurationMulti =   
                 Config.Bind(sectionName,
                             "FiringBoltsDurationMulti",
                             0.52f,

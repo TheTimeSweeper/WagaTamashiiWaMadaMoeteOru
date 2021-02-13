@@ -2,12 +2,13 @@
 using System.Reflection;
 using R2API.Utils;
 using RoR2;
+using RoR2.Skills;
 using UnityEngine;
 using UnityEngine.Networking;
 using FireFireBolt = EntityStates.Mage.Weapon.FireFireBolt;
 
 namespace FastArtiBolts {
-    public class FireFastBolt : FireFireBolt {
+    public class FireFastBolt : FireFireBolt, SteppedSkillDef.IStepSetter {
 
         public static MethodInfo fireGauntletMethod;
 
@@ -32,10 +33,16 @@ namespace FastArtiBolts {
 
         private Transform _aimOrigin;
         private Vector3 _origOrigin;
-        public static float _originShift = 0.15f;
-        public static float _originShiftMax = 0.5f;
+        private float _originShift = 0.12f;
+        private float _originShiftMax = 0.5f;
+        private float _originShiftForward = 0.2f;
 
         private Gauntlet _jauntlet;
+
+        public new void SetStep(int i) {
+            base.SetStep(i);
+            _jauntlet = (FireFireBolt.Gauntlet)i;
+        }
 
         public override void OnEnter() {
 
@@ -56,7 +63,7 @@ namespace FastArtiBolts {
             #endregion
 
             base.projectilePrefab = FastBoltsMod.fastFireBoltPrefab;
-            base.muzzleflashEffectPrefab = Resources.Load<GameObject>("prefabs/effects/resources/muzzleflashes/MuzzleFlashMageFire");
+            base.muzzleflashEffectPrefab = Resources.Load<GameObject>("Prefabs/Effects/MuzzleFlashes/MuzzleflashMageFire");
 
             base.damageCoefficient = 2.2f * _fastBoltDamageMulti;
             base.procCoefficient = 1 * _fastBoltProcMulti;
@@ -80,10 +87,8 @@ namespace FastArtiBolts {
             _boltsFired = 1;
 
             _fireFireBolt.SetFieldValue<float>("duration", base.baseDuration);
-
-            _originShift *= _jauntlet == Gauntlet.Right ? 1 : -1;
         }
-        
+         
 
         public override void FixedUpdate() {
             base.FixedUpdate();
@@ -96,21 +101,15 @@ namespace FastArtiBolts {
                 if (!potato) {
 
                     Vector3 aimRight = -Vector3.Cross(base.GetAimRay().direction, Vector3.up);
-                    float remainder = _firingBoltsTimer - _fastBoltDuration;
-                    float remainderSegement = remainder / _fastBoltDuration;
-
-                    int sameFrameBolts = 0;
-
+                    int sameFrameBolts = 1;
                     while (_firingBoltsTimer > _fastBoltDuration) {
 
                         _firingBoltsTimer -= _fastBoltDuration;
 
                         float fuckinMath = doFuckinMath();
-                        float projectileSpeed = 80;
-
-                        float fuckinForward = remainderSegement * sameFrameBolts * projectileSpeed * Time.fixedDeltaTime;
-
-                        _aimOrigin.position += aimRight.normalized * fuckinMath + (base.GetAimRay().direction.normalized * -fuckinForward);
+                        Vector3 fuckinForwardSimple = base.GetAimRay().direction.normalized * _originShiftForward * _fastBoltDuration * sameFrameBolts * 80;
+                        
+                        _aimOrigin.position += aimRight.normalized * fuckinMath - fuckinForwardSimple;
 
                         PseudoFireGauntlet();
                         sameFrameBolts++;
@@ -137,17 +136,15 @@ namespace FastArtiBolts {
 
         private float doFuckinMath() {
 
-            int jaunt = _jauntlet == Gauntlet.Right ? 1 : -1;
-            float fuckinMath = _boltsFired * _originShift * jaunt;
-
+            float fuckinMath = _boltsFired * _originShift * (_jauntlet == Gauntlet.Right ? 1 : -1);
             while (Mathf.Clamp(fuckinMath, -_originShiftMax, _originShiftMax) != fuckinMath) {
 
-                if (fuckinMath > _originShiftMax) {
+                if (fuckinMath >= _originShiftMax) {
 
                     fuckinMath = 2 * _originShiftMax - fuckinMath;
                 }
 
-                if (fuckinMath < -_originShiftMax) {
+                if (fuckinMath <= -_originShiftMax) {
 
                     fuckinMath = -2 * _originShiftMax - fuckinMath;
                 }
@@ -178,7 +175,6 @@ namespace FastArtiBolts {
             writer.Write((byte)this._jauntlet);
         }
 
-        // Token: 0x0600393A RID: 14650 RVA: 0x000E9E6F File Offset: 0x000E806F
         public override void OnDeserialize(NetworkReader reader) {
             base.OnDeserialize(reader);
             this._jauntlet = (FireFireBolt.Gauntlet)reader.ReadByte();
