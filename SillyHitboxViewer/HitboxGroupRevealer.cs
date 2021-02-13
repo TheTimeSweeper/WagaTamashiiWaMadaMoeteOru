@@ -39,7 +39,7 @@ namespace SillyHitboxViewer {
             _revealers = new HitboxRevealer[hitboxGroup.hitBoxes.Length];
             for (int i = 0; i < hitboxGroup.hitBoxes.Length; i++) {
 
-                rev = HitboxViewerMod.instance.requestPooledRevealer();
+                rev = HitboxViewerMod.instance.requestPooledHitboxRevealer();
                 rev.init(hitboxGroup.hitBoxes[i].transform, _isMerc);
                 _revealers[i] = rev;
             }
@@ -71,7 +71,7 @@ namespace SillyHitboxViewer {
             _revealBufferCount = -1;
 
             HitboxViewerMod.instance.removeHitBoxGroupRevealer(this);
-            HitboxViewerMod.instance.returnPooledRevealers(_revealers);
+            HitboxViewerMod.instance.returnPooledHitboxRevealers(_revealers);
         }
     }
 }

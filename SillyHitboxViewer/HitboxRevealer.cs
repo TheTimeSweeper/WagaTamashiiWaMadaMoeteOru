@@ -54,7 +54,7 @@ namespace SillyHitboxViewer {
             _matColor = Random.ColorHSV(setHue, setHueHue, 0.5f, 0.5f, setLum, setLum);  
 
             _matColor.a = setAlpha;
-            Utils.LogReadout($"init box. alpha: {setAlpha}");
+            //Utils.LogReadout($"init box. alpha: {setAlpha}");
 
             _matProperties.SetColor("_Color", _matColor);
 
@@ -159,8 +159,10 @@ namespace SillyHitboxViewer {
 
             yield return new WaitForSeconds(cfg_BlastShowTime);
 
-            if (gameObject)
-                Destroy(gameObject);
+            if (gameObject) {
+                show(false);
+                HitboxViewerMod.instance.returnPooledBlastRevealer(this);
+            }
         }
         #endregion
     }

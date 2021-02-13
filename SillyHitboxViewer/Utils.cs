@@ -7,7 +7,7 @@ namespace SillyHitboxViewer {
 
         public static bool cfg_doHurtbox;
         public static bool cfg_useDebug;
-        public static bool cfg_showLogs;
+        public static bool cfg_showLogsVerbose;
 
         public static KeyCode cfg_toggleKey;
 
@@ -16,8 +16,15 @@ namespace SillyHitboxViewer {
 
         public static void LogReadout(object log) {
 
-            if (cfg_showLogs) {
+            if (cfg_showLogsVerbose) {
                 Log(log, false);
+            }
+        }
+
+        public static void LogWarning(object log) {
+
+            if (cfg_showLogsVerbose) {
+                HitboxViewerMod.log.LogWarning(log);
             }
         }
 

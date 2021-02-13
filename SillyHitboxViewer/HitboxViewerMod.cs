@@ -21,11 +21,15 @@ namespace SillyHitboxViewer {
 
         private List<HitboxGroupRevealer> _hitboxGroupRevealers = new List<HitboxGroupRevealer>();
         private Queue<HitboxRevealer> _revealerPool = new Queue<HitboxRevealer>();
-
-        private List<HitboxRevealer> _hurtboxRevealers = new List<HitboxRevealer>();
-        private static int poolStart = 50;
+        private static int hitPoolStart = 50;
         private static int totalPool = 0;
 
+        private List<HitboxRevealer> _blastRevealers = new List<HitboxRevealer>();
+        private Queue<HitboxRevealer> _blastPool = new Queue<HitboxRevealer>();
+        private static int blastPoolStart = 50;
+
+        private List<HitboxRevealer> _hurtboxRevealers = new List<HitboxRevealer>();
+         
         private HitboxRevealer _hitboxBoxPrefab; 
         private HitboxRevealer _hitboxNotBoxPrefab;
         private HitboxRevealer _hitboxNotBoxPrefabTall;
@@ -49,7 +53,8 @@ namespace SillyHitboxViewer {
 
             doOptions();
 
-            createPool();
+            createPool(hitPoolStart, _revealerPool, false);
+            createPool(blastPoolStart, _blastPool, true); 
 
             On.RoR2.BodyCatalog.Init += BodyCatalog_Init;
 
@@ -120,7 +125,7 @@ namespace SillyHitboxViewer {
                             false,
                             "welcom 2m y twisted mind\ntimescale hotkeys on I, K, O, and L. press quote key to disable").Value;
 
-            Utils.cfg_showLogs=
+            Utils.cfg_showLogsVerbose=
                 Config.Bind("pls be safe",
                             "logs",
                             false,
@@ -212,7 +217,7 @@ namespace SillyHitboxViewer {
         private BlastAttack.Result BlastAttack_Fire(On.RoR2.BlastAttack.orig_Fire orig, BlastAttack self) {
             BlastAttack.Result result = orig(self);
 
-            HitboxRevealer box = Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
+            HitboxRevealer box = requestPooledBlastRevealer().initBlastBox(self.position, self.radius);
 
             Utils.LogReadout($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
 
@@ -221,46 +226,72 @@ namespace SillyHitboxViewer {
         #endregion
 
         #region pool
-        private void createPool() {
+        //lot of code copy pasted from the first Hitbox pool i wrote to get the blast hitbox pool working
+        //  ideally i'll have a general pool class that'll more gracefully handle both 
+        //      (and any new ones (lookin at you, beetles with 10 hurtboxes (when there should just be one sphere)))
+        private void createPool(int poolStart, Queue<HitboxRevealer> poolQueue, bool blast) {
 
             for (int i = 0; i < poolStart; i++) {
-                createPooledRevealer();
+                createPooledRevealer(poolQueue, blast);
             }
         }
 
-        private void createPooledRevealer() {
+        private void createPooledRevealer(Queue<HitboxRevealer> poolQueue, bool blast) {
 
-            HitboxRevealer rev = Instantiate(_hitboxBoxPrefab, transform);
+            HitboxRevealer rev = Instantiate(blast ? _hitboxNotBoxPrefab : _hitboxBoxPrefab, transform);
 
-            _revealerPool.Enqueue(rev);
-            totalPool++;
+            poolQueue.Enqueue(rev);
+            //totalPool++;
         }
 
-        public HitboxRevealer requestPooledRevealer() {
+        public HitboxRevealer requestPooledHitboxRevealer() {
+            return requestPooledRevealer(_revealerPool, false);
+        }
 
-            if (_revealerPool.Count <= 0) {
-                instance.createPooledRevealer();
-                Utils.LogReadout($"pool full. adding rev {totalPool} to total {_revealerPool.Count}");
+        public HitboxRevealer requestPooledBlastRevealer() {
+            return requestPooledRevealer(_blastPool, true);
+        }
+
+        private HitboxRevealer requestPooledRevealer(Queue<HitboxRevealer> poolQueue, bool blast) {
+
+            if (poolQueue.Count <= 0) {
+                instance.createPooledRevealer(poolQueue, blast);
+
+                Utils.LogWarning($"requestPooledRevealer: pool full. adding revealer to total");
             }
-            HitboxRevealer revealer = _revealerPool.Dequeue();
-            if(revealer == null) {
-                Utils.LogReadout($"pooled revealer is null. trying again");
-                return requestPooledRevealer();
+
+            HitboxRevealer revealer = poolQueue.Dequeue();
+
+            if (revealer == null) {
+                Utils.LogWarning($"requestPooledRevealer: pooled revealer is null. trying again");
+                return requestPooledRevealer(poolQueue, blast);
             }
 
             return revealer;
         }
 
-        public void returnPooledRevealers(HitboxRevealer[] revs) {
-            //if revs[i] == null count killed revealers
+        public void returnPooledHitboxRevealers(HitboxRevealer[] revs) {
+
             for (int i = 0; i < revs.Length; i++) {
-                returnPooledRevealer(revs[i]);
+                returnPooledRevealer(revs[i], _revealerPool);
             }
         }
 
-        public void returnPooledRevealer(HitboxRevealer rev) {
+        public void returnPooledBlastRevealer(HitboxRevealer rev) {
+
+            returnPooledRevealer(rev, _blastPool);
+        }
+
+        private void returnPooledRevealers(HitboxRevealer[] revs, Queue<HitboxRevealer> poolQueue) {
+            //if revs[i] == null count killed revealers
+            for (int i = 0; i < revs.Length; i++) {
+                returnPooledRevealer(revs[i], poolQueue);
+            }
+        }
+
+        private void returnPooledRevealer(HitboxRevealer rev, Queue<HitboxRevealer> poolQueue) {
             rev.transform.parent = instance.transform;
-            _revealerPool.Enqueue(rev);
+            poolQueue.Enqueue(rev);
         }
 
         public void removeHitBoxGroupRevealer(HitboxGroupRevealer rev) {
@@ -287,6 +318,9 @@ namespace SillyHitboxViewer {
             if (Input.GetKeyDown(KeyCode.Quote)) {
                 keyDisable = !keyDisable;
                 Utils.Log($"hitbox debug hotkeys toggled {!keyDisable}", true);
+                if (Time.timeScale != 1) {
+                    setTimeScale(1);
+                }
             }
 
             if (keyDisable)
@@ -315,8 +349,15 @@ namespace SillyHitboxViewer {
                 HitboxRevealer rev;
                 for (int i = 1; i <= _revealerPool.Count; i++) {
                     rev = _revealerPool.Dequeue();
-                    Utils.LogReadout($"{rev != null}, {i} revs checked ");
+                    Utils.LogReadout($"hitbox {rev != null}, {i} revs checked ");
                     _revealerPool.Enqueue(rev);
+                }
+
+                Utils.LogReadout($"blast pool count: {_blastPool.Count}");
+                for (int i = 1; i <= _blastPool.Count; i++) {
+                    rev = _blastPool.Dequeue();
+                    Utils.LogReadout($"blastbox {rev != null}, {i} revs checked ");
+                    _blastPool.Enqueue(rev);
                 }
             }
         }
@@ -337,7 +378,7 @@ namespace SillyHitboxViewer {
         private void setTimeScale(float tim) {
             Time.timeScale = tim;
 
-            Utils.Log($"tim: {Time.timeScale}", true);
+            Utils.Log($"set tim: {Time.timeScale}", true);
         }
         #endregion
     }
