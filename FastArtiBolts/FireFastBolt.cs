@@ -32,7 +32,8 @@ namespace FastArtiBolts {
 
         private Transform _aimOrigin;
         private Vector3 _origOrigin;
-        public static float _originShift = 0.3f;
+        public static float _originShift = 0.15f;
+        public static float _originShiftMax = 0.5f;
 
         private Gauntlet _jauntlet;
 
@@ -93,20 +94,30 @@ namespace FastArtiBolts {
             if (_firingBoltsTimer > _fastBoltDuration && _pseudoFixedAge < _firingBoltsEndTime) {
 
                 if (!potato) {
-                    float sameFrameBolts = 0;
+
+                    Vector3 aimRight = -Vector3.Cross(base.GetAimRay().direction, Vector3.up);
+                    float remainder = _firingBoltsTimer - _fastBoltDuration;
+                    float remainderSegement = remainder / _fastBoltDuration;
+
+                    int sameFrameBolts = 0;
+
                     while (_firingBoltsTimer > _fastBoltDuration) {
+
                         _firingBoltsTimer -= _fastBoltDuration;
 
-                        Vector3 aimRight = -Vector3.Cross(base.GetAimRay().direction, Vector3.up);
-                        _aimOrigin.position += aimRight.normalized * sameFrameBolts * _originShift;
+                        float fuckinMath = doFuckinMath();
+                        float projectileSpeed = 80;
+
+                        float fuckinForward = remainderSegement * sameFrameBolts * projectileSpeed * Time.fixedDeltaTime;
+
+                        _aimOrigin.position += aimRight.normalized * fuckinMath + (base.GetAimRay().direction.normalized * -fuckinForward);
 
                         PseudoFireGauntlet();
-
                         sameFrameBolts++;
+
                         _aimOrigin.localPosition = _origOrigin;
                     }
 
-                    _aimOrigin.localPosition = _origOrigin;
                 } else {
 
                     int multi = 0;
@@ -122,6 +133,27 @@ namespace FastArtiBolts {
                     PseudoFireGauntlet();
                 }
             }
+        }
+
+        private float doFuckinMath() {
+
+            int jaunt = _jauntlet == Gauntlet.Right ? 1 : -1;
+            float fuckinMath = _boltsFired * _originShift * jaunt;
+
+            while (Mathf.Clamp(fuckinMath, -_originShiftMax, _originShiftMax) != fuckinMath) {
+
+                if (fuckinMath > _originShiftMax) {
+
+                    fuckinMath = 2 * _originShiftMax - fuckinMath;
+                }
+
+                if (fuckinMath < -_originShiftMax) {
+
+                    fuckinMath = -2 * _originShiftMax - fuckinMath;
+                }
+            }
+
+            return fuckinMath;
         }
 
         private void PseudoFireGauntlet() {
