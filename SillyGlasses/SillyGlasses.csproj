@@ -45,10 +45,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\_sln References\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp.R2API.mm, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\_sln References\Assembly-CSharp.R2API.mm.dll</HintPath>
-    </Reference>
     <Reference Include="BepInEx, Version=5.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\_sln References\BepInEx.dll</HintPath>
@@ -101,10 +97,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\_sln References\MonoMod.Utils.dll</HintPath>
     </Reference>
-    <Reference Include="R2API, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\_sln References\R2API.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\_sln References\UnityEngine.dll</HintPath>
@@ -151,9 +143,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\.editorconfig">
-      <Link>.editorconfig</Link>
-    </None>
     <None Include="Release\manifest.json" />
     <None Include="Release\README.md" />
   </ItemGroup>

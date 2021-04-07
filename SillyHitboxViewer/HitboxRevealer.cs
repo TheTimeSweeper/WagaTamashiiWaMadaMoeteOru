@@ -71,6 +71,7 @@ namespace SillyHitboxViewer {
                 rend.enabled = active;
             }
         }
+
         #region hurtbox
         public HitboxRevealer initHurtbox(Transform capsuleTransform, CapsuleCollider capsuleCollider) {
             init(capsuleTransform, false, false);
@@ -160,8 +161,9 @@ namespace SillyHitboxViewer {
             yield return new WaitForSeconds(cfg_BlastShowTime);
 
             if (gameObject) {
-                show(false);
-                HitboxViewerMod.instance.returnPooledBlastRevealer(this);
+                //show(false);
+                //HitboxViewerMod.instance.returnPooledBlastRevealer(this);
+                Destroy(gameObject);
             }
         }
         #endregion

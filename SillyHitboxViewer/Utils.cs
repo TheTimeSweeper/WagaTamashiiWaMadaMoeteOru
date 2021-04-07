@@ -11,15 +11,10 @@ namespace SillyHitboxViewer {
 
         public static KeyCode cfg_toggleKey;
 
+        public static string defaultSoftenedCharacters = "MercBody, MinerBody, MiniMushroomBody, NemesisEnforcerBody, NemesisEnforcerBossBody, UrsaBody, ";
         public static string cfg_softenedCharactersString;
         public static List<int> cfg_softenedCharacters = new List<int>();
 
-        public static void LogReadout(object log) {
-
-            if (cfg_showLogsVerbose) {
-                Log(log, false);
-            }
-        }
 
         public static void LogWarning(object log) {
 
@@ -28,8 +23,20 @@ namespace SillyHitboxViewer {
             }
         }
 
-        public static void Log(object log, bool chat) {
-            if (cfg_useDebug) {
+        public static void LogError(object log) {
+            HitboxViewerMod.log.LogError(log);
+        }
+
+        public static void LogReadout(object log) {
+
+            if (cfg_showLogsVerbose) {
+                Log(log, false);
+            }
+        }
+
+        public static void Log(object log, bool chat, bool overrideDebug = false) {
+
+            if (cfg_useDebug || overrideDebug) {
                 HitboxViewerMod.log.LogMessage(log);
                 if (chat) {
                     RoR2.Chat.AddMessage(log.ToString());
@@ -42,6 +49,7 @@ namespace SillyHitboxViewer {
             if (!HitboxRevealer.cfg_MercSoften)
                 return;
 
+            cfg_softenedCharactersString = defaultSoftenedCharacters + cfg_softenedCharactersString;
             cfg_softenedCharactersString = cfg_softenedCharactersString.Replace(" ", "");
             string[] strings = cfg_softenedCharactersString.Split(',');
 
@@ -50,11 +58,14 @@ namespace SillyHitboxViewer {
             for (int i = 0; i < strings.Length; i++) {
                 string parsedString = strings[i];
 
-                int bodIndex = RoR2.BodyCatalog.FindBodyIndex(parsedString);
+                int bodIndex = (int)RoR2.BodyCatalog.FindBodyIndex(parsedString);
                 if(bodIndex == -1) {
-                    HitboxViewerMod.log.LogWarning($"Could not find Characterbody for '{parsedString}'. This character's hitboxes will not be toned down. be careful");
+                    //HitboxViewerMod.log.LogWarning($"Could not find Characterbody for '{parsedString}'. This character's hitboxes will not be toned down. be careful");
                     continue;
                 }
+                if (cfg_softenedCharacters.Contains(bodIndex))
+                    continue;
+
                 cfg_softenedCharacters.Add(bodIndex);
                 parsedBodiesLog += $"\nbodyIndex: {bodIndex}: {parsedString}";
             }

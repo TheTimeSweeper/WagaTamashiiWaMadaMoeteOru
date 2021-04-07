@@ -7,6 +7,7 @@ namespace SillyHitboxViewer {
     public class HitboxGroupRevealer: MonoBehaviour {
 
         public HitBoxGroup hitboxGroup { get; set; }
+        private HitboxRevealer _hitboxPrefab;
 
         private HitboxRevealer[] _revealers;
 
@@ -15,13 +16,14 @@ namespace SillyHitboxViewer {
         private int _revealBufferCount;
         private bool _revealed;
 
-        public void init(HitBoxGroup hitboxGroup_, GameObject attacker) {
+        public void init(HitBoxGroup hitboxGroup_, HitboxRevealer hitboxPrefab_, GameObject attacker) {
             hitboxGroup = hitboxGroup_;
+            _hitboxPrefab = hitboxPrefab_;
 
             if (attacker) {
                 CharacterBody bod = attacker.GetComponent<CharacterBody>();
                 if (bod) {
-                    _isMerc = checkMerc(bod.bodyIndex);
+                    _isMerc = checkMerc((int)bod.bodyIndex);
                 }
             }
 
@@ -39,7 +41,8 @@ namespace SillyHitboxViewer {
             _revealers = new HitboxRevealer[hitboxGroup.hitBoxes.Length];
             for (int i = 0; i < hitboxGroup.hitBoxes.Length; i++) {
 
-                rev = HitboxViewerMod.instance.requestPooledHitboxRevealer();
+                //rev = HitboxViewerMod.instance.requestPooledHitboxRevealer();
+                rev = Instantiate(_hitboxPrefab);
                 rev.init(hitboxGroup.hitBoxes[i].transform, _isMerc);
                 _revealers[i] = rev;
             }
@@ -67,6 +70,14 @@ namespace SillyHitboxViewer {
         }
 
         void OnDestroy() {
+
+            reveal(false);
+            for (int i = 0; i < _revealers.Length; i++) {
+                Destroy(_revealers[i].gameObject);
+
+            }
+            return; //rip pool
+
             reveal(false);
             _revealBufferCount = -1;
 

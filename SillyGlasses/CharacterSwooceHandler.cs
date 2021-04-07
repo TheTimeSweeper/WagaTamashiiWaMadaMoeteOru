@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using BepInEx;
-using R2API.Utils;
+//using R2API.Utils;
 using RoR2;
 using UnityEngine;
 using UnityEngineInternal;
@@ -50,7 +51,7 @@ namespace SillyGlasses
         private static readonly Color healFlashColor = new Color32(104, 196, 49, byte.MaxValue);
 
         private static readonly float hitFlashDuration = 0.15f;
-        private static readonly float healFlashDuration = 0.35f; 
+        private static readonly float healFlashDuration = 0.35f;
         #endregion
 
         private int _cfgMaxItems {
@@ -70,6 +71,8 @@ namespace SillyGlasses
             {
                 _swoocedCharacterModel = GetComponent<CharacterModel>();
             }
+
+            FieldInfo fadeField = typeof(CharacterModel).GetField("fade", BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
         public void Init(SillyGlassesPlugin sillyGlasses_, float distance_)
@@ -229,7 +232,7 @@ namespace SillyGlasses
                         continue;
 
                     //create item
-                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated, itemIndex_ == ItemIndex.CritGlasses);
+                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated, itemIndex_ == ItemCatalog.FindItemIndex("CritGlasses"));
                     if (iterInstantiatedItem == null)
                         continue;
 
@@ -452,7 +455,9 @@ namespace SillyGlasses
                 return;
             }
 
-            float fade = characterModel_.GetFieldValue<float>("fade");
+            //float fade = characterModel_.GetFieldValue<float>("fade");
+
+            float fade = (float)Utils.materialFadeField.GetValue(characterModel_);
 
             for (int i = 0; i < _allSillyItemDisplays.Count; i++) {
 

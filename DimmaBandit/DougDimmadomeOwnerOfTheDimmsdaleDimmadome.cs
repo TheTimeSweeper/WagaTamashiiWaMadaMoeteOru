@@ -5,16 +5,16 @@ using BepInEx;
 using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
-using R2API.Utils;
+//using R2API.Utils;
 using UnityEngine.Networking;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 using EntityStates.Missions.ArtifactWorld.TrialController;
 
 namespace DimmaBandit {
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.DimmaBandit", "The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome", "0.2.0")]
+    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    //[BepInDependency("com.bepis.r2api")]
+    [BepInPlugin("com.TheTimeSweeper.DimmaBandit", "The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome", "0.3.0")]
     public class DougDimmadomeOwnerOfTheDimmsdaleDimmadome : BaseUnityPlugin {
 
         public static DougDimmadomeOwnerOfTheDimmsdaleDimmadome Instance;
@@ -24,15 +24,10 @@ namespace DimmaBandit {
         public static bool moveCamera = true;
 
         public static GameObject dimmadomePrefab;
+        public static GameObject dimmadomePrefab2;
 
         public delegate void hatGrowEvent(float amountScale);
         public hatGrowEvent onHatGrow;
-
-        private string[] _dougs = new string[]{
-            "BanditBody(Clone)",
-            "BanditReloadedBody(Clone)",
-            "WildBody(Clone)"
-        };
 
         private void populateAss() {
             AssetBundle MainAss = null;
@@ -41,6 +36,7 @@ namespace DimmaBandit {
             }
              
             dimmadomePrefab = MainAss.LoadAsset<GameObject>("the name's doug dimmadome");
+            dimmadomePrefab2 = MainAss.LoadAsset<GameObject>("the name's doug dimmadome2");
         }
 
         private void doConfig() {
@@ -49,7 +45,7 @@ namespace DimmaBandit {
                 Config.Bind("The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome",
                             "hat grow amount",
                             0.169f,
-                            "multiplier of size gain per kill").Value;
+                            "multiplier of size gain per kill (scales with enemy health)").Value;
             //moveCamera =
             //    Config.Wrap("The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome",
             //                "move camera",
@@ -70,7 +66,7 @@ namespace DimmaBandit {
         private void CharacterBody_OnDeathStart(On.RoR2.CharacterBody.orig_OnDeathStart orig, CharacterBody self) {
             orig(self);
 
-            onHatGrow?.Invoke(self.maxHealth * 0.01f);
+            onHatGrow?.Invoke(self.maxHealth * 0.012f);
         }
 
         private void ModelSkinController_ApplySkin(On.RoR2.ModelSkinController.orig_ApplySkin orig, ModelSkinController self, int skinIndex) {
@@ -79,14 +75,20 @@ namespace DimmaBandit {
 
             CharacterModel model = self.GetComponent<CharacterModel>();
 
-            if (_dougs.Contains(model.body.name) || model.name == "mdlBandit") {
+            bool bandit1 = model.name == "mdlBandit";
+
+            bool bandit2 = model.name == "mdlBandit2";
+
+            Debug.LogWarning("kneeg");
+
+            if (bandit1 || bandit2) {
 
                 Chat.AddMessage("<color=#fd2>The name's Doug Dimmadome,</color>");
 
                 DimmaBanditHatGrower hatGrower = model.GetComponent<ChildLocator>()
-                    .FindChild("Head").transform.Find("hat").gameObject
+                    .FindChild("Head").GetChild(0).gameObject
                     .AddComponent<DimmaBanditHatGrower>()
-                    .init(model);
+                    .init(model, bandit1);
 
                 Chat.AddMessage("<color=#fd2>owner of the Dimmsdale dimmadome</color>");
             }

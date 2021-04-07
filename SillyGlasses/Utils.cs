@@ -1,4 +1,5 @@
 ﻿using RoR2;
+using System.Reflection;
 using UnityEngine;
 
 namespace SillyGlasses
@@ -16,6 +17,8 @@ namespace SillyGlasses
         public static int Cfg_CheatItem = 7; //glassiese
         public static int Cfg_CheatItemBoring = 58; //magayzenes
 
+        public static FieldInfo materialFadeField;
+
         public static void Log (string logString, bool chat = false)
         {
             if (Cfg_UseLogs)
@@ -27,6 +30,10 @@ namespace SillyGlasses
                     Chat.AddMessage(logString);
                 }
             }
+        }
+
+        public static void CacheReflection() {
+            materialFadeField = typeof(CharacterModel).GetField("fade", BindingFlags.NonPublic | BindingFlags.Instance);
         }
     }
 }

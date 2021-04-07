@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -34,6 +34,9 @@
     <Reference Include="BepInEx.Preloader">
       <HintPath>..\..\_sln References\BepInEx.Preloader.dll</HintPath>
     </Reference>
+    <Reference Include="EnigmaticThunder">
+      <HintPath>..\_refs\EnigmaticThunder.dll</HintPath>
+    </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>..\..\_sln References\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -54,9 +57,6 @@
     </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>..\..\_sln References\MonoMod.Utils.dll</HintPath>
-    </Reference>
-    <Reference Include="R2API">
-      <HintPath>..\..\_sln References\R2API.dll</HintPath>
     </Reference>
     <Reference Include="RiskOfOptions">
       <HintPath>..\..\_sln References\compats\RiskOfOptions.dll</HintPath>

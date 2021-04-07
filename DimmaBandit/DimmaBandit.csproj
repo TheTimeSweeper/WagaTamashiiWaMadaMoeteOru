@@ -31,11 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\_sln References\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp.R2API.mm">
-      <HintPath>..\..\_sln References\Assembly-CSharp.R2API.mm.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\..\_sln References\BepInEx.dll</HintPath>
@@ -49,7 +47,8 @@
     <Reference Include="BepInEx.Preloader">
       <HintPath>..\..\_sln References\BepInEx.Preloader.dll</HintPath>
     </Reference>
-    <Reference Include="MMHOOK_Assembly-CSharp">
+    <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\_sln References\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -69,9 +68,6 @@
     </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>..\..\_sln References\MonoMod.Utils.dll</HintPath>
-    </Reference>
-    <Reference Include="R2API">
-      <HintPath>..\..\_sln References\R2API.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

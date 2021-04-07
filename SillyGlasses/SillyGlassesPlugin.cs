@@ -5,10 +5,11 @@ using BepInEx;
 using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
-using R2API.Utils;
+//using R2API.Utils;
 using UnityEngine.Networking;
 using EntityStates.Engi.EngiWeapon;
 
+//[assembly: ManualNetworkRegistration]
 namespace SillyGlasses {
 
     public class SillyItemDisplayRules : List<SillyItemDisplayRule> {
@@ -26,7 +27,7 @@ namespace SillyGlasses {
     public class SillyItemDisplayRule {
         public string character;
 
-        public ItemIndex item;
+        public ItemIndex item; 
 
         public Vector3 positionShift;
         public Vector3 rotationShift;
@@ -34,9 +35,9 @@ namespace SillyGlasses {
         public SillyItemDisplayBehavior specialBehavior;
     }
 
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.1.0")]
+    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    //[BepInDependency("com.bepis.r2api")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.2.69")]
     public class SillyGlassesPlugin : BaseUnityPlugin
     {
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
@@ -84,7 +85,9 @@ namespace SillyGlasses {
 
             InitConfig();
 
-            On.RoR2.Inventory.CopyItemsFrom += CopyItemsHook;
+            Utils.CacheReflection();
+
+            On.RoR2.Inventory.CopyItemsFrom_Inventory += Inventory_CopyItemsFrom_Inventory; ;
 
             On.RoR2.CharacterBody.OnInventoryChanged += InvChangedHook;
 
@@ -95,6 +98,28 @@ namespace SillyGlasses {
             On.RoR2.CharacterModel.DisableItemDisplay += DisableItemDisplayHook;
 
             On.RoR2.CharacterModel.UpdateMaterials += UpdateMaterialsHook;
+        }
+
+        //check if this inventory is a turret
+        private void Inventory_CopyItemsFrom_Inventory(On.RoR2.Inventory.orig_CopyItemsFrom_Inventory orig, Inventory self, Inventory other) {
+
+            CharacterBody copiedItemsBody;
+
+            for (int i = 0; i < _swooceHandlers.Count; i++) {
+
+                if (_swooceHandlers[i] != null && _swooceHandlers[i].swoocedCharacterModel != null) {
+
+                    copiedItemsBody = _swooceHandlers[i].swoocedCharacterModel.body;
+
+                    if (copiedItemsBody.inventory == other) {
+
+                        _copiedItemsInventory = self;
+                        break;
+                    }
+                }
+            }
+
+            orig(self, other);
         }
 
         #region config
@@ -166,8 +191,8 @@ namespace SillyGlasses {
 
         #endregion
 
-        //check if this inventory is a turret
-        private void CopyItemsHook(On.RoR2.Inventory.orig_CopyItemsFrom orig, Inventory self, Inventory other) 
+        //old hook
+        private void CopyItemsHook(Inventory self, Inventory other) 
         {
             CharacterBody copiedItemsBody = null;
 
@@ -185,7 +210,7 @@ namespace SillyGlasses {
                 }
             }
 
-            orig(self, other);
+            //orig(self, other);
         }
 
         private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) {
@@ -219,15 +244,15 @@ namespace SillyGlasses {
                 return Utils.Cfg_EngiTurretItemDistanceMultiplier;
             }
 
-            bool isScavenger = checkScavengerNames(self);
-            if (isScavenger) {
-                return Utils.Cfg_ScavengerItemDistanceMultiplier;
-            }
+            //bool isScavenger = checkScavengerNames(self);
+            //if (isScavenger) {
+            //    return Utils.Cfg_ScavengerItemDistanceMultiplier;
+            //}
 
-            bool isMoon = checkMoonNames(self);
-            if (isMoon) {
-                return Utils.Cfg_BrotherItemDistanceMultiplier;
-            }
+            //bool isMoon = checkMoonNames(self);
+            //if (isMoon) {
+            //    return Utils.Cfg_BrotherItemDistanceMultiplier;
+            //}
 
             return 1;
         }
@@ -300,14 +325,14 @@ namespace SillyGlasses {
             {
                 if (Input.GetKeyDown(KeyCode.F2))
                 {
-                    TestSpawnItem((int)ItemIndex.CritGlasses);
+                    TestSpawnItem((int)ItemCatalog.FindItemIndex("CritGlasses"));//ItemIndex.CritGlasses);
                 }
 
-                if (Input.GetKeyDown(KeyCode.F3))
-                {
-                    Chat.AddMessage("kek");
-                    TestSpawnItem((int)ItemIndex.TreasureCache);
-                }
+                //if (Input.GetKeyDown(KeyCode.F3))
+                //{
+                //    Chat.AddMessage("kek");
+                //    TestSpawnItem((int)ItemIndex.TreasureCache);
+                //}
 
                 if (Input.GetKeyDown(KeyCode.F6))
                 {
@@ -358,7 +383,8 @@ namespace SillyGlasses {
                     if (_spawnedRandomItems >= 3)
                     {
                         //Randomly get the next item:
-                        _currentRandomIndex = Run.instance.treasureRng.RangeInt(0, dropList.Count);
+                        Utils.Log("treasureRNG broken", true);
+                        //_currentRandomIndex = Run.instance.treasureRng.RangeInt(0, dropList.Count);
                         _spawnedRandomItems = 1;
                     }
                     else

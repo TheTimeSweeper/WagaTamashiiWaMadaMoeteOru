@@ -1,8 +1,5 @@
 ﻿using BepInEx;
 using EntityStates;
-using R2API;
-using R2API.AssetPlus;
-using R2API.Utils;
 using RoR2;
 using RoR2.Skills;
 using System;
@@ -11,16 +8,17 @@ using UnityEngine;
 
 namespace AcridHitbox {
 
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)] 
     //TODO: see if only host needs it
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.AcridHitboxBuff", "Acrid Slash Hitbox Buff", "1.0.0")]
+    //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)] 
+    //[BepInDependency("com.bepis.r2api")]
+    [BepInPlugin("com.TheTimeSweeper.AcridHitboxBuff", "Acrid Slash Hitbox Buff", "1.1.0")]
     public class AcridHitboxMod : BaseUnityPlugin {
 
         //45, 42, 38,, 0, 13, 11
         private Vector3 cfg_newHitboxScale = new Vector3(45, 42, 38);
         private Vector3 cfg_newHtboxPosition = new Vector3(0, 13, 11);
         private bool cfg_keepVisuals;
+        BodyIndex _crocoBod;
 
         public void Awake() {
 
@@ -31,6 +29,12 @@ namespace AcridHitbox {
 
             On.RoR2.CharacterBody.Start += CharacterBody_Start;
 
+            On.RoR2.BodyCatalog.Init += BodyCatalog_Init;
+        }
+
+        private void BodyCatalog_Init(On.RoR2.BodyCatalog.orig_Init orig) {
+            orig();
+            _crocoBod = BodyCatalog.FindBodyIndex("CrocoBody");
         }
 
         private void doConfig() {
@@ -79,7 +83,7 @@ namespace AcridHitbox {
 
             orig(self);
 
-            if (self.bodyIndex != BodyCatalog.FindBodyIndex("CrocoBody")) 
+            if (self.bodyIndex != _crocoBod) 
                 return;
 
             wheresthebeef(self);
