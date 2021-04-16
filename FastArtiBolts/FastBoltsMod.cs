@@ -1,13 +1,11 @@
 ﻿using BepInEx;
 using EntityStates;
-using R2API;
-using R2API.AssetPlus;
 using R2API.Utils;
 using RoR2;
 using RoR2.Projectile;
 using RoR2.Skills;
 using System;
-using System.Linq;
+using R2API;
 using UnityEngine;
 
 namespace FastArtiBolts {
@@ -16,14 +14,16 @@ namespace FastArtiBolts {
     {
         "LoadoutAPI",
         "LanguageAPI",
-        "ResourcesAPI"
+        "PrefabAPI",
+        "ResourcesAPI",
+        "ProjectileAPI",
         //"EffectAPI",
         //"SurvivorAPI",
         //"UnlockablesAPI",
     })]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.FastArtiBolts", "Fast Artificer Bolts", "2.0.0")]
+    [BepInPlugin("com.TheTimeSweeper.FastArtiBolts", "Fast Artificer Bolts", "2.1.0")]
     public class FastBoltsMod : BaseUnityPlugin {
 
         public static FastBoltsMod instance;
@@ -36,7 +36,7 @@ namespace FastArtiBolts {
 
         public void Awake() {
 
-            instance = this;
+            instance = this; 
 
             Utils.PopulateAssets();
 
@@ -60,9 +60,7 @@ namespace FastArtiBolts {
             }
             fastFireBoltPrefab.GetComponent<ProjectileController>().ghostPrefab = fastBoltGhost;
 
-            ProjectileCatalog.getAdditionalEntries += list => {
-                list.Add(fastFireBoltPrefab);
-            };
+            ProjectileAPI.Add(fastFireBoltPrefab);
         }
 
         public void AddNewFireboltSkill() {
@@ -96,26 +94,28 @@ namespace FastArtiBolts {
             LanguageAPI.Add("ARTI_PRIMARY_FASTBOLTS_DESCRIPTION", descriptionText);
 
             SteppedSkillDef mySkillDef = ScriptableObject.CreateInstance<SteppedSkillDef>();
+            mySkillDef.icon = Utils.FastBoltIcon;
+            mySkillDef.skillDescriptionToken = "ARTI_PRIMARY_FASTBOLTS_DESCRIPTION";
+            mySkillDef.skillName = "ARTI_PRIMARY_FASTBOLTS_NAME";
+            mySkillDef.skillNameToken = "ARTI_PRIMARY_FASTBOLTS_NAME";
+            mySkillDef.keywordTokens = firefireboltskill.keywordTokens;
             mySkillDef.activationState = new SerializableEntityStateType(typeof(FireFastBolt));
             mySkillDef.activationStateMachineName = firefireboltskill.activationStateMachineName;
             mySkillDef.baseMaxStock = firefireboltskill.baseMaxStock;
             mySkillDef.baseRechargeInterval = firefireboltskill.baseRechargeInterval;
             mySkillDef.beginSkillCooldownOnSkillEnd = firefireboltskill.beginSkillCooldownOnSkillEnd;
-            mySkillDef.canceledFromSprinting = firefireboltskill.canceledFromSprinting;
+            mySkillDef.resetCooldownTimerOnUse = firefireboltskill.resetCooldownTimerOnUse;
+            mySkillDef.dontAllowPastMaxStocks = firefireboltskill.dontAllowPastMaxStocks;
             mySkillDef.fullRestockOnAssign = firefireboltskill.fullRestockOnAssign;
+            mySkillDef.canceledFromSprinting = firefireboltskill.canceledFromSprinting;
             mySkillDef.interruptPriority = firefireboltskill.interruptPriority;
-            mySkillDef.isBullets = firefireboltskill.isBullets;
+            mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
             mySkillDef.isCombatSkill = firefireboltskill.isCombatSkill;
             mySkillDef.mustKeyPress = firefireboltskill.mustKeyPress;
-            mySkillDef.noSprint = firefireboltskill.noSprint;
+            mySkillDef.cancelSprintingOnActivation = firefireboltskill.cancelSprintingOnActivation;
             mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
             mySkillDef.requiredStock = firefireboltskill.requiredStock;
-            mySkillDef.shootDelay = firefireboltskill.shootDelay;
             mySkillDef.stockToConsume = firefireboltskill.stockToConsume;
-            mySkillDef.icon = Utils.FastBoltIcon;
-            mySkillDef.skillDescriptionToken = "ARTI_PRIMARY_FASTBOLTS_DESCRIPTION";
-            mySkillDef.skillName = "ARTI_PRIMARY_FASTBOLTS_NAME";
-            mySkillDef.skillNameToken = "ARTI_PRIMARY_FASTBOLTS_NAME";
             mySkillDef.resetStepsOnIdle = firefireboltskill.resetStepsOnIdle;
             mySkillDef.stepCount = firefireboltskill.stepCount;
             return mySkillDef;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using R2API.Utils;
 using RoR2;
+using R2API.Utils;
 using RoR2.Skills;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -34,7 +34,7 @@ namespace FastArtiBolts {
         private Transform _aimOrigin;
         private Vector3 _origOrigin;
         private float _originShift = 0.12f;
-        private float _originShiftMax = 0.5f;
+        private float _originShiftMax = 0.4f;
         private float _originShiftForward = 0.2f;
 
         private Gauntlet _jauntlet;
@@ -134,9 +134,13 @@ namespace FastArtiBolts {
             }
         }
 
+        //makes the position pingpong back and forth from a left and right threshold
         private float doFuckinMath() {
 
-            float fuckinMath = _boltsFired * _originShift * (_jauntlet == Gauntlet.Right ? 1 : -1);
+            int jauntletMult = _jauntlet == Gauntlet.Right ? 1 : -1;
+
+            float fuckinMath = _boltsFired * _originShift * jauntletMult;
+
             while (Mathf.Clamp(fuckinMath, -_originShiftMax, _originShiftMax) != fuckinMath) {
 
                 if (fuckinMath >= _originShiftMax) {
@@ -149,6 +153,8 @@ namespace FastArtiBolts {
                     fuckinMath = -2 * _originShiftMax - fuckinMath;
                 }
             }
+
+            fuckinMath += 0.1f * jauntletMult;
 
             return fuckinMath;
         }
