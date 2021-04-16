@@ -2,6 +2,7 @@
 
 namespace SillyHitboxViewer {
     public static class RiskOfOptionsCompat {
+
         private static bool? _enabled;
 
         public static bool enabled {
@@ -28,26 +29,24 @@ namespace SillyHitboxViewer {
 
         public static void hitboxBoolEvent(bool active) {
 
-            HitboxRevealer.showingHitBoxes = !active;
+            HitboxViewerMod.setShowingHitboxes(!active);
         }
         public static void hurtboxBoolEvent(bool active) {
 
-            HitboxRevealer.showingHurtBoxes = !active;
-            HitboxViewerMod.instance.showAllHurtboxes();
+            HitboxViewerMod.setShowingHurtboxes(!active, true);
         }
 
         public static void readOptions() {
 
             string disableHit = ModSettingsManager.getOptionValue("Enable Hitboxes");
             if (!string.IsNullOrEmpty(disableHit)) {
-                HitboxRevealer.showingHitBoxes = disableHit == "1";
+                HitboxViewerMod.setShowingHitboxes(disableHit == "1");
             }
 
             string disableHurt = ModSettingsManager.getOptionValue("Enable Hurtboxes");
             if (!string.IsNullOrEmpty(disableHurt)) {
-                HitboxRevealer.showingHurtBoxes = disableHurt == "1";
+                HitboxViewerMod.setShowingHurtboxes(disableHurt == "1", false);
             }
         }
-
     }
 }

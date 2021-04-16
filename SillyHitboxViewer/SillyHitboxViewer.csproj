@@ -19,9 +19,6 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\_sln References\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp.R2API.mm">
-      <HintPath>..\..\_sln References\Assembly-CSharp.R2API.mm.dll</HintPath>
-    </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\..\_sln References\BepInEx.dll</HintPath>
     </Reference>
@@ -34,8 +31,8 @@
     <Reference Include="BepInEx.Preloader">
       <HintPath>..\..\_sln References\BepInEx.Preloader.dll</HintPath>
     </Reference>
-    <Reference Include="EnigmaticThunder">
-      <HintPath>..\_refs\EnigmaticThunder.dll</HintPath>
+    <Reference Include="HGCSharpUtils">
+      <HintPath>..\..\_sln References\HGCSharpUtils.dll</HintPath>
     </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>..\..\_sln References\MMHOOK_Assembly-CSharp.dll</HintPath>
@@ -57,6 +54,9 @@
     </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>..\..\_sln References\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="R2API">
+      <HintPath>..\..\_sln References\R2API.dll</HintPath>
     </Reference>
     <Reference Include="RiskOfOptions">
       <HintPath>..\..\_sln References\compats\RiskOfOptions.dll</HintPath>

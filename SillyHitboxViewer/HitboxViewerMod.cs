@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using System;
+using R2API.Utils;
+using R2API;
 
 namespace SillyHitboxViewer {
 
-    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInDependency("com.EnigmaDev.EnigmaticThunder")]
+    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.3.0")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.3.1")]
     public class HitboxViewerMod : BaseUnityPlugin {
 
         public static HitboxViewerMod instance;
@@ -54,7 +56,7 @@ namespace SillyHitboxViewer {
                 setDefaultOptions();
             }
 
-            EnigmaticThunder.Modules.CommandHelper.AddToConsoleWhenReady();
+            CommandHelper.AddToConsoleWhenReady();
 
             //createPool(hitPoolStart, _revealerPool, false);
             //createPool(blastPoolStart, _blastPool, true); 
@@ -85,6 +87,7 @@ namespace SillyHitboxViewer {
         }
 
         #region options n commands
+        //remember the latest settings
         private void setDefaultOptions() {
             HitboxRevealer.showingHitBoxes = PlayerPrefs.GetInt("showHitbox", 1) == 1;
             HitboxRevealer.showingHurtBoxes = PlayerPrefs.GetInt("showHurtbox", 0) == 1;
@@ -109,8 +112,7 @@ namespace SillyHitboxViewer {
                 enabled = !HitboxRevealer.showingHitBoxes;
             }
 
-            HitboxRevealer.showingHitBoxes = enabled;
-            PlayerPrefs.SetInt("showHitbox", enabled ? 1 : 0);
+            setShowingHitboxes(enabled);
 
             Utils.Log($"showing hitboxes option set to {enabledArg == 1}", true, true);
         }
@@ -133,12 +135,24 @@ namespace SillyHitboxViewer {
                 enabled = !HitboxRevealer.showingHurtBoxes;
             }
 
-            HitboxRevealer.showingHurtBoxes = enabled; 
-            PlayerPrefs.SetInt("showHurtbox", enabled ? 1: 0);
+            setShowingHurtboxes(enabled, true);
 
             Utils.Log($"showing hurtboxes option set to {enabledArg == 1}", true, true);
+        }
 
-            HitboxViewerMod.instance.showAllHurtboxes();
+        public static void setShowingHitboxes(bool set) {
+
+            HitboxRevealer.showingHitBoxes = set;
+            PlayerPrefs.SetInt("showHitbox", set ? 1 : 0);
+        }
+
+        public static void setShowingHurtboxes(bool set, bool showAll) {
+
+            HitboxRevealer.showingHurtBoxes = set;
+            PlayerPrefs.SetInt("showHurtbox", set ? 1 : 0);
+            if (showAll) {
+               HitboxViewerMod.instance.showAllHurtboxes();
+            }
         }
         #endregion
 
@@ -330,8 +344,11 @@ namespace SillyHitboxViewer {
         #region toggle and debug
         void Update() {
 
+            //override hotkey
             if (Input.GetKeyDown(Utils.cfg_toggleKey)) {
+
                 HitboxRevealer.showingBoxes = !HitboxRevealer.showingBoxes;
+
                 if (HitboxRevealer.showingBoxes) {
                     Utils.Log("hitboxes enabled", true, true);
                 } else {
@@ -339,10 +356,10 @@ namespace SillyHitboxViewer {
                 }
                 showAllHurtboxes();
             }
-
             if (!Utils.cfg_useDebug)
                 return;
 
+            //debug hotkeys
             if (Input.GetKeyDown(KeyCode.Quote)) {
                 keysDisable = !keysDisable;
                 Utils.Log($"hitbox debug hotkeys toggled {!keysDisable}", true);
