@@ -12,13 +12,14 @@ namespace SillyHitboxViewer {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.3.1")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.0")]
     public class HitboxViewerMod : BaseUnityPlugin {
-
+        
         public static HitboxViewerMod instance;
 
         public static BepInEx.Logging.ManualLogSource log;
 
+        #region pools (rip)
         private List<HitboxGroupRevealer> _hitboxGroupRevealers = new List<HitboxGroupRevealer>();
         private Queue<HitboxRevealer> _revealerPool = new Queue<HitboxRevealer>();
         private static int hitPoolStart = 50;
@@ -26,14 +27,18 @@ namespace SillyHitboxViewer {
 
         private Queue<HitboxRevealer> _blastPool = new Queue<HitboxRevealer>();
         private static int blastPoolStart = 50;
+        #endregion
 
         private List<HitboxRevealer> _hurtboxRevealers = new List<HitboxRevealer>();
-         
+
+        private List<HitboxRevealer> _bulletHitPointRevealers = new List<HitboxRevealer>();
+
         private HitboxRevealer _hitboxBoxPrefab; 
         private HitboxRevealer _hitboxNotBoxPrefab;
         private HitboxRevealer _hitboxNotBoxPrefabTall;
+        private HitboxRevealer _hitboxNotBoxPrefabTallFlat;
 
-        private bool keysDisable;
+        private bool _keysDisable;
 
         void Awake() {
 
@@ -43,12 +48,12 @@ namespace SillyHitboxViewer {
 
             populateAss();
 
-            if (_hitboxBoxPrefab == null || _hitboxNotBoxPrefabTall == null || _hitboxNotBoxPrefab == null) {
-                log.LogError($"unable to get a hitboxprefab from the bundle. Timesweeper did an oops | box: {_hitboxBoxPrefab != null}, capsule: {_hitboxNotBoxPrefabTall != null}, sphere: {_hitboxNotBoxPrefab != null}");
+            if (_hitboxBoxPrefab == null || _hitboxNotBoxPrefabTall == null || _hitboxNotBoxPrefab == null || _hitboxNotBoxPrefabTallFlat == null) {
+                log.LogError($"unable to get a hitboxprefab from the bundle. Timesweeper did an oops | box: {_hitboxBoxPrefab != null}, capsule: {_hitboxNotBoxPrefabTall != null}, sphere: {_hitboxNotBoxPrefab != null}, can: {_hitboxNotBoxPrefabTallFlat != null}");
                 return;
             }
 
-            doConfig();
+            Utils.doConfig();
 
             if (RiskOfOptionsCompat.enabled) {
                 RiskOfOptionsCompat.doOptions();
@@ -68,13 +73,20 @@ namespace SillyHitboxViewer {
             On.RoR2.BlastAttack.Fire += BlastAttack_Fire;
 
             On.RoR2.HurtBox.Awake += HurtBox_Awake;
+
+            On.RoR2.BulletAttack.FireSingle += BulletAttack_FireSingle;
+            On.RoR2.BulletAttack.InitBulletHitFromRaycastHit += BulletAttack_InitBulletHitFromRaycastHit;
+
+            //initbulletfrom raycasthit
+            // spawnblast at origin, radius 1
+
         }
 
         void Start() {
             if (RiskOfOptionsCompat.enabled)
                 RiskOfOptionsCompat.readOptions();
         }
-
+        #region setup Ass
         private void populateAss() {
             AssetBundle MainAss = null;
                 using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SillyHitboxViewer.sillyhitbox")) {
@@ -84,8 +96,9 @@ namespace SillyHitboxViewer {
             _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInator")?.GetComponent<HitboxRevealer>();
             _hitboxNotBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorSphere")?.GetComponent<HitboxRevealer>();
             _hitboxNotBoxPrefabTall = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorCapsule")?.GetComponent<HitboxRevealer>();
+            _hitboxNotBoxPrefabTallFlat = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorCylinder")?.GetComponent<HitboxRevealer>();
         }
-
+        #endregion
         #region options n commands
         //remember the latest settings
         private void setDefaultOptions() {
@@ -114,7 +127,7 @@ namespace SillyHitboxViewer {
 
             setShowingHitboxes(enabled);
 
-            Utils.Log($"showing hitboxes option set to {enabledArg == 1}", true, true);
+            Utils.Log($"showing hitboxes option set to {enabledArg == 1}", true);
         }
 
         [ConCommand(commandName = "show_hurtboxes", flags = ConVarFlags.None, helpText = "Enables/disables character Hurtboxes")]
@@ -137,7 +150,7 @@ namespace SillyHitboxViewer {
 
             setShowingHurtboxes(enabled, true);
 
-            Utils.Log($"showing hurtboxes option set to {enabledArg == 1}", true, true);
+            Utils.Log($"showing hurtboxes option set to {enabledArg == 1}", true);
         }
 
         public static void setShowingHitboxes(bool set) {
@@ -151,62 +164,8 @@ namespace SillyHitboxViewer {
             HitboxRevealer.showingHurtBoxes = set;
             PlayerPrefs.SetInt("showHurtbox", set ? 1 : 0);
             if (showAll) {
-               HitboxViewerMod.instance.showAllHurtboxes();
+               HitboxViewerMod.instance.bindShowAllHurtboxes();
             }
-        }
-        #endregion
-
-        #region config
-        private void doConfig() {
-
-            HitboxRevealer.cfg_BoxAlpha =
-                Config.Bind("hitboxes",
-                            "hitbox alpha",
-                            0.22f,
-                            "0-1. Around 0.22 is ok. don't make it higher if you have epilepsy").Value;
-
-            HitboxRevealer.cfg_MercSoften =
-                Config.Bind("hitboxes",
-                            "tone down merc",
-                            true,
-                            "Make merc's hitboxes lighter cause he's a crazy fool (and might actually hurt your eyes)\n - overrides alpha brightness to 0.1 and keeps colors cool blue-ish range").Value;
-
-            Utils.cfg_softenedCharactersString =
-                Config.Bind("hitboxes",
-                            "tone-down characters",
-                            "MercBody, MinerBody, MiniMushroomBody",
-                            $"The wacky characters who need softening, separated by commas.\n - In addition to these, the following characters are always on the list: {Utils.defaultSoftenedCharacters}\n - Character's internal names are: CommandoBody, HuntressBody, ToolbotBody, EngiBody, MageBody, MercBody, TreebotBody, LoaderBody, CrocoBody, Captainbody\n - Use the DebugToolkit mod's body_list command to see a complete list (including enemies and moddeds)").Value;
-
-            HitboxRevealer.cfg_HurtAlpha =
-                Config.Bind("hitboxes",
-                            "hurtbox capsule alpha",
-                            0.169f,
-                            "0-1. Around 0.16 is ok.").Value;
-
-            HitboxRevealer.cfg_BlastShowTime =
-                Config.Bind("hitboxes",
-                            "blast attack visual time",
-                            0.2f,
-                            "the amount of time blast hitboxes show up (their actual damage happens in one frame)").Value;
-
-            Utils.cfg_toggleKey =
-                Config.Bind("pls be safe",
-                            "hitbox toggle Key",
-                            KeyCode.Semicolon,
-                            "press this key to toggle disabling hitbox viewer on and off in game. Overrides current settings menu").Value;
-
-            Utils.cfg_useDebug =
-                Config.Bind("pls be safe",
-                            "debug",
-                            false,
-                            "welcom 2m y twisted mind\ntimescale hotkeys on I, K, O, and L. press quote key to disable").Value;
-
-            Utils.cfg_showLogsVerbose=
-                Config.Bind("pls be safe",
-                            "logs",
-                            false,
-                            "print debug logs").Value;
-
         }
         #endregion
 
@@ -217,6 +176,7 @@ namespace SillyHitboxViewer {
             Utils.setSoftenedCharacters();
         }
 
+        //hit box
         private bool OverlapAttack_Fire(On.RoR2.OverlapAttack.orig_Fire orig, OverlapAttack self, List<HurtBox> hitResults) {
 
             bool didAHit = orig(self, hitResults);
@@ -238,18 +198,49 @@ namespace SillyHitboxViewer {
             return didAHit;
         }
 
+        //hit blast
         private BlastAttack.Result BlastAttack_Fire(On.RoR2.BlastAttack.orig_Fire orig, BlastAttack self) {
             BlastAttack.Result result = orig(self);
 
+            if(!Utils.cfg_showLogsVerbose) {
+                //avoiding creating some garbage
+                Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
+                return result;
+            }
+
             HitboxRevealer box = Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
 
+            //this still needed?
             Utils.LogReadout($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
-
+            
             return result;
         }
 
+        //hit bullet
+        private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, Vector3 normal, int muzzleIndex) {
+            orig(self, normal, muzzleIndex);
+
+            Instantiate(_hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, normal, self.maxDistance, self.radius);
+        }
+
+        private void BulletAttack_InitBulletHitFromRaycastHit(On.RoR2.BulletAttack.orig_InitBulletHitFromRaycastHit orig, BulletAttack self, ref BulletAttack.BulletHit bulletHit, Vector3 origin, Vector3 direction, ref RaycastHit raycastHit) {
+            orig(self, ref bulletHit, origin, direction, ref raycastHit);
+
+            if (!HitboxRevealer.bulletModeEnabled) {
+
+                Instantiate(_hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
+            }
+
+            _bulletHitPointRevealers.Add(Instantiate(_hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius));
+
+        }
+
+        //hurt
         private void HurtBox_Awake(On.RoR2.HurtBox.orig_Awake orig, HurtBox self) {
             orig(self);
+
+            if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingBoxes || !HitboxRevealer.showingHurtBoxes))
+                return;
 
             if (self.collider is CapsuleCollider) {
                 _hurtboxRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initHurtbox(self.collider.transform, self.collider as CapsuleCollider));
@@ -260,6 +251,139 @@ namespace SillyHitboxViewer {
             if (self.collider is BoxCollider) {
                 _hurtboxRevealers.Add(Instantiate(_hitboxBoxPrefab).initHurtbox(self.collider.transform, self.collider as BoxCollider));
             }
+        }
+
+        #endregion
+
+        #region toggle and debug
+        void Update() {
+
+            //timer to use for randomizing to avoid float rounding errors
+            HitboxRevealer.randomTimer += Time.deltaTime;
+            if (HitboxRevealer.randomTimer > 100) {
+                HitboxRevealer.randomTimer -= 100;
+            }
+
+            //show box override hotkey
+            if (Input.GetKeyDown(Utils.cfg_toggleKey)) {
+
+                HitboxRevealer.showingBoxes = !HitboxRevealer.showingBoxes;
+                Utils.Log(HitboxRevealer.showingBoxes? "hitboxes enabled" : "all hitboxes disabled", true);
+
+                bindShowAllHurtboxes();
+
+                bindClearBulletPoints();
+            }
+
+            //clear bullet hits key
+            if (Input.GetKeyDown(Utils.cfg_bulletModeKey)) {
+
+                HitboxRevealer.bulletModeEnabled = !HitboxRevealer.bulletModeEnabled;                                             //lol typo
+                Utils.Log(HitboxRevealer.bulletModeEnabled? "Lingering Bullet Mode Enabled" : "Lingering Bullets disabaled", true);
+
+                bindClearBulletPoints();
+            }
+
+            if (!Utils.cfg_useDebug)
+                return;
+
+            //debug hotkeys
+            if (Input.GetKeyDown(KeyCode.Quote)) {
+                _keysDisable = !_keysDisable;
+                Utils.Log($"hitbox debug hotkeys toggled {!_keysDisable}", true);
+
+                if (_keysDisable && Time.timeScale != 1) {
+                    setTimeScale(1);
+                }
+            }
+
+            //ability to disable keys because keyboard focus is on console window
+            //  should have just looked up how to check keyboard focus lol
+            if (_keysDisable)
+                return;
+
+            //time keys
+            if (Input.GetKeyDown(KeyCode.I)) {
+                if (Time.timeScale == 0) {
+                    setTimeScale(Time.timeScale + 0.1f);
+                } else {
+                    setTimeScale(Time.timeScale + 0.5f);
+                } 
+            }
+            if (Input.GetKeyDown(KeyCode.K)) {
+
+                setTimeScale(Time.timeScale - 0.1f);
+            }
+            if (Input.GetKeyDown(KeyCode.O)) {
+                setTimeScale(1);
+            }
+            if (Input.GetKeyDown(KeyCode.L)) {
+                setTimeScale(0);
+            }
+
+            //pool (rip) keys
+            if (Input.GetKeyDown(KeyCode.P)) {
+
+                string log = "";
+                int poolCount = _revealerPool.Count;
+
+                HitboxRevealer revealer;
+                for (int i = 1; i <= _revealerPool.Count; i++) {
+                    revealer = _revealerPool.Dequeue();
+
+                    log += $"\nhitbox {revealer != null}, {i} revealers checked";
+
+                    _revealerPool.Enqueue(revealer);
+                }
+                Utils.LogReadout($"hitbox pool count: {poolCount}:{log}");
+
+                log = "";
+                poolCount = _blastPool.Count;
+
+                for (int i = 1; i <= _blastPool.Count; i++) {
+
+                    revealer = _blastPool.Dequeue();
+                    log += $"\nblastbox {revealer != null}, {i} revealers checked";
+                    _blastPool.Enqueue(revealer);
+                }
+                Utils.LogReadout($"blast pool count: {poolCount}:{log}");
+            }
+        }
+
+        private void bindClearBulletPoints() {
+
+            bool shouldClearBullets = !HitboxRevealer.showingBoxes || !HitboxRevealer.bulletModeEnabled;
+
+            if (shouldClearBullets) {
+
+                for (int i = 0; i < _bulletHitPointRevealers.Count; i++) {
+                    HitboxRevealer pointRevealer = _bulletHitPointRevealers[i];
+
+                    if(pointRevealer != null)
+                        pointRevealer.kill();
+                }
+
+                _bulletHitPointRevealers = new List<HitboxRevealer>();
+            }
+        }
+
+        public void bindShowAllHurtboxes() {
+
+            bool shouldShow = HitboxRevealer.showingBoxes && HitboxRevealer.showingHurtBoxes;
+
+            for (int i = _hurtboxRevealers.Count - 1; i >= 0; i--) {
+                if (_hurtboxRevealers[i] == null) {
+                    _hurtboxRevealers.RemoveAt(i);
+                    continue;
+                }
+                _hurtboxRevealers[i].hurtboxShow(shouldShow);
+            }
+        }
+
+        private void setTimeScale(float tim) {
+            Time.timeScale = tim;
+
+            Utils.Log($"set tim: {Time.timeScale}", true);
         }
         #endregion
 
@@ -338,102 +462,6 @@ namespace SillyHitboxViewer {
 
         public void removeHitBoxGroupRevealer(HitboxGroupRevealer rev) {
             _hitboxGroupRevealers.Remove(rev);
-        }
-        #endregion
-
-        #region toggle and debug
-        void Update() {
-
-            //override hotkey
-            if (Input.GetKeyDown(Utils.cfg_toggleKey)) {
-
-                HitboxRevealer.showingBoxes = !HitboxRevealer.showingBoxes;
-
-                if (HitboxRevealer.showingBoxes) {
-                    Utils.Log("hitboxes enabled", true, true);
-                } else {
-                    Utils.Log("all hitboxes disabled", true, true);
-                }
-                showAllHurtboxes();
-            }
-            if (!Utils.cfg_useDebug)
-                return;
-
-            //debug hotkeys
-            if (Input.GetKeyDown(KeyCode.Quote)) {
-                keysDisable = !keysDisable;
-                Utils.Log($"hitbox debug hotkeys toggled {!keysDisable}", true);
-                if (keysDisable && Time.timeScale != 1) {
-                    setTimeScale(1);
-                }
-            }
-
-            if (keysDisable)
-                return;
-
-            if (Input.GetKeyDown(KeyCode.I)) {
-                if (Time.timeScale == 0) {
-                    setTimeScale(Time.timeScale + 0.1f);
-                } else {
-                    setTimeScale(Time.timeScale + 0.5f);
-                } 
-            }
-            if (Input.GetKeyDown(KeyCode.K)) {
-
-                setTimeScale(Time.timeScale - 0.1f);
-            }
-            if (Input.GetKeyDown(KeyCode.O)) {
-                setTimeScale(1);
-            }
-            if (Input.GetKeyDown(KeyCode.L)) {
-                setTimeScale(0);
-            }
-
-            if (Input.GetKeyDown(KeyCode.P)) {
-
-                string log = "";
-                int poolCount = _revealerPool.Count;
-
-                HitboxRevealer revealer;
-                for (int i = 1; i <= _revealerPool.Count; i++) {
-                    revealer = _revealerPool.Dequeue();
-
-                    log += $"\nhitbox {revealer != null}, {i} revealers checked";
-
-                    _revealerPool.Enqueue(revealer);
-                }
-                Utils.LogReadout($"hitbox pool count: {poolCount}:{log}");
-
-                log = "";
-                poolCount = _blastPool.Count;
-
-                for (int i = 1; i <= _blastPool.Count; i++) {
-
-                    revealer = _blastPool.Dequeue();
-                    log += $"\nblastbox {revealer != null}, {i} revealers checked";
-                    _blastPool.Enqueue(revealer);
-                }
-                Utils.LogReadout($"blast pool count: {poolCount}:{log}");
-            }
-        }
-
-        public void showAllHurtboxes() {
-
-            bool shouldShow = HitboxRevealer.showingBoxes && HitboxRevealer.showingHurtBoxes;
-
-            for (int i = _hurtboxRevealers.Count - 1; i >= 0; i--) {
-                if (_hurtboxRevealers[i] == null) {
-                    _hurtboxRevealers.RemoveAt(i);
-                    continue;
-                }
-                _hurtboxRevealers[i].showHurtboxes(shouldShow);
-            }
-        }
-
-        private void setTimeScale(float tim) {
-            Time.timeScale = tim;
-
-            Utils.Log($"set tim: {Time.timeScale}", true);
         }
         #endregion
     }

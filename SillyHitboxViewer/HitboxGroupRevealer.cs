@@ -43,7 +43,7 @@ namespace SillyHitboxViewer {
 
                 //rev = HitboxViewerMod.instance.requestPooledHitboxRevealer();
                 rev = Instantiate(_hitboxPrefab);
-                rev.init(hitboxGroup.hitBoxes[i].transform, _isMerc);
+                rev.init(boxType.HIT, hitboxGroup.hitBoxes[i].transform, _isMerc);
                 _revealers[i] = rev;
             }
         }

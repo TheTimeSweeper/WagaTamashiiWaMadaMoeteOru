@@ -19,12 +19,11 @@ namespace SillyHitboxViewer {
             ModSettingsManager.setPanelTitle("Hitbox Viewer");
             ModSettingsManager.setPanelDescription("Enable/disable hitbox or hurtbox viewer");
 
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Enable Hitboxes", "", "1"));
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Enable Hitboxes", $"Shows hitboxes on attacks.\nCan be overridden by pressing {Utils.cfg_toggleKey}", "1"));
             ModSettingsManager.addListener(ModSettingsManager.getOption("Enable Hitboxes"), new UnityEngine.Events.UnityAction<bool>(hitboxBoolEvent));
 
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Enable Hurtboxes", "", "0"));
+            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Enable Hurtboxes", $"Shows hurtboxes on characters\nCan be overridden by pressing {Utils.cfg_toggleKey}", "0"));
             ModSettingsManager.addListener(ModSettingsManager.getOption("Enable Hurtboxes"), new UnityEngine.Events.UnityAction<bool>(hurtboxBoolEvent));
-
         }
 
         public static void hitboxBoolEvent(bool active) {
