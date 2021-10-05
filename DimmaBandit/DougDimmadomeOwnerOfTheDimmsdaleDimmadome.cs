@@ -5,16 +5,15 @@ using BepInEx;
 using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
-//using R2API.Utils;
 using UnityEngine.Networking;
 using System.Runtime.CompilerServices;
 using System.Reflection;
-using EntityStates.Missions.ArtifactWorld.TrialController;
+using R2API.Utils;
 
 namespace DimmaBandit {
-    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    //[BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.DimmaBandit", "The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome", "0.3.0")]
+    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    [BepInDependency("com.bepis.r2api")]
+    [BepInPlugin("com.TheTimeSweeper.DimmaBandit", "The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome", "0.3.1")]
     public class DougDimmadomeOwnerOfTheDimmsdaleDimmadome : BaseUnityPlugin {
 
         public static DougDimmadomeOwnerOfTheDimmsdaleDimmadome Instance;
@@ -28,6 +27,9 @@ namespace DimmaBandit {
 
         public delegate void hatGrowEvent(float amountScale);
         public hatGrowEvent onHatGrow;
+
+        public delegate void ragdollEvent(GameObject model);
+        public ragdollEvent onRagdoll;
 
         private void populateAss() {
             AssetBundle MainAss = null;
@@ -62,7 +64,15 @@ namespace DimmaBandit {
             On.RoR2.ModelSkinController.ApplySkin += ModelSkinController_ApplySkin;
 
             On.RoR2.CharacterBody.OnDeathStart += CharacterBody_OnDeathStart;
+
+            On.RoR2.RagdollController.BeginRagdoll += RagdollController_BeginRagdoll;
         }
+
+        private void RagdollController_BeginRagdoll(On.RoR2.RagdollController.orig_BeginRagdoll orig, RagdollController self, Vector3 force) {
+            orig(self, force);
+            onRagdoll?.Invoke(self.gameObject);
+        }
+
         private void CharacterBody_OnDeathStart(On.RoR2.CharacterBody.orig_OnDeathStart orig, CharacterBody self) {
             orig(self);
 
@@ -76,11 +86,7 @@ namespace DimmaBandit {
             CharacterModel model = self.GetComponent<CharacterModel>();
 
             bool bandit1 = model.name == "mdlBandit";
-
             bool bandit2 = model.name == "mdlBandit2";
-
-            Debug.LogWarning("kneeg");
-
             if (bandit1 || bandit2) {
 
                 Chat.AddMessage("<color=#fd2>The name's Doug Dimmadome,</color>");

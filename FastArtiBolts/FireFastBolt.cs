@@ -50,7 +50,6 @@ namespace FastArtiBolts {
             //printed from current FlameBolt
             //more properly grab flame bolt's SerializedFields from (i assume) its scriptableobject;
             //plugging in the values for now
-            //bless you for making these public
 
             //self.projectilePrefab,        MageFireboltBasic  
             //self.muzzleflashEffectPrefab, MuzzleflashMageFire 
@@ -86,7 +85,7 @@ namespace FastArtiBolts {
             //one bolt is fired OnEnter
             _boltsFired = 1;
 
-            _fireFireBolt.SetFieldValue<float>("duration", base.baseDuration);
+            _fireFireBolt.duration = base.baseDuration;
         }
          
 
@@ -106,7 +105,7 @@ namespace FastArtiBolts {
 
                         _firingBoltsTimer -= _fastBoltDuration;
 
-                        float fuckinMath = doFuckinMath();
+                        float fuckinMath = doFuckinMathOffset(_boltsFired);
                         Vector3 fuckinForwardSimple = base.GetAimRay().direction.normalized * _originShiftForward * _fastBoltDuration * sameFrameBolts * 80;
                         
                         _aimOrigin.position += aimRight.normalized * fuckinMath - fuckinForwardSimple;
@@ -135,11 +134,11 @@ namespace FastArtiBolts {
         }
 
         //makes the position pingpong back and forth from a left and right threshold
-        private float doFuckinMath() {
+        private float doFuckinMathOffset(int boltsFired) {
 
             int jauntletMult = _jauntlet == Gauntlet.Right ? 1 : -1;
 
-            float fuckinMath = _boltsFired * _originShift * jauntletMult;
+            float fuckinMath = _originShift * boltsFired * jauntletMult;
 
             while (Mathf.Clamp(fuckinMath, -_originShiftMax, _originShiftMax) != fuckinMath) {
 
@@ -161,12 +160,9 @@ namespace FastArtiBolts {
 
         private void PseudoFireGauntlet() {
 
-            _fireFireBolt.SetFieldValue("hasFiredGauntlet", false);
+            _fireFireBolt.hasFiredGauntlet = false;
 
-            if (fireGauntletMethod == null) {
-                fireGauntletMethod = typeof(FireFireBolt).GetMethod("FireGauntlet", BindingFlags.NonPublic | BindingFlags.Instance);
-            }
-            fireGauntletMethod.Invoke(_fireFireBolt, null);
+            _fireFireBolt.FireGauntlet();
 
             _boltsFired++;
         }
@@ -178,12 +174,12 @@ namespace FastArtiBolts {
 
         public override void OnSerialize(NetworkWriter writer) {
             base.OnSerialize(writer);
-            writer.Write((byte)this._jauntlet);
+            writer.Write((byte)_jauntlet);
         }
 
         public override void OnDeserialize(NetworkReader reader) {
             base.OnDeserialize(reader);
-            this._jauntlet = (FireFireBolt.Gauntlet)reader.ReadByte();
+            _jauntlet = (FireFireBolt.Gauntlet)reader.ReadByte();
         }
     }
 }

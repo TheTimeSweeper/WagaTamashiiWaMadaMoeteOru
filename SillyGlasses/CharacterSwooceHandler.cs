@@ -125,7 +125,7 @@ namespace SillyGlasses
 
         public void onHookedEnableDisableDisplay(CharacterModel characterModel_, ItemIndex itemIndex_)
         {
-            if (characterModel_.gameObject != gameObject)
+            if (characterModel_ && characterModel_.gameObject != gameObject)
                 return;
 
             if (characterModel_.itemDisplayRuleSet)

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using System.Reflection;
+using System;
 
 namespace DimmaBandit {
     public class DimmaBanditHatGrower : MonoBehaviour {
@@ -15,32 +16,61 @@ namespace DimmaBandit {
         private Transform _hat;
         private HatRescale _hatRescale;
 
+        private CharacterModel _model;
+
         private bool _bandit1;
+        private bool _subscribed;
 
         public DimmaBanditHatGrower init(CharacterModel model, bool one) {
 
-            DougDimmadomeOwnerOfTheDimmsdaleDimmadome.Instance.onHatGrow += grow;
-
+            _model = model;
             _bandit1 = one;
 
-            _hat = Instantiate(one? DougDimmadomeOwnerOfTheDimmsdaleDimmadome.dimmadomePrefab : DougDimmadomeOwnerOfTheDimmsdaleDimmadome.dimmadomePrefab2, transform).transform;
+            _hat = Instantiate(one? DougDimmadomeOwnerOfTheDimmsdaleDimmadome.dimmadomePrefab : DougDimmadomeOwnerOfTheDimmsdaleDimmadome.dimmadomePrefab2, transform)
+                .transform;
             _hatRescale = _hat.GetComponent<HatRescale>();
 
-            SetRendererInfos(model);
+            SetRendererInfos();
+            //SetHatRagdoll();
+
+            subscribeToEvents(true);
 
             grow(0);
 
             return this;
         }
 
-        private void SetRendererInfos(CharacterModel model) {
+        void OnDestroy() {
+            subscribeToEvents(false);
+        }
 
-            CharacterModel.RendererInfo[] modelInfos = model.baseRendererInfos;
-            CharacterModel.RendererInfo[] hatInfos = new CharacterModel.RendererInfo[2];
+        private void subscribeToEvents(bool subscribe) {
+
+            if (subscribe == _subscribed)
+                return;
+            _subscribed = subscribe;
+
+            if (subscribe) {
+
+                DougDimmadomeOwnerOfTheDimmsdaleDimmadome.Instance.onRagdoll += onRagdoll;
+                DougDimmadomeOwnerOfTheDimmsdaleDimmadome.Instance.onHatGrow += grow;
+            } else {
+
+                DougDimmadomeOwnerOfTheDimmsdaleDimmadome.Instance.onRagdoll -= onRagdoll;
+                DougDimmadomeOwnerOfTheDimmsdaleDimmadome.Instance.onHatGrow -= grow;
+            }
+        }
+
+        private void SetRendererInfos() {
+
+            CharacterModel.RendererInfo[] modelInfos = _model.baseRendererInfos;
+            CharacterModel.RendererInfo[] hatInfos = new CharacterModel.RendererInfo[_hatRescale.hatRenderers.Length];
 
             Material banditMaterial = modelInfos[_bandit1 ? 0 : 3].defaultMaterial;//Reflection.GetFieldValue<SkinnedMeshRenderer>(model, "mainSkinnedMeshRenderer").material;
 
-            for (int i = 0; i < _hatRescale.hatRenderers.Length; i++) {
+            //adding them in reverse so the tall part of the hat is last rendererinfo
+            for (int i = _hatRescale.hatRenderers.Length - 1; i >= 0; i--) {
+
                 hatInfos[i] = new CharacterModel.RendererInfo {
                     defaultMaterial = banditMaterial,
                     renderer = _hatRescale.hatRenderers[i],
@@ -48,7 +78,17 @@ namespace DimmaBandit {
                     ignoreOverlays = false
                 };
             }
-            model.baseRendererInfos = modelInfos.Concat(hatInfos).ToArray();
+            _model.baseRendererInfos = modelInfos.Concat(hatInfos).ToArray();
+        }
+
+        //why this didn't work i got no clu
+        private void SetHatRagdoll() {
+
+            RagdollController ragdollController = _model.GetComponent<RagdollController>();
+
+            System.Collections.Generic.List<Transform> bonse = ragdollController.bones.ToList();
+            bonse.AddRange(_hatRescale.hatColliders);
+            ragdollController.bones = bonse.ToArray();
         }
 
         private void grow(float growScale) {
@@ -60,8 +100,13 @@ namespace DimmaBandit {
             _hatRescale.RescaleTop();
         }
 
-        void OnDestroy() {
-            DougDimmadomeOwnerOfTheDimmsdaleDimmadome.Instance.onHatGrow -= grow;
+        private void onRagdoll(GameObject bod) {
+
+            if (bod == _model.gameObject) {
+                for (int i = 0; i < _hatRescale.hatColliders.Length; i++) {
+                    _hatRescale.hatColliders[i].GetComponent<Collider>().enabled = true;
+                }
+            }
         }
     }
 }

@@ -10,6 +10,11 @@ namespace DimmaBandit {
         private Renderer[] _hatRenderers;
         public Renderer[] hatRenderers { get => _hatRenderers; }
 
+        //script's now taking on more responsibility than hatrescale but fuck it I already named it that
+        [SerializeField]
+        private Transform[] _hatColliders;
+        public Transform[] hatColliders { get => _hatColliders; }
+        
         public void RescaleTop() {
 
             for (int i = 0; i < _hatRenderers.Length; i++) {

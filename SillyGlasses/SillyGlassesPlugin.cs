@@ -6,12 +6,18 @@ using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
 //using R2API.Utils;
-using UnityEngine.Networking;
-using EntityStates.Engi.EngiWeapon;
+
+using System.Security;
+using System.Security.Permissions;
+
+//can't believe I didn't have this til now
+//can I do a bunch of shit i didn't know i could do with this?
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 //[assembly: ManualNetworkRegistration]
 namespace SillyGlasses {
-
+#region sillydisplayrules
     public class SillyItemDisplayRules : List<SillyItemDisplayRule> {
         
     }
@@ -34,6 +40,7 @@ namespace SillyGlasses {
         public float distanceMult = 1;
         public SillyItemDisplayBehavior specialBehavior;
     }
+    #endregion
 
     //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     //[BepInDependency("com.bepis.r2api")]
@@ -80,8 +87,7 @@ namespace SillyGlasses {
         private int _spawnedRedItems;
         #endregion
 
-        public void Awake()
-        {
+        public void Awake() {
 
             InitConfig();
 
