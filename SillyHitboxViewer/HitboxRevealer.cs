@@ -63,7 +63,7 @@ namespace SillyHitboxViewer {
                 case boxType.BULLET_THIN:
                     return cfg_BulletAlpha * 1.5f;
                 case boxType.BULLET_POINT:
-                    return cfg_BulletAlpha * 3f;
+                    return cfg_BulletAlpha * 2f;
                 case boxType.HURT:
                     return cfg_HurtAlpha;
             }
@@ -80,8 +80,8 @@ namespace SillyHitboxViewer {
 
             float setAlpha = getBoxAlpha(box); 
             float setLum = 0.6f;
-            float setHue = 0.00f;
-            float setHueHue = 1.00f;
+            float setHue = 0.00f; //random min
+            float setHueHue = 1.00f; //random max
 
             if (isMerc && cfg_MercSoften) { 
                 //low alpha, and colors in cool blue-ish range
@@ -90,12 +90,14 @@ namespace SillyHitboxViewer {
                 setHue = 0.35f;
                 setHueHue = 0.90f;
             }
+
             if ((box == boxType.BULLET || box == boxType.BULLET_THIN || box == boxType.BULLET_POINT)) {
 
                 if (!cfg_ColorfulBullets) {
 
                     setHue = randomTimer * 10000 - (int)(randomTimer * 10000);
                     setHueHue = setHue;
+                    //pesudorandom using time, so that calls on the same frame are the same color
 
                     //Utils.LogReadout($"{setHue} | {Time.time}/{randomTimer}");
                 }
@@ -152,7 +154,7 @@ namespace SillyHitboxViewer {
 
         public HitboxRevealer initHurtbox(Transform sphereTransform, SphereCollider sphereCollider) {
             init(boxType.HURT, sphereTransform);
-
+            spher = true;
             transform.localPosition = sphereCollider.center;
             transform.localScale = Vector3.one * sphereCollider.radius * 2;
 
@@ -177,6 +179,12 @@ namespace SillyHitboxViewer {
             if (rend) {
                 rend.enabled = active;
             }
+        }
+
+        bool spher;
+        void OnDestroy() {
+            if(spher)
+            Utils.LogWarning("oy i die (a sphere (just to be clear))");
         }
         #endregion
 
@@ -276,6 +284,11 @@ namespace SillyHitboxViewer {
 
             _matProperties.SetColor("_Color", _matColor);
             rend.SetPropertyBlock(_matProperties);
+
+            // only shrink for bullet mode so dots can be seen.
+            // outside of bullet mode, bullets big the whole time, shrink and die at the same time, skipping shrink 
+            if (!bulletModeEnabled)
+                shrinkTime = killTime;
 
             yield return new WaitForSeconds(shrinkTime);
 

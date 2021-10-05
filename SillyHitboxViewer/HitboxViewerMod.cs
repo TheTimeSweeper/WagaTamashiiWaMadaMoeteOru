@@ -12,7 +12,7 @@ namespace SillyHitboxViewer {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.0")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.1")]
     public class HitboxViewerMod : BaseUnityPlugin {
         
         public static HitboxViewerMod instance;
@@ -35,8 +35,10 @@ namespace SillyHitboxViewer {
 
         private HitboxRevealer _hitboxBoxPrefab; 
         private HitboxRevealer _hitboxNotBoxPrefab;
+        private HitboxRevealer _hitboxNotBoxPrefabSmol;
         private HitboxRevealer _hitboxNotBoxPrefabTall;
         private HitboxRevealer _hitboxNotBoxPrefabTallFlat;
+        private HitboxRevealer _hitboxNotBoxPrefabTallFlatSmol;
 
         private bool _keysDisable;
 
@@ -47,11 +49,6 @@ namespace SillyHitboxViewer {
             log = Logger;
 
             populateAss();
-
-            if (_hitboxBoxPrefab == null || _hitboxNotBoxPrefabTall == null || _hitboxNotBoxPrefab == null || _hitboxNotBoxPrefabTallFlat == null) {
-                log.LogError($"unable to get a hitboxprefab from the bundle. Timesweeper did an oops | box: {_hitboxBoxPrefab != null}, capsule: {_hitboxNotBoxPrefabTall != null}, sphere: {_hitboxNotBoxPrefab != null}, can: {_hitboxNotBoxPrefabTallFlat != null}");
-                return;
-            }
 
             Utils.doConfig();
 
@@ -88,15 +85,29 @@ namespace SillyHitboxViewer {
         }
         #region setup Ass
         private void populateAss() {
-            AssetBundle MainAss = null;
-                using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SillyHitboxViewer.sillyhitbox")) {
-                    MainAss = AssetBundle.LoadFromStream(assetStream);
-                }
 
-            _hitboxBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInator")?.GetComponent<HitboxRevealer>();
-            _hitboxNotBoxPrefab = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorSphere")?.GetComponent<HitboxRevealer>();
-            _hitboxNotBoxPrefabTall = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorCapsule")?.GetComponent<HitboxRevealer>();
-            _hitboxNotBoxPrefabTallFlat = MainAss.LoadAsset<GameObject>("hitboxPreviewInatorCylinder")?.GetComponent<HitboxRevealer>();
+            AssetBundle MainAss = null;
+            using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SillyHitboxViewer.sillyhitbox")) {
+                MainAss = AssetBundle.LoadFromStream(assetStream);
+            }
+
+            _hitboxBoxPrefab = LoadHitboxAss(MainAss, "hitboxPreviewInator");
+            _hitboxNotBoxPrefab = LoadHitboxAss(MainAss,"hitboxPreviewInatorSphere");
+            _hitboxNotBoxPrefabSmol = LoadHitboxAss(MainAss, "hitboxPreviewInatorSphereSmol");
+            _hitboxNotBoxPrefabTall = LoadHitboxAss(MainAss,"hitboxPreviewInatorCapsule");
+            _hitboxNotBoxPrefabTallFlat = LoadHitboxAss(MainAss, "hitboxPreviewInatorCylinder");
+            _hitboxNotBoxPrefabTallFlatSmol = LoadHitboxAss(MainAss, "hitboxPreviewInatorCylinderSmol");
+
+        }
+
+        private static HitboxRevealer LoadHitboxAss(AssetBundle MainAss, string assString) {
+            HitboxRevealer loadedAss = MainAss.LoadAsset<GameObject>(assString)?.GetComponent<HitboxRevealer>();
+
+            if(loadedAss == null) {
+                log.LogError($"unable to load prefab, {assString}, from the bundle. Timesweeper did an oops");
+            }
+
+            return loadedAss?.GetComponent<HitboxRevealer>();
         }
         #endregion
         #region options n commands
@@ -203,15 +214,15 @@ namespace SillyHitboxViewer {
             BlastAttack.Result result = orig(self);
 
             if(!Utils.cfg_showLogsVerbose) {
-                //avoiding creating some garbage
-                Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
+                //avoiding an extra reference creating some garbage
+                Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
                 return result;
             }
 
-            HitboxRevealer box = Instantiate(_hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
+            HitboxRevealer box = Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBlastBox(self.position, self.radius);
 
             //this still needed?
-            Utils.LogReadout($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
+            //Utils.LogReadout($"making blast hitbox at {self.position}, {self.radius}: {box != null}");
             
             return result;
         }
@@ -220,18 +231,21 @@ namespace SillyHitboxViewer {
         private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, Vector3 normal, int muzzleIndex) {
             orig(self, normal, muzzleIndex);
 
-            Instantiate(_hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, normal, self.maxDistance, self.radius);
+            Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabTallFlatSmol : _hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, normal, self.maxDistance, self.radius);
         }
 
         private void BulletAttack_InitBulletHitFromRaycastHit(On.RoR2.BulletAttack.orig_InitBulletHitFromRaycastHit orig, BulletAttack self, ref BulletAttack.BulletHit bulletHit, Vector3 origin, Vector3 direction, ref RaycastHit raycastHit) {
             orig(self, ref bulletHit, origin, direction, ref raycastHit);
+            
+            if (Vector3.Distance(self.origin, bulletHit.point) < 0.5f)
+                return;
 
             if (!HitboxRevealer.bulletModeEnabled) {
 
-                Instantiate(_hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
+                Instantiate(self.radius < 0.1f? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
             }
 
-            _bulletHitPointRevealers.Add(Instantiate(_hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius));
+            _bulletHitPointRevealers.Add(Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius));
 
         }
 
@@ -247,6 +261,8 @@ namespace SillyHitboxViewer {
             }
             if (self.collider is SphereCollider) {
                 _hurtboxRevealers.Add(Instantiate(_hitboxNotBoxPrefab).initHurtbox(self.collider.transform, self.collider as SphereCollider));
+
+                Utils.LogWarning($"intititating {self.hurtBoxGroup.gameObject.name}");
             }
             if (self.collider is BoxCollider) {
                 _hurtboxRevealers.Add(Instantiate(_hitboxBoxPrefab).initHurtbox(self.collider.transform, self.collider as BoxCollider));
