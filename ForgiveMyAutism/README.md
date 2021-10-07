@@ -12,7 +12,7 @@ Second and foreslightlyless, forgive my cringe making a compilation about myself
 | ![https://thunderstore.io/package/SleeperHavel/ChiptheBeetle/](https://gcdn.thunderstore.io/live/repository/icons/SleeperHavel-ChiptheBeetle-1.1.6.png.128x128_q95.jpg) |  |  
 |
 | **ChiptheBeetle**|  | 
-| He asked a couple questions and I answered kinda
+| He asked a couple questions and I answered kinda c:
 
 
 
