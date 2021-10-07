@@ -1,0 +1,28 @@
+{
+    "name": "Timesweeper_is_a_slut",
+    "version_number": "0.6.9",
+    "website_url": "https://github.com/GnomeModder/EnforcerMod",
+    "description": "I've worked on some mods. No one download this. Also it's a modpack, forgive my insolence.",
+    "dependencies": [
+        "TheTimesweeper-SillyItems-1.2.1",
+        "TheTimesweeper-FastArtificerBolts-2.1.0",
+        "TheTimesweeper-DimmaBandit-0.3.1",
+        "TheTimesweeper-AcridHitboxBuff-1.1.0",
+        "TheTimesweeper-HitboxViewerMod-1.5.1",
+        "EnforcerGang-Enforcer-3.1.2",
+        "tristanmcpherson-R2API-3.0.52",
+        "rob-MinerUnearthed-1.5.3",
+        "TeamMoonstorm-Starstorm2-0.3.24",
+        "TeamCloudburst-Cloudburst-0.1.7",
+        "Sniper_Mafia-SniperClassic-0.9.2",
+        "Gnome-ChefMod-2.0.12",
+        "Vodhrin-UrsaSurvivorMod-0.3.1",
+        "rob-PaladinMod-1.4.15",
+        "Ruxbieno-Tsunami-0.0.3",
+        "rob-HenryMod-2.0.0",
+        "Moffein-HAND_OVERCLOCKED_BETA-0.1.5",
+        "Paladin_Alliance-PaladinMod-1.5.3",
+        "EnforcerGang-MinerUnearthed-1.5.4",
+        "SleeperHavel-ChiptheBeetle-1.1.6",
+    ]
+}
