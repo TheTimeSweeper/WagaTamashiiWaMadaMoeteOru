@@ -1,5 +1,5 @@
 First and foremost, forgive my insolence creating a modpack  
-Second and foreslightlyless, forgive my cringe making a compilation about myself
+Second and foreslightlyless, forgive my cringe making a compilation about myself?
 # The bois
 | ![https://thunderstore.io/package/EnforcerGang/MinerUnearthed/](https://raw.githubusercontent.com/GnomeModder/EnforcerMod/master/Release/icon2FUCKc.png) | ![https://thunderstore.io/package/EnforcerGang/MinerUnearthed/](https://raw.githubusercontent.com/GnomeModder/EnforcerMod/master/Release/icon2FUCKc.png) |
 |
