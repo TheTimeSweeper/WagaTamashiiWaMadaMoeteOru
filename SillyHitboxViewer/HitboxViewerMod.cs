@@ -12,6 +12,7 @@ namespace SillyHitboxViewer {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
+    [R2APISubmoduleDependency(nameof(CommandHelper))]
     [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.1")]
     public class HitboxViewerMod : BaseUnityPlugin {
         

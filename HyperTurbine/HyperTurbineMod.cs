@@ -16,6 +16,8 @@ namespace HyperTurbine {
         //overcharge is contained in extra charges
         //start with 2/3 add 1/2 per stack
 
+        //incredibly outdated and not not even working anyway. let it slowly rot into dust until I maybe revsit it in the future as a slightly more experienced monkey on a typewriter
+        /*
         private float _pseudoInitialSpin;
         private Run.FixedTimeStamp _pseudoSnapshotTime;
         private float _pseudoInitialCharge;
@@ -168,7 +170,7 @@ namespace HyperTurbine {
             self.spinPerKill = _stackedSpinPerKill;
 
             orig(self);
-        }
+        }*/
     }
 }
 

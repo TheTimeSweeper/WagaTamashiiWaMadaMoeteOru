@@ -212,7 +212,8 @@ namespace SillyHitboxViewer {
             }
         }
 
-
+        //don't think I'll ever get the hang of this
+        //please laugh at me I deserve it
         public static Vector3 retardTransformTest(Transform transform, Vector3 normal, Vector3 transformwhatever) {
 
             if (Input.GetKey(KeyCode.Keypad7)) {

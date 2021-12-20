@@ -132,7 +132,7 @@ namespace FastArtiBolts {
                 }
             }
         }
-
+        
         //makes the position pingpong back and forth from a left and right threshold
         private float doFuckinMathOffset(int boltsFired) {
 
