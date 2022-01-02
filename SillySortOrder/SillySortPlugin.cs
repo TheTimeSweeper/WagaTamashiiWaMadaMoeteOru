@@ -17,8 +17,8 @@ namespace SillySortOrder
     public class SillySortPlugin : BaseUnityPlugin
     {            //there's really no reason to call this one silly. just branding at this point
 
-        private Dictionary<string, float> NewSurivorSortings;
-        private Dictionary<string, float> VanillaSurivorSortings;
+        public static Dictionary<string, float> NewSurivorSortings;
+        public static Dictionary<string, float> VanillaSurivorSortings;
 
         void Awake()
         {
@@ -98,10 +98,10 @@ namespace SillySortOrder
             } 
             else
             {
-                NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.01f;
-                NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.01f;
+                NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
+                NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.001f;
             }
-
+            
         }
 
         private void SurvivorCatalog_SetSurvivorDefs(On.RoR2.SurvivorCatalog.orig_SetSurvivorDefs orig, SurvivorDef[] newSurvivorDefs)
