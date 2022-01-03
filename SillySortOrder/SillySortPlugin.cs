@@ -11,7 +11,7 @@ using System.Security.Permissions;
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-namespace SillySortOrder
+namespace SillyMod
 {
     [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "0.1.0")]
     public class SillySortPlugin : BaseUnityPlugin
