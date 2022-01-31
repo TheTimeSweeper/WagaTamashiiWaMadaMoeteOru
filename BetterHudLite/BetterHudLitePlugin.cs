@@ -26,6 +26,9 @@ namespace BetterHudLite {
 
             //ShowBoxesGodDang(self);
 
+            RectTransform bottomRightCluster = (RectTransform)self.mainUIPanel.transform.Find("SpringCanvas/BottomRightCluster");
+            RectTransform bottomCenterCluster = (RectTransform)self.mainUIPanel.transform.Find("SpringCanvas/BottomCenterCluster");
+
             if (Confug.doBar)
             {
                 #region health bar
@@ -97,10 +100,59 @@ namespace BetterHudLite {
                     col.a = 0.76f;
                     im.color = col;
                 }
+
+                //Fixing tooltips
+                // dunno what's required so im just copying everything
+                #region component migration
+                
+                //IDK if this part is required
+                var cOld = bottomRightCluster.GetComponent<Canvas>();
+                var cNew = bottomCenterCluster.gameObject.AddComponent<Canvas>();
+                cNew.additionalShaderChannels = cOld.additionalShaderChannels;
+                //cNew.name = cOld.name;
+                cNew.normalizedSortingGridSize = cOld.normalizedSortingGridSize;
+                cNew.overridePixelPerfect = cOld.overridePixelPerfect;
+                cNew.overrideSorting = cOld.overrideSorting;
+                cNew.pixelPerfect = cOld.pixelPerfect;
+                cNew.planeDistance = cOld.planeDistance;
+                cNew.referencePixelsPerUnit = cOld.referencePixelsPerUnit;
+                cNew.renderMode = cOld.renderMode;
+                cNew.scaleFactor = cOld.scaleFactor;
+                cNew.sortingLayerID = cOld.sortingLayerID;
+                cNew.sortingLayerName = cOld.sortingLayerName;
+                cNew.sortingOrder = cOld.sortingOrder;
+                cNew.tag = cOld.tag;
+                cNew.targetDisplay = cOld.targetDisplay;
+                cNew.worldCamera = cOld.worldCamera;
+
+
+                //this one definitely is
+                var grOld = bottomRightCluster.GetComponent<GraphicRaycaster>();
+                var grNew = bottomCenterCluster.gameObject.AddComponent<GraphicRaycaster>();
+                grNew.blockingObjects = grOld.blockingObjects;
+                grNew.hideFlags = grOld.hideFlags;
+                grNew.ignoreReversedGraphics = grOld.ignoreReversedGraphics;
+                //grNew.name = grOld.name;
+                grNew.tag = grOld.tag;
+                grNew.useGUILayout = grOld.useGUILayout;
+                #endregion component migration
+
+                #region move notif
+                var notifArea = (RectTransform)self.mainUIPanel.transform.parent.Find("NotificationArea");
+                //fix this
+                notifArea.position += Vector3.up * 2f;
+                #endregion move notif
+
+                #region movespec
+                var spec = (RectTransform)bottomCenterCluster.Find("SpectatorLabel");
+                //fix this too
+                spec.position += Vector3.up * 0.4f;
+                #endregion movespec
+
                 #endregion skills
             }
 
-            if(!Confug.doBar && !Confug.doSkills)
+            if (!Confug.doBar && !Confug.doSkills)
             {
                 Logger.LogMessage("bruh you just downloaded a mod and disabled the only two things it does");
             }
