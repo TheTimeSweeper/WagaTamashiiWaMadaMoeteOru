@@ -97,6 +97,9 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>..\_lib\UnityEngine.UI.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\_lib\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
     <Reference Include="Wwise">
       <HintPath>..\_lib\Wwise.dll</HintPath>
     </Reference>
