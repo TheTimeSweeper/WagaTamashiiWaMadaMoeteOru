@@ -75,9 +75,6 @@ namespace SillyHitboxViewer {
             On.RoR2.BulletAttack.FireSingle += BulletAttack_FireSingle;
             On.RoR2.BulletAttack.InitBulletHitFromRaycastHit += BulletAttack_InitBulletHitFromRaycastHit;
 
-            //initbulletfrom raycasthit
-            // spawnblast at origin, radius 1
-
         }
 
         void Start() {
@@ -243,10 +240,13 @@ namespace SillyHitboxViewer {
 
             if (!HitboxRevealer.bulletModeEnabled) {
 
-                Instantiate(self.radius < 0.1f? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
+                //Instantiate(self.radius < 0.1f? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
+                Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f);
             }
 
-            _bulletHitPointRevealers.Add(Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius));
+            //code repeated to avoid uncesseary allocation of a new gameobject in memory
+                //immediately point and laugh at me publicly if that is wrong so I know
+            _bulletHitPointRevealers.Add(Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f));
 
         }
 

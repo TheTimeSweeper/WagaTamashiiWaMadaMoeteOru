@@ -10,7 +10,8 @@ using UnityEngine.UI;
 
 
 namespace BetterHudLite {
-    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.1.0")]
+    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.1.1")]
+    [R2API.Utils.NetworkCompatibility(R2API.Utils.CompatibilityLevel.NoNeedForSync)]
     public class BetterHudLitePlugin : BaseUnityPlugin {
 
         void Awake() {
@@ -35,12 +36,6 @@ namespace BetterHudLite {
                 buffs.SetParent(barRoots.parent);
 
                 barRoots.SetParent(self.mainUIPanel.transform.Find("SpringCanvas/BottomCenterCluster"));
-
-                //cuts down on ugly copypaste but it's a lot less readable
-                //ArrangeRect(barRoots,
-                //            new Vector2(0.5f, 0.25f),
-                //            Vector2.zero,
-                //            new Vector2(-432f + -432 * (-(Confag.healthBarWidth - 1)), Confag.healthBarHeight * 72f));
 
                 barRoots.rotation = Quaternion.identity;
                 barRoots.pivot = new Vector2(0.5f, 0.25f);
@@ -109,14 +104,6 @@ namespace BetterHudLite {
             {
                 Logger.LogMessage("bruh you just downloaded a mod and disabled the only two things it does");
             }
-        }
-
-        private void ArrangeRect(RectTransform rect, Vector2 pivot, Vector2 AnchoredPosition, Vector2 sizeDelta)
-        {
-            rect.rotation = Quaternion.identity;
-            rect.pivot = pivot;
-            rect.anchoredPosition = AnchoredPosition;
-            rect.sizeDelta = sizeDelta;
         }
 
         //debog
