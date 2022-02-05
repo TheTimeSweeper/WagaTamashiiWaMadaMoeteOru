@@ -14,8 +14,13 @@ namespace BetterHudLite {
     [R2API.Utils.NetworkCompatibility(R2API.Utils.CompatibilityLevel.NoNeedForSync)]
     public class BetterHudLitePlugin : BaseUnityPlugin {
 
+        public static BetterHudLitePlugin instance;
+
         void Awake() {
-            Confug.doConfig(this);
+
+            instance = this;
+
+            Confug.doConfig();
 
             On.RoR2.UI.HUD.Awake += HUD_Awake;
         }
@@ -57,7 +62,7 @@ namespace BetterHudLite {
                 //skills
                 RectTransform skillsScaler = (RectTransform)self.mainUIPanel.transform.Find("SpringCanvas/BottomRightCluster/Scaler");
 
-                //separate sprint and tab icons, keeping them in their corner
+                //separate sprint and tab screen icons, keeping them in their corner
                 RectTransform sprint = (RectTransform)skillsScaler.Find("SprintCluster");
                 sprint.SetParent(skillsScaler.parent);
                 sprint.anchoredPosition = new Vector2(-100, 0);
@@ -85,7 +90,7 @@ namespace BetterHudLite {
                 skillsScaler.anchoredPosition = new Vector2(60, 80 + barsHeight * skillHeightFactor);
                 //presto! I bet you've never seen so much magic in your life!
 
-                //move up the "M1" "M2" etc fields to give the section room to move lower
+                //move up the skill slot fields to give the section room to move lower
                 Transform rect;
                 Image im;
                 foreach (InputBindingDisplayController bindingDisplay in skillsScaler.GetComponentsInChildren<InputBindingDisplayController>())
@@ -104,31 +109,10 @@ namespace BetterHudLite {
                 //Fixing tooltips
                 // dunno what's required so im just copying everything
                 #region component migration
-                
-                //IDK if this part is required
-                var cOld = bottomRightCluster.GetComponent<Canvas>();
-                var cNew = bottomCenterCluster.gameObject.AddComponent<Canvas>();
-                cNew.additionalShaderChannels = cOld.additionalShaderChannels;
-                //cNew.name = cOld.name;
-                cNew.normalizedSortingGridSize = cOld.normalizedSortingGridSize;
-                cNew.overridePixelPerfect = cOld.overridePixelPerfect;
-                cNew.overrideSorting = cOld.overrideSorting;
-                cNew.pixelPerfect = cOld.pixelPerfect;
-                cNew.planeDistance = cOld.planeDistance;
-                cNew.referencePixelsPerUnit = cOld.referencePixelsPerUnit;
-                cNew.renderMode = cOld.renderMode;
-                cNew.scaleFactor = cOld.scaleFactor;
-                cNew.sortingLayerID = cOld.sortingLayerID;
-                cNew.sortingLayerName = cOld.sortingLayerName;
-                cNew.sortingOrder = cOld.sortingOrder;
-                cNew.tag = cOld.tag;
-                cNew.targetDisplay = cOld.targetDisplay;
-                cNew.worldCamera = cOld.worldCamera;
-
 
                 //this one definitely is
-                var grOld = bottomRightCluster.GetComponent<GraphicRaycaster>();
-                var grNew = bottomCenterCluster.gameObject.AddComponent<GraphicRaycaster>();
+                GraphicRaycaster grOld = bottomRightCluster.GetComponent<GraphicRaycaster>();
+                GraphicRaycaster grNew = bottomCenterCluster.gameObject.AddComponent<GraphicRaycaster>();
                 grNew.blockingObjects = grOld.blockingObjects;
                 grNew.hideFlags = grOld.hideFlags;
                 grNew.ignoreReversedGraphics = grOld.ignoreReversedGraphics;
@@ -138,13 +122,13 @@ namespace BetterHudLite {
                 #endregion component migration
 
                 #region move notif
-                var notifArea = (RectTransform)self.mainUIPanel.transform.parent.Find("NotificationArea");
+                RectTransform notifArea = (RectTransform)self.mainUIPanel.transform.parent.Find("NotificationArea");
                 //fix this
                 notifArea.position += Vector3.up * 2f;
                 #endregion move notif
 
                 #region movespec
-                var spec = (RectTransform)bottomCenterCluster.Find("SpectatorLabel");
+                RectTransform spec = (RectTransform)bottomCenterCluster.Find("SpectatorLabel");
                 //fix this too
                 spec.position += Vector3.up * 0.4f;
                 #endregion movespec
@@ -187,21 +171,45 @@ namespace BetterHudLite {
 
     public class Confug
     {
+        private static ConfigEntry<bool> _doBar;
+        public static bool doBar
+        {
+            get
+            {
+                reloadConfig();
+                return _doBar.Value;
+            }
+        }
+
+        private static ConfigEntry<bool> _doSkills;
+        public static bool doSkills
+        {
+            get
+            {
+                reloadConfig();
+                return _doSkills.Value;
+            }
+        }
+
         public static float healthBarWidth = 1;
         public static float healthBarHeight = 1;
 
-        public static bool doBar;
-        public static bool doSkills;
+        private static BetterHudLitePlugin plugin => BetterHudLitePlugin.instance;
 
-        public static void doConfig(BaseUnityPlugin plugin)
+        private static void reloadConfig()
+        {
+            plugin.Config.Reload();
+        }
+
+        public static void doConfig()
         {
             string barSection = "Health UI";
 
-            doBar =
+            _doBar =
                 plugin.Config.Bind<bool>(barSection,
                         "Do the health bar",
                         true,
-                        "Brings the health and level bar to the center").Value;
+                        "Brings the health and level bar to the center");
 
             healthBarWidth =
                 plugin.Config.Bind<float>(barSection,
@@ -219,11 +227,13 @@ namespace BetterHudLite {
 
             string skillsSection = "Skills UI";
 
-            doSkills =
+            _doSkills =
                 plugin.Config.Bind<bool>(skillsSection,
                         "Do the skills",
                         true,
-                        "Brings the skills to the center above where the health bar is (if that's also enabled)").Value;
+                        "Brings the skills to the center above where the health bar is (if that's also enabled)");
+
+            
         }
     }
 }

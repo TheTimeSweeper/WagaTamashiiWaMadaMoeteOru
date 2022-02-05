@@ -11,17 +11,15 @@ using System.Security.Permissions;
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-namespace SillyMod
-{
+namespace SillyMod {
     [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "0.1.0")]
-    public class SillySortPlugin : BaseUnityPlugin
-    {            //there's really no reason to call this one silly. just branding at this point
+    public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> NewSurivorSortings;
         public static Dictionary<string, float> VanillaSurivorSortings;
 
-        void Awake()
-        {
+        void Awake() {
+
             ConFag.DoConfig(this);
 
             SetSurvivorSortings();
@@ -37,10 +35,10 @@ namespace SillyMod
          EngiBody sort position: 5
             EnforcerBody sort position: 4.005
          MageBody sort position: 6
-            SniperClassicBody sort position: 5.5
          MercBody sort position: 7
-            HANDOverclockedBody sort position: 100
+            SniperClassicBody sort position: 5.5
          TreebotBody sort position: 8
+            HANDOverclockedBody sort position: 100
             CHEF sort position: 99
          LoaderBody sort position: 9
             MinerBody sort position: 17
@@ -48,13 +46,12 @@ namespace SillyMod
          CaptainBody sort position: 11
          HereticBody sort position: 13
 
-        NemesisEnforcerBody sort position: 4.010
+            NemesisEnforcerBody sort position: 4.010
          JoeBody sort position: 69
          V1Body sort position: 101
         */
 
-        private void SetSurvivorSortings()
-        {
+        private void SetSurvivorSortings() {
 
             VanillaSurivorSortings = new Dictionary<string, float>();
 
@@ -74,16 +71,13 @@ namespace SillyMod
 
             NewSurivorSortings = new Dictionary<string, float>();
 
-            if (ConFag.MixRor1Survivors)
-            {
+            if (ConFag.MixRor1Survivors) {
                 NewSurivorSortings["EnforcerBody"] = 5.1f;
                 NewSurivorSortings["SniperClassicBody"] = 7.1f;
                 NewSurivorSortings["HANDOverclockedBody"] = 8.1f;
                 NewSurivorSortings["CHEF"] = 8.2f;
                 NewSurivorSortings["MinerBody"] = 9.1f;
-            } 
-            else
-            {
+            } else {
                 NewSurivorSortings["EnforcerBody"] = 13.1f;
                 NewSurivorSortings["SniperClassicBody"] = 13.2f;
                 NewSurivorSortings["HANDOverclockedBody"] = 13.3f;
@@ -91,41 +85,36 @@ namespace SillyMod
                 NewSurivorSortings["MinerBody"] = 13.5f;
             }
 
-            if(ConFag.NemesesSeparate)
-            {
+            if (ConFag.NemesesSeparate) {
                 NewSurivorSortings["NemmandoBody"] = 14.1f;
                 NewSurivorSortings["NemesisEnforcerBody"] = 14.2f;
-            } 
-            else
-            {
+            } else {
                 NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
                 NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.001f;
             }
-            
+
         }
 
-        private void SurvivorCatalog_SetSurvivorDefs(On.RoR2.SurvivorCatalog.orig_SetSurvivorDefs orig, SurvivorDef[] newSurvivorDefs)
-        {
+        private void SurvivorCatalog_SetSurvivorDefs(On.RoR2.SurvivorCatalog.orig_SetSurvivorDefs orig, SurvivorDef[] newSurvivorDefs) {
+
             PrintOrder(newSurvivorDefs);
 
-            for (int i = newSurvivorDefs.Length - 1; i >= 0; i--)
-            {
-                if(NewSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name))
-                {
+            for (int i = newSurvivorDefs.Length - 1; i >= 0; i--) {
+                //is new survivor (ror1 or nemesis)
+                if (NewSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name)) {
                     newSurvivorDefs[i].desiredSortPosition = NewSurivorSortings[newSurvivorDefs[i].bodyPrefab.name];
                     continue;
                 }
 
                 float endSort = 20.0f;
-
-                if(ConFag.ForceModdedCharactersOut)
-                {
-                    if(!NewSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name) && !VanillaSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name))
-                    {
-                        newSurvivorDefs[i].desiredSortPosition = endSort + newSurvivorDefs[i].desiredSortPosition/1000;
+                //force other modded characters
+                if (ConFag.ForceModdedCharactersOut) {
+                    if (!NewSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name) && !VanillaSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name)) {
+                        newSurvivorDefs[i].desiredSortPosition = endSort + newSurvivorDefs[i].desiredSortPosition / 1000;
                     }
                 }
             }
+
             Debug.LogWarning("sorted");
 
             PrintOrder(newSurvivorDefs);
@@ -133,44 +122,41 @@ namespace SillyMod
             orig(newSurvivorDefs);
         }
 
-        private static void PrintOrder(SurvivorDef[] newSurvivorDefs)
-        {
+        private static void PrintOrder(SurvivorDef[] newSurvivorDefs) {
+
             List<SurvivorDef> defs = newSurvivorDefs.ToList();
-            defs.Sort((def1, def2) =>
-            {
+            defs.Sort((def1, def2) => {
                 return def1.desiredSortPosition >= def2.desiredSortPosition ? 1 : -1;
             });
 
-            for (int i = 0; i < defs.Count; i++)
-            {
+            for (int i = 0; i < defs.Count; i++) {
                 //Language.GetString((newSurvivorDefs[i].displayNameToken), "EN_US")
                 Debug.Log(defs[i].bodyPrefab.name + " sort position: " + defs[i].desiredSortPosition);
             }
         }
     }
 
-    public class ConFag
-    {
+    public class ConFag {
+
         public static bool MixRor1Survivors;
         public static Ror1MixType Ror1Mix;
         public static bool NemesesSeparate;
         public static bool ForceModdedCharactersOut;
         public static string ForcedModdedCharacters;
 
-        public enum Ror1MixType
-        {
+        public enum Ror1MixType {
             Default,
-            Risky1Style,
+            Risky1First,
             Risky1ButMixed
         }
 
-        public static void DoConfig(BaseUnityPlugin plugin)
-        {
+        public static void DoConfig(BaseUnityPlugin plugin) {
+
             MixRor1Survivors =
                 plugin.Config.Bind<bool>("love ya",
                             "Mix ror1 surivors",
                             true,
-                            "Modded ror1 survivors will be mixed in with the rest of the cast, loosely based on their unlock condition.\n" 
+                            "Modded ror1 survivors will be mixed in with the rest of the cast, loosely based on their unlock condition.\n"
                             + "Set to false to separate them out and neatly place them together right after Captain\n"
                             + "Overrides those mods' original configs").Value;
 
@@ -188,7 +174,7 @@ namespace SillyMod
                             "Separate Nemesis",
                             true,
                             "Set to true to separate out nemesis survivors from the main lineup, grouped up after ror1 and ror2 survivors.\n"
-                            + "Set to false to leave them where their mod placed them (usually next to their counterpart)").Value;
+                            + "Set to false to place next to their counterpart").Value;
 
             ForceModdedCharactersOut =
                 plugin.Config.Bind<bool>("love ya",
@@ -199,15 +185,11 @@ namespace SillyMod
 
             //ForcedModdedCharacters =
             //    plugin.Config.Bind<string>("love ya",
-            //                "Force Modded Characters Out",
+            //                "Forced out whitelist",
             //                "none",
-            //                "Enter names of modded survivors, comma separated (no spaces), to force them out of the vanilla lineup.\n"
-            //                + "Accepts 'none', and 'all'.\n"
-            //                + "set '-' before a character to whitelist them from 'all'\n"
-            //                //make sure these examples work
+            //                "Enter names of modded survivors, comma separated, to exclude them from force-out config above.\n"
             //                //be a chad and allow any format of character names:nemforcerbody,mdlnemforcer,Nemesis Enforcer
-            //                + "ex: enter [executioner,ursa] to force these two characters after captain\n"
-            //                + "ex: enter [all,-paladin] would separate all modded characters, but keep paladin where he is").Value;
+            //                + "ex: enter [executioner,paladin] to force these two characters after captain\n"
 
             //set your own custom order
 
@@ -217,6 +199,23 @@ namespace SillyMod
             //                ":P",
             //                "dictionary of name and number? EngiBody:69,HereticBody:2,etc:X,"
             //                + "").Value;
+            string defaultStort = "CommandoBody: 1\n" +
+                                  "HuntressBody: 2\n" + 
+                                  "Bandit2Body: 3\n" + 
+                                  "ToolbotBody: 4\n" + 
+                                  "EngiBody: 5\n" + 
+                                  "   EnforcerBody: 5.1\n" + 
+                                  "MageBody: 6\n" + 
+                                  "MercBody: 7\n" + 
+                                  "   SniperClassicBody: 7.1\n" + 
+                                  "TreebotBody: 8\n" + 
+                                  "   HANDOverclockedBody: 8.1\n" + 
+                                  "   CHEF: 8.2\n" + 
+                                  "LoaderBody: 9\n" + 
+                                  "   MinerBody: 9.1\n" + 
+                                  "CrocoBody: 10\n" + 
+                                  "CaptainBody: 11\n" + 
+                                  "HereticBody: 13"; 
         }
     }
 }

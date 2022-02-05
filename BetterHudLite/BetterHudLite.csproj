@@ -106,7 +106,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if "$(Username)" == "Erikbir" copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-SillyItems"
+    <PostBuildEvent>if "$(Username)" == "Erikbir" copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\r2modman\BepInEx\plugins\TheTimesweeper-BetterHudLite"
 if "$(Username)" == "Erikbir" copy "$(TargetPath)" "$(ProjectDir)Release"</PostBuildEvent>
   </PropertyGroup>
 </Project>
