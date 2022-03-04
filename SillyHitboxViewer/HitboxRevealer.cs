@@ -29,7 +29,7 @@ namespace SillyHitboxViewer {
         //incremented in plugin update
         public static float randomTimer;
 
-        public static bool showingBoxes = true;
+        public static bool showingAnyBoxes = true;
         public static bool showingHitBoxes = true;
         public static bool showingHurtBoxes = true;
 
@@ -122,7 +122,7 @@ namespace SillyHitboxViewer {
 
         public void show(bool active) {
 
-            active &= showingBoxes && showingHitBoxes;
+            active &= showingAnyBoxes && showingHitBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
                 rend.enabled = active;
@@ -174,7 +174,7 @@ namespace SillyHitboxViewer {
 
         public void hurtboxShow(bool active) {
 
-            active &= showingBoxes && showingHurtBoxes;
+            active &= showingAnyBoxes && showingHurtBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
                 rend.enabled = active;
@@ -202,7 +202,7 @@ namespace SillyHitboxViewer {
 
         public void blastboxShow(bool active, float showTime) {
 
-            active &= showingBoxes && showingHitBoxes;
+            active &= showingAnyBoxes && showingHitBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
                 rend.enabled = active;
@@ -266,7 +266,7 @@ namespace SillyHitboxViewer {
 
         public void bulletPointBoxShow(bool active, float showTime, float shrinkTime) {
 
-            active &= showingBoxes && showingHitBoxes;
+            active &= showingAnyBoxes && showingHitBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
                 rend.enabled = active;

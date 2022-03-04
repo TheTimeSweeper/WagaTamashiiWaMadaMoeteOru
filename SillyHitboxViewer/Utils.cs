@@ -7,6 +7,7 @@ namespace SillyHitboxViewer {
     public class Utils {
 
         //debug config
+        public static bool cfg_doHitbox;
         public static bool cfg_doHurtbox;
         public static bool cfg_useDebug;
         public static bool cfg_showLogsVerbose;
@@ -62,6 +63,26 @@ namespace SillyHitboxViewer {
 
         #region config
         public static void doConfig() {
+
+            //box
+            const string sectionTemp = "0. General";
+
+            Utils.cfg_doHitbox =
+                HitboxViewerMod.instance.Config.Bind(
+                            sectionTemp,
+                            "Show Hitboxes",
+                            true,
+                            "Show Hitboxes. Overridden by in-game settings\n").Value;
+
+            Utils.cfg_doHurtbox =
+                HitboxViewerMod.instance.Config.Bind(
+                            sectionTemp,
+                            "Show Hurtboxes",
+                            false,
+                            "Show Hurtboxes. Overridden by in-game settings\n").Value;
+
+            //do colliders separately
+            //lol
 
             //box
             const string sectionBox = "1. OverlapAttack hitboxes (melee and some projectiles)";

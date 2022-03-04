@@ -4,16 +4,16 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using System;
-using R2API.Utils;
-using R2API;
+//using R2API.Utils;
+//using R2API;
 
 namespace SillyHitboxViewer {
 
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInDependency("com.bepis.r2api")]
+    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    //[BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [R2APISubmoduleDependency(nameof(CommandHelper))]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.1")]
+    //[R2APISubmoduleDependency(nameof(CommandHelper))]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.2")]
     public class HitboxViewerMod : BaseUnityPlugin {
         
         public static HitboxViewerMod instance;
@@ -52,6 +52,8 @@ namespace SillyHitboxViewer {
             populateAss();
 
             Utils.doConfig();
+            setShowingHitboxes(Utils.cfg_doHitbox);
+            setShowingHurtboxes(Utils.cfg_doHurtbox, false);
 
             if (RiskOfOptionsCompat.enabled) {
                 RiskOfOptionsCompat.doOptions();
@@ -59,7 +61,7 @@ namespace SillyHitboxViewer {
                 setDefaultOptions();
             }
 
-            CommandHelper.AddToConsoleWhenReady();
+            //CommandHelper.AddToConsoleWhenReady();
 
             //createPool(hitPoolStart, _revealerPool, false);
             //createPool(blastPoolStart, _blastPool, true); 
@@ -74,6 +76,8 @@ namespace SillyHitboxViewer {
 
             On.RoR2.BulletAttack.FireSingle += BulletAttack_FireSingle;
             On.RoR2.BulletAttack.InitBulletHitFromRaycastHit += BulletAttack_InitBulletHitFromRaycastHit;
+
+            On.RoR2.CharacterMotor.Awake += CharacterMotor_Awake;
 
         }
 
@@ -254,7 +258,7 @@ namespace SillyHitboxViewer {
         private void HurtBox_Awake(On.RoR2.HurtBox.orig_Awake orig, HurtBox self) {
             orig(self);
 
-            if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingBoxes || !HitboxRevealer.showingHurtBoxes))
+            if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingAnyBoxes || !HitboxRevealer.showingHurtBoxes))
                 return;
 
             if (self.collider is CapsuleCollider) {
@@ -270,6 +274,16 @@ namespace SillyHitboxViewer {
             }
         }
 
+        private void CharacterMotor_Awake(On.RoR2.CharacterMotor.orig_Awake orig, CharacterMotor self) {
+            orig(self);
+
+            if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingAnyBoxes || !HitboxRevealer.showingHurtBoxes))
+                return;
+
+            _hurtboxRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initHurtbox(self.Motor.Capsule.transform, self.Motor.Capsule as CapsuleCollider));
+        }
+
+
         #endregion
 
         #region toggle and debug
@@ -284,8 +298,8 @@ namespace SillyHitboxViewer {
             //show box override hotkey
             if (Input.GetKeyDown(Utils.cfg_toggleKey)) {
 
-                HitboxRevealer.showingBoxes = !HitboxRevealer.showingBoxes;
-                Utils.Log(HitboxRevealer.showingBoxes? "hitboxes enabled" : "all hitboxes disabled", true);
+                HitboxRevealer.showingAnyBoxes = !HitboxRevealer.showingAnyBoxes;
+                Utils.Log(HitboxRevealer.showingAnyBoxes? "hitboxes enabled" : "all hitboxes disabled", true);
 
                 bindShowAllHurtboxes();
 
@@ -369,7 +383,7 @@ namespace SillyHitboxViewer {
 
         private void bindClearBulletPoints() {
 
-            bool shouldClearBullets = !HitboxRevealer.showingBoxes || !HitboxRevealer.bulletModeEnabled;
+            bool shouldClearBullets = !HitboxRevealer.showingAnyBoxes || !HitboxRevealer.bulletModeEnabled;
 
             if (shouldClearBullets) {
 
@@ -386,7 +400,7 @@ namespace SillyHitboxViewer {
 
         public void bindShowAllHurtboxes() {
 
-            bool shouldShow = HitboxRevealer.showingBoxes && HitboxRevealer.showingHurtBoxes;
+            bool shouldShow = HitboxRevealer.showingAnyBoxes && HitboxRevealer.showingHurtBoxes;
 
             for (int i = _hurtboxRevealers.Count - 1; i >= 0; i--) {
                 if (_hurtboxRevealers[i] == null) {
