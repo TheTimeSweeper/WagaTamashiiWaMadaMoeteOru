@@ -23,8 +23,9 @@ namespace SillyGlasses {
     }
 
     public enum SillyItemDisplayBehavior {
-        NONE,
-        BOTH_WAYS,
+        DEFAULT,
+        DEFAULT_BOTH_WAYS,
+        OUTWARD,
         SCATTER,
         //SPIRAL
         //GROW
@@ -35,16 +36,16 @@ namespace SillyGlasses {
 
         public ItemIndex item; 
 
-        public Vector3 positionShift;
-        public Vector3 rotationShift;
+        public Vector3 defaultStackDirection = Vector3.forward;
+        //public Vector3 rotationShift;
         public float distanceMult = 1;
-        public SillyItemDisplayBehavior specialBehavior;
+        public SillyItemDisplayBehavior stackBehavior;
     }
     #endregion
 
     //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     //[BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.2.69")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.2.3")]
     public class SillyGlassesPlugin : BaseUnityPlugin
     {
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
@@ -141,9 +142,9 @@ namespace SillyGlasses {
 
             Utils.Cfg_ClassicStackType =
                 Config.Bind(sectionName,
-                            "Classic Stacking",
+                            "Outward Stacking",
                             false,
-                            "Makes item stack based on their object's forward facing direction (as it used to do), rather than what it does now, which always stacks outward from the bone it's attached to.").Value;
+                            "Makes item stacks outward from the bone it's attached to, rather than their object's forward facing direction.").Value;
 
             Utils.Cfg_ItemDistanceMultiplier =
                 Config.Bind(sectionName,
@@ -250,15 +251,15 @@ namespace SillyGlasses {
                 return Utils.Cfg_EngiTurretItemDistanceMultiplier;
             }
 
-            //bool isScavenger = checkScavengerNames(self);
-            //if (isScavenger) {
-            //    return Utils.Cfg_ScavengerItemDistanceMultiplier;
-            //}
+            bool isScavenger = checkScavengerNames(self);
+            if (isScavenger) {
+                return Utils.Cfg_ScavengerItemDistanceMultiplier;
+            }
 
-            //bool isMoon = checkMoonNames(self);
-            //if (isMoon) {
-            //    return Utils.Cfg_BrotherItemDistanceMultiplier;
-            //}
+            bool isMoon = checkMoonNames(self);
+            if (isMoon) {
+                return Utils.Cfg_BrotherItemDistanceMultiplier;
+            }
 
             return 1;
         }
@@ -327,34 +328,34 @@ namespace SillyGlasses {
         #region cheats
         public void Update()
         {
-            if (Utils.Cfg_PlantsForHire)
-            {
-                if (Input.GetKeyDown(KeyCode.F2))
-                {
-                    TestSpawnItem((int)ItemCatalog.FindItemIndex("CritGlasses"));//ItemIndex.CritGlasses);
-                }
+            //if (Utils.Cfg_PlantsForHire)
+            //{
+            //    if (Input.GetKeyDown(KeyCode.F2))
+            //    {
+            //        TestSpawnItem((int)ItemCatalog.FindItemIndex("CritGlasses"));//ItemIndex.CritGlasses);
+            //    }
 
-                //if (Input.GetKeyDown(KeyCode.F3))
-                //{
-                //    Chat.AddMessage("kek");
-                //    TestSpawnItem((int)ItemIndex.TreasureCache);
-                //}
+            //    //if (Input.GetKeyDown(KeyCode.F3))
+            //    //{
+            //    //    Chat.AddMessage("kek");
+            //    //    TestSpawnItem((int)ItemIndex.TreasureCache);
+            //    //}
 
-                if (Input.GetKeyDown(KeyCode.F6))
-                {
-                    TestSpawnItem();
-                }
+            //    if (Input.GetKeyDown(KeyCode.F6))
+            //    {
+            //        TestSpawnItem();
+            //    }
 
-                if (Input.GetKeyDown(KeyCode.F7))
-                {
-                    TestSpawnItem(Utils.Cfg_CheatItem);
-                }
+            //    if (Input.GetKeyDown(KeyCode.F7))
+            //    {
+            //        TestSpawnItem(Utils.Cfg_CheatItem);
+            //    }
 
-                if (Input.GetKeyDown(KeyCode.F9))
-                {
-                    TestSpawnItemRed();
-                }
-            }
+            //    if (Input.GetKeyDown(KeyCode.F9))
+            //    {
+            //        TestSpawnItemRed();
+            //    }
+            //}
         }
 
         private void TestSpawnItem(int item = -1)

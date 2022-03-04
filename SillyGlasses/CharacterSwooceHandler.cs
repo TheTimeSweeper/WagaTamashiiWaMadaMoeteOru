@@ -268,7 +268,7 @@ namespace SillyGlasses
 
             float forwardDistance = instanceMult_ * _cfgDistanceMultiplier * _specialItemDistance;
 
-            if (glas || Utils.Cfg_ClassicStackType) {
+            if (glas || !Utils.Cfg_ClassicStackType) {
                 if (glas) {
                     forwardDistance = Mathf.Abs(forwardDistance);
                 }
@@ -505,14 +505,14 @@ namespace SillyGlasses
         {
             if (Utils.Cfg_PlantsForHire)
             {
-                if (Input.GetKeyDown(KeyCode.F10))
-                {
-                    TestRemoveGlasses();
-                }
-                if (Input.GetKeyDown(KeyCode.F11))
-                {
-                    TestAddGlasses();
-                }
+                //if (Input.GetKeyDown(KeyCode.F10))
+                //{
+                //    TestRemoveGlasses();
+                //}
+                //if (Input.GetKeyDown(KeyCode.F11))
+                //{
+                //    TestAddGlasses();
+                //}
             }
         }
 
