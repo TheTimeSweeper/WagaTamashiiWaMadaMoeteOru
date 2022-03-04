@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using RoR2;
-using R2API.Utils;
+//using R2API.Utils;
 using RoR2.Skills;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -10,18 +10,18 @@ using FireFireBolt = EntityStates.Mage.Weapon.FireFireBolt;
 namespace FastArtiBolts {
     public class FireFastBolt : FireFireBolt, SteppedSkillDef.IStepSetter {
 
-        public static MethodInfo fireGauntletMethod;
-
+#region config
         private float _fastBoltDamageMulti { get { return Utils.Cfg_DamageMulti; } }
         private float _fastBoltProcMulti { get { return Utils.Cfg_ProcMulti; } }
         private float _fastBoltAttackSpeedMulti { get { return Utils.Cfg_AttackSpeedMulti; } }
         private float _firingBoltsDurationMulti { get { return Utils.Cfg_DurationMulti; } }
 
         private bool potato { get { return Utils.Cfg_potato; } }
-
-        private FireFireBolt _fireFireBolt {
-            get { return this; }
-        }
+        #endregion
+        //todo: load these later so I don't load them on every use
+        //we do this with like every load don't we
+        public static GameObject fastProjectilePrefab;// = LegacyResourcesAPI.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic");
+        public static GameObject fastMuzzleFlash = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/MuzzleFlashes/MuzzleflashMageFire");
 
         private float _fastBoltDuration;
         private float _firingBoltsEndTime;
@@ -31,12 +31,14 @@ namespace FastArtiBolts {
 
         private int _boltsFired = 1;
 
+        #region aimorigin stuff
         private Transform _aimOrigin;
         private Vector3 _origOrigin;
         private float _originShift = 0.12f;
         private float _originShiftMax = 0.4f;
         private float _originShiftForward = 0.2f;
-
+        #endregion
+        
         private Gauntlet _jauntlet;
 
         public new void SetStep(int i) {
@@ -61,8 +63,9 @@ namespace FastArtiBolts {
             //self.attackSoundPitch         1.3 
             #endregion
 
-            base.projectilePrefab = FastBoltsMod.fastFireBoltPrefab;
-            base.muzzleflashEffectPrefab = Resources.Load<GameObject>("Prefabs/Effects/MuzzleFlashes/MuzzleflashMageFire");
+            base.projectilePrefab = fastProjectilePrefab;
+
+            base.muzzleflashEffectPrefab = fastMuzzleFlash;
 
             base.damageCoefficient = 2.2f * _fastBoltDamageMulti;
             base.procCoefficient = 1 * _fastBoltProcMulti;
@@ -85,7 +88,7 @@ namespace FastArtiBolts {
             //one bolt is fired OnEnter
             _boltsFired = 1;
 
-            _fireFireBolt.duration = base.baseDuration;
+            base.duration = base.baseDuration;
         }
          
 
@@ -160,9 +163,9 @@ namespace FastArtiBolts {
 
         private void PseudoFireGauntlet() {
 
-            _fireFireBolt.hasFiredGauntlet = false;
+            base.hasFiredGauntlet = false;
 
-            _fireFireBolt.FireGauntlet();
+            base.FireGauntlet();
 
             _boltsFired++;
         }

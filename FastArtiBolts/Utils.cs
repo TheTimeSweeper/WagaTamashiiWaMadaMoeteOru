@@ -1,5 +1,4 @@
 ﻿using BepInEx.Configuration;
-using R2API;
 using System.Reflection;
 using UnityEngine;
 
@@ -7,29 +6,25 @@ namespace FastArtiBolts {
     public static class Utils {
 
         #region asse
-
         public static AssetBundle MainAssetBundle = null;
-        public static AssetBundleResourcesProvider Provider;
 
         // icons
         public static Sprite FastBoltIcon = null;
 
         public static void PopulateAssets() {
-            // populate ASSets
             if (MainAssetBundle == null) {
                 using (var assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FastArtiBolts.arti")) {
-
                     MainAssetBundle = AssetBundle.LoadFromStream(assetStream);
-                    Provider = new AssetBundleResourcesProvider("@FastArtiBolts", MainAssetBundle);
-                    ResourcesAPI.AddProvider(Provider);
                 }
             }
+
             // gather assets
             FastBoltIcon = MainAssetBundle.LoadAsset<Sprite>("texMageSkillIcon");
         }
+
         #endregion
 
-        #region conf
+            #region conf
         public static float Cfg_DamageMulti = 0.4f;
         public static float Cfg_ProcMulti = 0.6f;
         public static float Cfg_AttackSpeedMulti = 3f;
@@ -70,5 +65,19 @@ namespace FastArtiBolts {
                             "If true, when multiple bolts are spawned on the same frame, it will instead spawn one bolt with combined damage\nThis also combines proc coefficient, which will lead to proc coefficients higher than 1, and I don't know what hilarity will ensue").Value;
         }
         #endregion
+    }
+
+
+    public class help : MonoBehaviour {
+        void OnDestroy() {
+            Debug.LogWarning("rip " + gameObject.name);
+        }
+
+        void OnDisable() {
+            Debug.LogWarning("uh disable " + gameObject.name);
+        }
+        void OnEnable() {
+            Debug.LogWarning("uh enable " + gameObject.name);
+        }
     }
 }

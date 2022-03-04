@@ -1,40 +1,47 @@
 ﻿using BepInEx;
 using EntityStates;
-using R2API.Utils;
+//using R2API.Utils;
 using RoR2;
 using RoR2.Projectile;
 using RoR2.Skills;
 using System;
 using R2API;
 using UnityEngine;
+using System.Security;
+using System.Security.Permissions;
+
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace FastArtiBolts {
 
-    [R2APISubmoduleDependency(new string[]
-    {
-        "LoadoutAPI",
-        "LanguageAPI",
-        "PrefabAPI",
-        "ResourcesAPI",
-        "ProjectileAPI",
-        //"EffectAPI",
-        //"SurvivorAPI",
-        //"UnlockablesAPI",
-    })]
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)]
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.FastArtiBolts", "Fast Artificer Bolts", "2.1.0")]
+    //[R2APISubmoduleDependency(new string[]
+    //{
+    //    "LoadoutAPI",
+    //    "LanguageAPI",
+    //    "PrefabAPI",
+    //    "ProjectileAPI",
+    //})]
+    //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)]
+    //[BepInDependency("com.bepis.r2api")]
+    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.1.1")]
     public class FastBoltsMod : BaseUnityPlugin {
 
         public static FastBoltsMod instance;
-
-        public static GameObject fastFireBoltPrefab;
+        public const string MODUID = "com.TheTimeSweeper.FastArtiBolts";
 
         public delegate void BaseOnEnterEvent();
 
         public BaseOnEnterEvent baseOnEnterEvent;
 
-        public void Awake() {
+        void Awake() {
+            Debug.LogWarning("awake");
+            R2API.LanguageAPI.LanguageAwake();
+        }
+
+        void Start() {
+
+            //Debug.LogWarning("start fire");
 
             instance = this; 
 
@@ -42,15 +49,17 @@ namespace FastArtiBolts {
 
             Utils.InitConfig(Config);
 
-            RegisterFastBoltProjectile();
+            createFastBoltProjectile();
 
             AddNewFireboltSkill();
+
+            new Modules.ContentPacks().Initialize();
         }
 
-        private void RegisterFastBoltProjectile() {
+        private void createFastBoltProjectile() {
 
-            fastFireBoltPrefab = PrefabAPI.InstantiateClone(Resources.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic"), "FastFireBolt", true);
-            GameObject fastBoltGhost = PrefabAPI.InstantiateClone(Resources.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic").GetComponent<ProjectileController>().ghostPrefab, "FastFireBoltGhost", false);
+            GameObject fastFireBoltPrefab = PrefabAPI.InstantiateClone(LegacyResourcesAPI.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic"), "FastFireBolt", true);
+            GameObject fastBoltGhost = PrefabAPI.InstantiateClone(LegacyResourcesAPI.Load<GameObject>("Prefabs/Projectiles/MageFireboltBasic").GetComponent<ProjectileController>().ghostPrefab, "FastFireBoltGhost", false);
             fastBoltGhost.transform.localScale = new Vector3(0.72f, 0.72f, 1f);
             fastBoltGhost.transform.Find("Spinner").localScale = Vector3.one * 0.87f;
 
@@ -60,12 +69,15 @@ namespace FastArtiBolts {
             }
             fastFireBoltPrefab.GetComponent<ProjectileController>().ghostPrefab = fastBoltGhost;
 
+            //Debug.LogWarning("created" + (fastFireBoltPrefab != null));
+
             ProjectileAPI.Add(fastFireBoltPrefab);
+            FireFastBolt.fastProjectilePrefab = fastFireBoltPrefab;
         }
 
         public void AddNewFireboltSkill() {
 
-            GameObject mageCharacterBody = Resources.Load<GameObject>("prefabs/characterbodies/MageBody");
+            GameObject mageCharacterBody = LegacyResourcesAPI.Load<GameObject>("prefabs/characterbodies/MageBody");
 
             SkillLocator skillLocator = mageCharacterBody.GetComponent<SkillLocator>();
 
@@ -80,7 +92,7 @@ namespace FastArtiBolts {
 
             skillFamily.variants[skillFamily.variants.Length - 1] = new SkillFamily.Variant {
                 skillDef = mySkillDef,
-                unlockableName = "",
+                unlockableDef= null,
                 viewableNode = new ViewablesCatalog.Node(mySkillDef.skillNameToken, false, null)
             };
         }
@@ -89,15 +101,19 @@ namespace FastArtiBolts {
 
             LanguageAPI.Add("ARTI_PRIMARY_FASTBOLTS_NAME", "Fast Flame Bolts");
             //TODO
-            string damage = $"<style=cIsDamage> {2.2f * Utils.Cfg_DamageMulti * 100}%</style>";
-            string descriptionText = $"Fire Flame Bolts for {damage} each. Shoots <style=cIsUtility>more bolts</style> with <style=cIsUtility>higher attack speed</style>";
+            string damage = $"<style=cIsDamage>2x{2.2f * Utils.Cfg_DamageMulti * 100}%</style>";
+            string flameBolts = $"<style=cIsDamage>Flame Bolts</style>";
+
+            string descriptionText = $"Fire smaller {flameBolts} for {damage}. Fires <style=cIsUtility>more bolts</style> with <style=cIsUtility>attack speed</style>";
             LanguageAPI.Add("ARTI_PRIMARY_FASTBOLTS_DESCRIPTION", descriptionText);
 
             SteppedSkillDef mySkillDef = ScriptableObject.CreateInstance<SteppedSkillDef>();
             mySkillDef.icon = Utils.FastBoltIcon;
             mySkillDef.skillDescriptionToken = "ARTI_PRIMARY_FASTBOLTS_DESCRIPTION";
-            mySkillDef.skillName = "ARTI_PRIMARY_FASTBOLTS_NAME";
-            mySkillDef.skillNameToken = "ARTI_PRIMARY_FASTBOLTS_NAME";
+            string name = "ARTI_PRIMARY_FASTBOLTS_NAME";
+            mySkillDef.skillName = name;
+            mySkillDef.skillNameToken = name;
+            (mySkillDef as ScriptableObject).name = name;
             mySkillDef.keywordTokens = firefireboltskill.keywordTokens;
             mySkillDef.activationState = new SerializableEntityStateType(typeof(FireFastBolt));
             mySkillDef.activationStateMachineName = firefireboltskill.activationStateMachineName;
@@ -116,7 +132,7 @@ namespace FastArtiBolts {
             mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
             mySkillDef.requiredStock = firefireboltskill.requiredStock;
             mySkillDef.stockToConsume = firefireboltskill.stockToConsume;
-            mySkillDef.resetStepsOnIdle = firefireboltskill.resetStepsOnIdle;
+            //mySkillDef.resetStepsOnIdle = firefireboltskill.resetStepsOnIdle;
             mySkillDef.stepCount = firefireboltskill.stepCount;
             return mySkillDef;
         }
