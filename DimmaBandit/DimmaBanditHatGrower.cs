@@ -8,7 +8,7 @@ using System;
 
 namespace DimmaBandit {
     public class DimmaBanditHatGrower : MonoBehaviour {
-
+        
         public static bool AfterLoop;
 
         private float _size = 0;

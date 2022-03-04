@@ -8,12 +8,11 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Runtime.CompilerServices;
 using System.Reflection;
-using R2API.Utils;
 
 namespace DimmaBandit {
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.DimmaBandit", "The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome", "0.3.1")]
+    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    //[BepInDependency("com.bepis.r2api")]
+    [BepInPlugin("com.TheTimeSweeper.DimmaBandit", "The Names Doug Dimmadome Owner of the Dimmsdale Dimmadome", "0.3.2")]
     public class DougDimmadomeOwnerOfTheDimmsdaleDimmadome : BaseUnityPlugin {
 
         public static DougDimmadomeOwnerOfTheDimmsdaleDimmadome Instance;
