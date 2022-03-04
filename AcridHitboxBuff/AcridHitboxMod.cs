@@ -11,7 +11,7 @@ namespace AcridHitbox {
     //TODO: see if only host needs it
     //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)] 
     //[BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.AcridHitboxBuff", "Acrid Slash Hitbox Buff", "1.1.0")]
+    [BepInPlugin("com.TheTimeSweeper.AcridHitboxBuff", "Acrid Slash Hitbox Buff", "1.1.1")]
     public class AcridHitboxMod : BaseUnityPlugin {
 
         //45, 42, 38,, 0, 13, 11
