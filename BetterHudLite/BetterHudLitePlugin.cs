@@ -10,8 +10,8 @@ using UnityEngine.UI;
 
 
 namespace BetterHudLite {
-    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.1.1")]
-    [R2API.Utils.NetworkCompatibility(R2API.Utils.CompatibilityLevel.NoNeedForSync)]
+    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.1.2")]
+    //[R2API.Utils.NetworkCompatibility(R2API.Utils.CompatibilityLevel.NoNeedForSync)]
     public class BetterHudLitePlugin : BaseUnityPlugin {
 
         public static BetterHudLitePlugin instance;
@@ -21,7 +21,7 @@ namespace BetterHudLite {
             instance = this;
 
             Confug.doConfig();
-
+            
             On.RoR2.UI.HUD.Awake += HUD_Awake;
         }
 
@@ -75,18 +75,15 @@ namespace BetterHudLite {
                 inve.anchorMin = new Vector2(1, 0.5f);
                 inve.anchorMax = new Vector2(1, 0.5f);
 
+                //move skills over
                 skillsScaler.transform.SetParent(self.mainUIPanel.transform.Find("SpringCanvas/BottomCenterCluster"));// barRoots);
-
                 //skillsScaler.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-
                 skillsScaler.rotation = Quaternion.identity;
                 skillsScaler.pivot = new Vector2(0.5f, 0.0f);
 
                 skillsScaler.sizeDelta = new Vector2(-639, -234);
-
                 float barsHeight = Confug.healthBarHeight - 1;
                 float skillHeightFactor = 72 * 0.25f;
-
                 skillsScaler.anchoredPosition = new Vector2(60, 80 + barsHeight * skillHeightFactor);
                 //presto! I bet you've never seen so much magic in your life!
 
@@ -107,33 +104,30 @@ namespace BetterHudLite {
                 }
 
                 //Fixing tooltips
-                // dunno what's required so im just copying everything
                 #region component migration
 
-                //this one definitely is
-                GraphicRaycaster grOld = bottomRightCluster.GetComponent<GraphicRaycaster>();
-                GraphicRaycaster grNew = bottomCenterCluster.gameObject.AddComponent<GraphicRaycaster>();
-                grNew.blockingObjects = grOld.blockingObjects;
-                grNew.hideFlags = grOld.hideFlags;
-                grNew.ignoreReversedGraphics = grOld.ignoreReversedGraphics;
-                //grNew.name = grOld.name;
-                grNew.tag = grOld.tag;
-                grNew.useGUILayout = grOld.useGUILayout;
-                #endregion component migration
-
-                #region move notif
-                RectTransform notifArea = (RectTransform)self.mainUIPanel.transform.parent.Find("NotificationArea");
-                //fix this
-                notifArea.position += Vector3.up * 2f;
-                #endregion move notif
-
-                #region movespec
-                RectTransform spec = (RectTransform)bottomCenterCluster.Find("SpectatorLabel");
-                //fix this too
-                spec.position += Vector3.up * 0.4f;
-                #endregion movespec
-
+                GraphicRaycaster graphicRaycasterOld = bottomRightCluster.GetComponent<GraphicRaycaster>();
+                GraphicRaycaster graphicRaycasterNew = bottomCenterCluster.gameObject.AddComponent<GraphicRaycaster>();
+                graphicRaycasterNew.blockingObjects = graphicRaycasterOld.blockingObjects;
+                graphicRaycasterNew.ignoreReversedGraphics = graphicRaycasterOld.ignoreReversedGraphics;
+                graphicRaycasterNew.useGUILayout = graphicRaycasterOld.useGUILayout;
+                #endregion
                 #endregion skills
+
+                //skills are now covering this
+                #region notif area (item blurbs)
+
+                RectTransform notifArea = (RectTransform)self.mainUIPanel.transform.parent.Find("NotificationArea");
+                notifArea.anchorMin = new Vector2(0.8f, 0.05f);
+                notifArea.anchorMax = new Vector2(0.8f, 0.05f);
+                #endregion 
+
+                #region spectator label
+
+                RectTransform spec = (RectTransform)bottomCenterCluster.Find("SpectatorLabel");
+                spec.anchoredPosition = new Vector2(0 , 150);
+                #endregion 
+
             }
 
             if (!Confug.doBar && !Confug.doSkills)
@@ -141,7 +135,7 @@ namespace BetterHudLite {
                 Logger.LogMessage("bruh you just downloaded a mod and disabled the only two things it does");
             }
         }
-
+        
         //debog
         private void ShowBoxesGodDang(HUD hud)
         {
