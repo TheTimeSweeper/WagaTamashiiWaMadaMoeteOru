@@ -1,0 +1,10 @@
+{
+    "name": "SurvivorSortOrder",
+    "version_number": "0.1.2",
+    "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+    "description": "Sorts modded survivors to your configurable liking. Force modded characters to the end. Mix RoR1 survivors in with vanilla like they belong c:, or Group RoR1 survivors neatly after vanilla instead.",
+    "dependencies": [
+        "bbepis-BepInExPack-5.3.1",
+        "RiskofThunder-HookGenPatcher-1.2.3"
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "name": "BiggerCSS",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+    "description": "To tide you over til ScrollableLobby is fixed.",
+    "dependencies": [
+        "bbepis-BepInExPack-5.3.1",
+        "RiskofThunder-HookGenPatcher-1.2.3"
+    ]
+}
