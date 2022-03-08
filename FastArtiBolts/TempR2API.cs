@@ -30,7 +30,6 @@ namespace R2API {
         private static bool Language_TokenIsRegistered(On.RoR2.Language.orig_TokenIsRegistered orig, Language self, string token) {
             var languagename = self.name;
                 if (LanguageDict.ContainsKey(token)) {
-                Debug.LogWarning(token);
                     return true;
                 }
             return orig(self, token);
@@ -39,8 +38,6 @@ namespace R2API {
         private static string Language_GetLocalizedStringByToken(On.RoR2.Language.orig_GetLocalizedStringByToken orig, Language self, string token) {
             var languagename = self.name;
                 if (LanguageDict.ContainsKey(token)) {
-                Debug.LogWarning(token + "  " + LanguageDict[token]);
-
                 return LanguageDict[token];
                 }
             return orig(self, token);

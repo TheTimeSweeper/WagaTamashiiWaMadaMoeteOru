@@ -54,8 +54,8 @@
     <Reference Include="HGUnityUtils">
       <HintPath>..\_lib\HGUnityUtils.dll</HintPath>
     </Reference>
-    <Reference Include="MMHOOK_Assembly-CSharp">
-      <HintPath>..\_lib\MMHOOK_Assembly-CSharp.dll</HintPath>
+    <Reference Include="MMHOOK_RoR2">
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\MMHOOK_RoR2.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\_lib\Mono.Cecil.dll</HintPath>
@@ -71,6 +71,9 @@
     </Reference>
     <Reference Include="R2API">
       <HintPath>..\_lib\R2API.dll</HintPath>
+    </Reference>
+    <Reference Include="RoR2">
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\RoR2.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\_lib\Unity.TextMeshPro.dll</HintPath>

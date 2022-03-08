@@ -7,16 +7,18 @@ using System.Linq;
 using UnityEngine;
 using System.Security;
 using System.Security.Permissions;
+using BepInEx.Logging;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "0.1.0")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "0.1.2")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> NewSurivorSortings;
         public static Dictionary<string, float> VanillaSurivorSortings;
+        public static List<string> forceOutWhitelist;
 
         void Awake() {
 
@@ -45,6 +47,8 @@ namespace SillyMod {
          CrocoBody sort position: 10
          CaptainBody sort position: 11
          HereticBody sort position: 13
+         RailgunnerBody sort position: 14
+         VoidSurvivorBody sort position: 15
 
             NemesisEnforcerBody sort position: 4.010
          JoeBody sort position: 69
@@ -68,8 +72,13 @@ namespace SillyMod {
             VanillaSurivorSortings["CrocoBody"] = 10f;
             VanillaSurivorSortings["CaptainBody"] = 11f;
             VanillaSurivorSortings["HereticBody"] = 13f;
+            VanillaSurivorSortings["RailgunnerBody"] = 14f;
+            VanillaSurivorSortings["VoidSurvivorBody"] = 15f;
+            //todo: check vanilla content packs if you wanna be legit about it
 
             NewSurivorSortings = new Dictionary<string, float>();
+
+            float afterVanillaIndex = 20.0f;
 
             if (ConFag.MixRor1Survivors) {
                 NewSurivorSortings["EnforcerBody"] = 5.1f;
@@ -78,16 +87,16 @@ namespace SillyMod {
                 NewSurivorSortings["CHEF"] = 8.2f;
                 NewSurivorSortings["MinerBody"] = 9.1f;
             } else {
-                NewSurivorSortings["EnforcerBody"] = 13.1f;
-                NewSurivorSortings["SniperClassicBody"] = 13.2f;
-                NewSurivorSortings["HANDOverclockedBody"] = 13.3f;
-                NewSurivorSortings["CHEF"] = 13.4f;
-                NewSurivorSortings["MinerBody"] = 13.5f;
+                NewSurivorSortings["EnforcerBody"] = afterVanillaIndex + 0.1f;
+                NewSurivorSortings["SniperClassicBody"] = afterVanillaIndex + 0.2f;
+                NewSurivorSortings["HANDOverclockedBody"] = afterVanillaIndex + 0.3f;
+                NewSurivorSortings["CHEF"] = afterVanillaIndex + 0.4f;
+                NewSurivorSortings["MinerBody"] = afterVanillaIndex + 0.5f;
             }
 
             if (ConFag.NemesesSeparate) {
-                NewSurivorSortings["NemmandoBody"] = 14.1f;
-                NewSurivorSortings["NemesisEnforcerBody"] = 14.2f;
+                NewSurivorSortings["NemmandoBody"] = afterVanillaIndex + 1 + 0.1f;
+                NewSurivorSortings["NemesisEnforcerBody"] = afterVanillaIndex + 1 + 0.2f;
             } else {
                 NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
                 NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.001f;
@@ -106,23 +115,27 @@ namespace SillyMod {
                     continue;
                 }
 
-                float endSort = 20.0f;
+                float afterEndIndex = 25.0f;
                 //force other modded characters
                 if (ConFag.ForceModdedCharactersOut) {
                     if (!NewSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name) && !VanillaSurivorSortings.ContainsKey(newSurvivorDefs[i].bodyPrefab.name)) {
-                        newSurvivorDefs[i].desiredSortPosition = endSort + newSurvivorDefs[i].desiredSortPosition / 1000;
+                        newSurvivorDefs[i].desiredSortPosition = afterEndIndex + newSurvivorDefs[i].desiredSortPosition / 1000;
                     }
                 }
             }
 
-            Debug.LogWarning("sorted");
+            if (ConFag.Debug)
+                Logger.LogInfo("sorted");
 
             PrintOrder(newSurvivorDefs);
 
             orig(newSurvivorDefs);
         }
 
-        private static void PrintOrder(SurvivorDef[] newSurvivorDefs) {
+        private void PrintOrder(SurvivorDef[] newSurvivorDefs) {
+
+            if (!ConFag.Debug)
+                return;
 
             List<SurvivorDef> defs = newSurvivorDefs.ToList();
             defs.Sort((def1, def2) => {
@@ -131,7 +144,7 @@ namespace SillyMod {
 
             for (int i = 0; i < defs.Count; i++) {
                 //Language.GetString((newSurvivorDefs[i].displayNameToken), "EN_US")
-                Debug.Log(defs[i].bodyPrefab.name + " sort position: " + defs[i].desiredSortPosition);
+                Logger.LogMessage(defs[i].bodyPrefab.name + " sort position: " + defs[i].desiredSortPosition);
             }
         }
     }
@@ -142,7 +155,9 @@ namespace SillyMod {
         public static Ror1MixType Ror1Mix;
         public static bool NemesesSeparate;
         public static bool ForceModdedCharactersOut;
-        public static string ForcedModdedCharacters;
+        public static string ForceOutWhiteList;
+
+        public static bool Debug;
 
         public enum Ror1MixType {
             Default,
@@ -157,7 +172,7 @@ namespace SillyMod {
                             "Mix ror1 surivors",
                             true,
                             "Modded ror1 survivors will be mixed in with the rest of the cast, loosely based on their unlock condition.\n"
-                            + "Set to false to separate them out and neatly place them together right after Captain\n"
+                            + "Set to false to separate them out and neatly place them together right after Vanilla\n"
                             + "Overrides those mods' original configs").Value;
 
             //Ror1Mix =
@@ -172,7 +187,7 @@ namespace SillyMod {
             NemesesSeparate =
                 plugin.Config.Bind<bool>("love ya",
                             "Separate Nemesis",
-                            true,
+                            false,
                             "Set to true to separate out nemesis survivors from the main lineup, grouped up after ror1 and ror2 survivors.\n"
                             + "Set to false to place next to their counterpart").Value;
 
@@ -183,13 +198,19 @@ namespace SillyMod {
                             "Set to true to separate out any other non-ror1 modded characters.\n"
                             + "Set to false to leave them where their mod placed them").Value;
 
+            Debug =
+                plugin.Config.Bind<bool>("love ya",
+                            "Print Sorting",
+                            true,
+                            "Show in console original sort positions and new sortings after this mod takes effect").Value;
+
             //ForcedModdedCharacters =
             //    plugin.Config.Bind<string>("love ya",
             //                "Forced out whitelist",
             //                "none",
             //                "Enter names of modded survivors, comma separated, to exclude them from force-out config above.\n"
             //                //be a chad and allow any format of character names:nemforcerbody,mdlnemforcer,Nemesis Enforcer
-            //                + "ex: enter [executioner,paladin] to force these two characters after captain\n"
+            //                + "ex: enter [executioner,paladin] to leave these characters where their mod put them\n"
 
             //set your own custom order
 

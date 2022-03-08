@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using EntityStates;
-//using R2API.Utils;
 using RoR2;
 using RoR2.Projectile;
 using RoR2.Skills;
@@ -35,19 +34,20 @@ namespace FastArtiBolts {
         public BaseOnEnterEvent baseOnEnterEvent;
 
         void Awake() {
-            Debug.LogWarning("awake");
             R2API.LanguageAPI.LanguageAwake();
         }
 
         void Start() {
-
-            //Debug.LogWarning("start fire");
 
             instance = this; 
 
             Utils.PopulateAssets();
 
             Utils.InitConfig(Config);
+
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.cwmlolzlz.skills")) {
+                SkillsPlusCompat.Init();
+            }
 
             createFastBoltProjectile();
 
