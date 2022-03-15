@@ -46,6 +46,9 @@
     <Reference Include="MonoMod.Utils">
       <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\MonoMod.Utils.dll</HintPath>
     </Reference>
+    <Reference Include="R2API">
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\EnforcerMod\EnforcerMod_VS\libs\R2API.dll</HintPath>
+    </Reference>
     <Reference Include="Rewired_Core">
       <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\Rewired_Core.dll</HintPath>
     </Reference>
@@ -54,6 +57,9 @@
     </Reference>
     <Reference Include="RoR2">
       <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\RoR2.dll</HintPath>
+    </Reference>
+    <Reference Include="Skills">
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\compat\Skills.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Addressables">
       <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\Unity.Addressables.dll</HintPath>
