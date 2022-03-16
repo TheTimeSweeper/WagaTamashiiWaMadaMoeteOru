@@ -32,6 +32,7 @@ namespace SillyHitboxViewer {
         public static bool showingAnyBoxes = true;
         public static bool showingHitBoxes = true;
         public static bool showingHurtBoxes = true;
+        public static bool showingKinos = true;
 
         public static bool bulletModeEnabled = false;
 

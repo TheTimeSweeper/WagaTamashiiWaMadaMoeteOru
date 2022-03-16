@@ -1,7 +1,11 @@
 ﻿using RiskOfOptions;
+using RiskOfOptions.Options;
+using UnityEngine;
 
 namespace SillyHitboxViewer {
     public static class RiskOfOptionsCompat {
+
+        public static Sprite icon;
 
         private static bool? _enabled;
 
@@ -16,14 +20,10 @@ namespace SillyHitboxViewer {
 
         public static void doOptions() {
 
-            ModSettingsManager.setPanelTitle("Hitbox Viewer");
-            ModSettingsManager.setPanelDescription("Enable/disable hitbox or hurtbox viewer");
-
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Enable Hitboxes", $"Shows hitboxes on attacks.\nCan be overridden by pressing {Utils.cfg_toggleKey}", "1"));
-            ModSettingsManager.addListener(ModSettingsManager.getOption("Enable Hitboxes"), new UnityEngine.Events.UnityAction<bool>(hitboxBoolEvent));
-
-            ModSettingsManager.addOption(new ModOption(ModOption.OptionType.Bool, "Enable Hurtboxes", $"Shows hurtboxes on characters\nCan be overridden by pressing {Utils.cfg_toggleKey}", "0"));
-            ModSettingsManager.addListener(ModSettingsManager.getOption("Enable Hurtboxes"), new UnityEngine.Events.UnityAction<bool>(hurtboxBoolEvent));
+            ModSettingsManager.SetModIcon(icon);
+            ModSettingsManager.AddOption(new CheckBoxOption(Utils.doHitbox));
+            ModSettingsManager.AddOption(new CheckBoxOption(Utils.doHurtbox));
+            ModSettingsManager.AddOption(new CheckBoxOption(Utils.doKinos));
         }
 
         public static void hitboxBoolEvent(bool active) {
@@ -33,19 +33,6 @@ namespace SillyHitboxViewer {
         public static void hurtboxBoolEvent(bool active) {
 
             HitboxViewerMod.setShowingHurtboxes(!active, true);
-        }
-
-        public static void readOptions() {
-
-            string disableHit = ModSettingsManager.getOptionValue("Enable Hitboxes");
-            if (!string.IsNullOrEmpty(disableHit)) {
-                HitboxViewerMod.setShowingHitboxes(disableHit == "1");
-            }
-
-            string disableHurt = ModSettingsManager.getOptionValue("Enable Hurtboxes");
-            if (!string.IsNullOrEmpty(disableHurt)) {
-                HitboxViewerMod.setShowingHurtboxes(disableHurt == "1", false);
-            }
         }
     }
 }

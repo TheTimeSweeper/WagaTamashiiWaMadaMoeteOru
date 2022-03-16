@@ -7,10 +7,15 @@ namespace SillyHitboxViewer {
     public class Utils {
 
         //debug config
-        public static bool cfg_doHitbox;
-        public static bool cfg_doHurtbox;
+        public static bool cfg_doHitbox => doHitbox.Value;
+        public static bool cfg_doHurtbox => doHurtbox.Value;
+        public static bool cfg_doKinos => doKinos.Value;
         public static bool cfg_useDebug;
         public static bool cfg_showLogsVerbose;
+
+        public static BepInEx.Configuration.ConfigEntry<bool> doHitbox;
+        public static BepInEx.Configuration.ConfigEntry<bool> doHurtbox;
+        public static BepInEx.Configuration.ConfigEntry<bool> doKinos;
 
         public static KeyCode cfg_toggleKey;
         public static KeyCode cfg_bulletModeKey;
@@ -62,24 +67,44 @@ namespace SillyHitboxViewer {
         #endregion
 
         #region config
+
+        public static void setHitboxConfig(bool set) {
+            doHitbox.Value = set;
+        }
+
+        public static void setHurtboxConfig(bool set) {
+            doHurtbox.Value = set;
+        }
+
+        internal static void setKinoConfig(bool set) {
+            doKinos.Value = set;
+        }
+
         public static void doConfig() {
 
             //box
             const string sectionTemp = "0. General";
 
-            Utils.cfg_doHitbox =
+            doHitbox =
                 HitboxViewerMod.instance.Config.Bind(
                             sectionTemp,
                             "Show Hitboxes",
                             true,
-                            "Show Hitboxes. Overridden by in-game settings\n").Value;
+                            "Show Hitboxes.\n");
 
-            Utils.cfg_doHurtbox =
+            doHurtbox = 
                 HitboxViewerMod.instance.Config.Bind(
                             sectionTemp,
                             "Show Hurtboxes",
                             false,
-                            "Show Hurtboxes. Overridden by in-game settings\n").Value;
+                            "Show Hurtboxes.\n");
+
+            doKinos =
+                HitboxViewerMod.instance.Config.Bind(
+                            sectionTemp,
+                            "Show Character Motors",
+                            false,
+                            "Show the capsule your character uses to interact with the environment/other characters.\n");
 
             //do colliders separately
             //lol

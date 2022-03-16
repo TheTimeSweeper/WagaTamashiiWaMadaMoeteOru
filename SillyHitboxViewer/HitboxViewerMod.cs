@@ -4,16 +4,16 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using System;
-//using R2API.Utils;
-//using R2API;
+using R2API.Utils;
+using R2API;
 
 namespace SillyHitboxViewer {
 
-    //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    //[BepInDependency("com.bepis.r2api")]
+    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    //[R2APISubmoduleDependency(nameof(CommandHelper))]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.2")]
+    [R2APISubmoduleDependency(nameof(CommandHelper))]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.3")]
     public class HitboxViewerMod : BaseUnityPlugin {
         
         public static HitboxViewerMod instance;
@@ -31,6 +31,8 @@ namespace SillyHitboxViewer {
         #endregion
 
         private List<HitboxRevealer> _hurtboxRevealers = new List<HitboxRevealer>();
+
+        private List<HitboxRevealer> _kinoRevealers = new List<HitboxRevealer>();
 
         private List<HitboxRevealer> _bulletHitPointRevealers = new List<HitboxRevealer>();
 
@@ -52,16 +54,19 @@ namespace SillyHitboxViewer {
             populateAss();
 
             Utils.doConfig();
+
+            Utils.doHitbox.SettingChanged += DoHitbox_SettingChanged;
+            Utils.doHurtbox.SettingChanged += DoHurtbox_SettingChanged;
+            Utils.doKinos.SettingChanged += DoKinos_SettingChanged;
+
             setShowingHitboxes(Utils.cfg_doHitbox);
             setShowingHurtboxes(Utils.cfg_doHurtbox, false);
 
             if (RiskOfOptionsCompat.enabled) {
                 RiskOfOptionsCompat.doOptions();
-            } else {
-                setDefaultOptions();
             }
 
-            //CommandHelper.AddToConsoleWhenReady();
+            CommandHelper.AddToConsoleWhenReady();
 
             //createPool(hitPoolStart, _revealerPool, false);
             //createPool(blastPoolStart, _blastPool, true); 
@@ -81,10 +86,18 @@ namespace SillyHitboxViewer {
 
         }
 
-        void Start() {
-            if (RiskOfOptionsCompat.enabled)
-                RiskOfOptionsCompat.readOptions();
+        private void DoHitbox_SettingChanged(object sender, EventArgs e) {
+            setShowingHitboxes(Utils.cfg_doHitbox);
         }
+
+        private void DoHurtbox_SettingChanged(object sender, EventArgs e) {
+            setShowingHurtboxes(Utils.cfg_doHurtbox, true);
+        }
+
+        private void DoKinos_SettingChanged(object sender, EventArgs e) {
+            setShowingKinos(Utils.cfg_doKinos, true);
+        }
+
         #region setup Ass
         private void populateAss() {
 
@@ -99,6 +112,7 @@ namespace SillyHitboxViewer {
             _hitboxNotBoxPrefabTall = LoadHitboxAss(MainAss,"hitboxPreviewInatorCapsule");
             _hitboxNotBoxPrefabTallFlat = LoadHitboxAss(MainAss, "hitboxPreviewInatorCylinder");
             _hitboxNotBoxPrefabTallFlatSmol = LoadHitboxAss(MainAss, "hitboxPreviewInatorCylinderSmol");
+            RiskOfOptionsCompat.icon = MainAss.LoadAsset<Sprite>("hitboxIcon");
 
         }
 
@@ -112,12 +126,10 @@ namespace SillyHitboxViewer {
             return loadedAss?.GetComponent<HitboxRevealer>();
         }
         #endregion
-        #region options n commands
-        //remember the latest settings
-        private void setDefaultOptions() {
-            HitboxRevealer.showingHitBoxes = PlayerPrefs.GetInt("showHitbox", 1) == 1;
-            HitboxRevealer.showingHurtBoxes = PlayerPrefs.GetInt("showHurtbox", 0) == 1;
-        }
+
+        #region commands
+        [ConCommand(commandName = "show_hitbox", flags = ConVarFlags.None, helpText = "Enables/disables attack Hitboxes")]
+        private static void ShowHitbox(ConCommandArgs args) => ShowHitboxes(args);
 
         [ConCommand(commandName = "show_hitboxes", flags = ConVarFlags.None, helpText = "Enables/disables attack Hitboxes")]
         private static void ShowHitboxes(ConCommandArgs args) {
@@ -138,10 +150,13 @@ namespace SillyHitboxViewer {
                 enabled = !HitboxRevealer.showingHitBoxes;
             }
 
-            setShowingHitboxes(enabled);
+            Utils.setHitboxConfig(enabled);
 
             Utils.Log($"showing hitboxes option set to {enabledArg == 1}", true);
         }
+
+        [ConCommand(commandName = "show_hurtbox", flags = ConVarFlags.None, helpText = "Enables/disables character Hurtboxes")]
+        private static void ShowHurtbox(ConCommandArgs args) => ShowHurtboxes(args);
 
         [ConCommand(commandName = "show_hurtboxes", flags = ConVarFlags.None, helpText = "Enables/disables character Hurtboxes")]
         private static void ShowHurtboxes(ConCommandArgs args) {
@@ -161,26 +176,60 @@ namespace SillyHitboxViewer {
                 enabled = !HitboxRevealer.showingHurtBoxes;
             }
 
-            setShowingHurtboxes(enabled, true);
+            Utils.setHurtboxConfig(enabled);
 
             Utils.Log($"showing hurtboxes option set to {enabledArg == 1}", true);
         }
 
-        public static void setShowingHitboxes(bool set) {
 
+        [ConCommand(commandName = "show_kinos", flags = ConVarFlags.None, helpText = "Enables/disables character motors")]
+        private static void ShowKino(ConCommandArgs args) => ShowKinos(args);
+
+        [ConCommand(commandName = "show_characterMotors", flags = ConVarFlags.None, helpText = "Enables/disables character motors")]
+        private static void ShowKinos(ConCommandArgs args) {
+
+            int? enabledArg = args.TryGetArgInt(0);
+
+            if (args.Count > 0 && !enabledArg.HasValue) {
+                Debug.LogError("ya dun fucked up. Pass in 1 to enable Hurtboxes, 0 to disable, or pass in nothing to toggle");
+                return;
+            }
+
+            bool enabled;
+
+            if (args.Count > 0) {
+                enabled = enabledArg == 1;
+            } else {
+                enabled = !HitboxRevealer.showingKinos;
+            }
+
+            Utils.setKinoConfig(enabled);
+
+            Utils.Log($"showing Character Motors option set to {enabledArg == 1}", true);
+        }
+
+        #endregion commands
+
+        public static void setShowingHitboxes(bool set) {
+            //can make this bool a property that reads the config now, but don't sneed to
             HitboxRevealer.showingHitBoxes = set;
-            PlayerPrefs.SetInt("showHitbox", set ? 1 : 0);
         }
 
         public static void setShowingHurtboxes(bool set, bool showAll) {
 
             HitboxRevealer.showingHurtBoxes = set;
-            PlayerPrefs.SetInt("showHurtbox", set ? 1 : 0);
             if (showAll) {
                HitboxViewerMod.instance.bindShowAllHurtboxes();
             }
         }
-        #endregion
+
+        public static void setShowingKinos(bool set, bool showAll) {
+
+            HitboxRevealer.showingKinos = set;
+            if (showAll) {
+                HitboxViewerMod.instance.bindShowAllKinos();
+            }
+        }
 
         #region hooks
         private void BodyCatalog_Init(On.RoR2.BodyCatalog.orig_Init orig) {
@@ -280,7 +329,7 @@ namespace SillyHitboxViewer {
             if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingAnyBoxes || !HitboxRevealer.showingHurtBoxes))
                 return;
 
-            _hurtboxRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initHurtbox(self.Motor.Capsule.transform, self.Motor.Capsule as CapsuleCollider));
+            _kinoRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initHurtbox(self.Motor.Capsule.transform, self.Motor.Capsule as CapsuleCollider));
         }
 
 
@@ -408,6 +457,20 @@ namespace SillyHitboxViewer {
                     continue;
                 }
                 _hurtboxRevealers[i].hurtboxShow(shouldShow);
+            }
+        }
+
+        //that's some tasty copy pasta mamma mia
+        public void bindShowAllKinos() {
+
+            bool shouldShow = HitboxRevealer.showingAnyBoxes && HitboxRevealer.showingKinos;
+
+            for (int i = _kinoRevealers.Count - 1; i >= 0; i--) {
+                if (_kinoRevealers[i] == null) {
+                    _kinoRevealers.RemoveAt(i);
+                    continue;
+                }
+                _kinoRevealers[i].hurtboxShow(shouldShow);
             }
         }
 
