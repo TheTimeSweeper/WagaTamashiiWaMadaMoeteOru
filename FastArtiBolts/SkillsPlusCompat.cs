@@ -36,5 +36,5 @@ namespace FastArtiBolts {
                 skillDef.baseRechargeInterval = MultScaling(1.3f, -0.1f, level);
             }
         }
-
     }
+}

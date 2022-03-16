@@ -8,22 +8,22 @@ using R2API;
 using UnityEngine;
 using System.Security;
 using System.Security.Permissions;
+using R2API.Utils;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace FastArtiBolts {
 
-    //[R2APISubmoduleDependency(new string[]
-    //{
-    //    "LoadoutAPI",
-    //    "LanguageAPI",
-    //    "PrefabAPI",
-    //    "ProjectileAPI",
-    //})]
-    //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod)]
-    //[BepInDependency("com.bepis.r2api")]
-    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.1.1")]
+    [R2APISubmoduleDependency(new string[]
+    {
+        "LoadoutAPI",
+        "LanguageAPI",
+        "PrefabAPI",
+    })]
+    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
+    [BepInDependency("com.bepis.r2api")]
+    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.2.0")]
     public class FastBoltsMod : BaseUnityPlugin {
 
         public static FastBoltsMod instance;
@@ -34,11 +34,6 @@ namespace FastArtiBolts {
         public BaseOnEnterEvent baseOnEnterEvent;
 
         void Awake() {
-            R2API.LanguageAPI.LanguageAwake();
-        }
-
-        void Start() {
-
             instance = this; 
 
             Utils.PopulateAssets();
@@ -71,7 +66,7 @@ namespace FastArtiBolts {
 
             //Debug.LogWarning("created" + (fastFireBoltPrefab != null));
 
-            ProjectileAPI.Add(fastFireBoltPrefab);
+            ContentAddition.AddProjectile(fastFireBoltPrefab);
             FireFastBolt.fastProjectilePrefab = fastFireBoltPrefab;
         }
 
@@ -85,9 +80,6 @@ namespace FastArtiBolts {
 
             SteppedSkillDef mySkillDef = spoofFireBoltSkillDef(skillFamily.variants[0].skillDef as SteppedSkillDef);
 
-            LoadoutAPI.AddSkillDef(mySkillDef);
-            LoadoutAPI.AddSkill(typeof(FireFastBolt));
-
             Array.Resize(ref skillFamily.variants, skillFamily.variants.Length + 1);
 
             skillFamily.variants[skillFamily.variants.Length - 1] = new SkillFamily.Variant {
@@ -95,6 +87,11 @@ namespace FastArtiBolts {
                 unlockableDef= null,
                 viewableNode = new ViewablesCatalog.Node(mySkillDef.skillNameToken, false, null)
             };
+
+            ContentAddition.AddSkillDef(mySkillDef);
+            bool uh;
+            ContentAddition.AddEntityState<FireFastBolt>(out uh);
+            Debug.Log(uh);
         }
 
         private static SteppedSkillDef spoofFireBoltSkillDef(SteppedSkillDef firefireboltskill) {
