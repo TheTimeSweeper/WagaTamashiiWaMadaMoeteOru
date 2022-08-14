@@ -55,7 +55,7 @@ namespace BetterHudLite {
                 //lev.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 #endregion health bar
             }
-
+            //racial expletive what you gonna do ni-
             if (Confug.doSkills)
             {
                 #region skills
