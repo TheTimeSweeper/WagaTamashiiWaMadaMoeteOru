@@ -16,10 +16,13 @@ ___
 DestroyedClone - fixed skills panel
 ___
 ### Known Issues:
- - I've accounted for the ExtendedLoadout mod a bit but it's still kinda jankey
+ - I've accounted for the ExtendedLoadout mod a bit but it's still kinda janky
  - lot of cases untested. don't be shy letting me know
 ___
 ### Plans:
+ - risk of options
+ - move buffs to health bar (config)
+ - move sprint and inv buttons (config)
  - move level below health bar to give skills more room, 
    - and cause it's less important truthfully
    - this was unexpectedly annoying to do and make work with my health bar height config
@@ -37,7 +40,12 @@ If you like this mod, consider donating to the Autism Research Institute https:/
 ___
 ### Changelog:
 
-`0.1.3` 
+`0.1.4`
+ - moving of the hud now happens a frame after `RoR2.UI.HUD.Awake`
+   - allows other UI mods to do their thing then be moved as well
+   - hopefully fixing a recent issue with TeammateRevival mod
+
+`0.1.3`
  - fix for cum2
  - I think something else?
 

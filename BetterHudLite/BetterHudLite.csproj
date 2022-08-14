@@ -38,9 +38,13 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BaseHudHandler.cs" />
+    <Compile Include="Confug.cs" />
+    <Compile Include="HealthHudHandler.cs" />
     <Compile Include="QuoteUnquotePermission.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BetterHudLitePlugin.cs" />
+    <Compile Include="SkillsHudHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -73,6 +77,9 @@
     <Reference Include="R2API">
       <HintPath>..\_lib\R2API.dll</HintPath>
     </Reference>
+    <Reference Include="RoR2">
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\RoR2.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\_lib\Unity.TextMeshPro.dll</HintPath>
     </Reference>
@@ -87,6 +94,10 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\_lib\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Networking">
       <HintPath>..\_lib\UnityEngine.Networking.dll</HintPath>
