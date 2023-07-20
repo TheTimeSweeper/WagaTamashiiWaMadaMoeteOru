@@ -13,7 +13,6 @@ Look at them bois
 ___
 ## Options:
 ![The Gang's All Here](https://i.imgur.com/IWK5SjX.png)
-*3 full row css coming soon, maybe*
 
 <ins>ForceModdedCharactersOut:</ins>
 - Pulls out modded characters from the lineup and places them after ror1 and ror2 survivors
@@ -21,23 +20,33 @@ ___
 
 <ins>MixRor1Survivors:</ins>
 - On by default. Mixes in ror1 folks loosely based on their unlock condition
-- When off, neatly separates and groups ror1 survivors right after Captain
+- When off, neatly separates and groups ror1 survivors right after Vanilla
 
 <ins>NemesesSeparate:</ins>
-- Place Nemeses survivors together at the end of the block, instead of right next to their counterpart where they usually are
+- Place Nemesis survivors together at the end of the main block, instead of right next to their counterpart where they usually are
 
-<ins>More coming soon:</ins>
+<ins>CustomOrder:</ins>
+- Finally, place any character in any spot you want by specifying their desired sort position.
+- See Print Sorting config for existing order to copy paste and change. 
 ___
 ### Plans:
- - Handle nemeses better, for when those two or three upcoming guys come out maybe
+ - Make code a little stronger to handle more situations without an update (namely nemeses)
  - Option to order all survivors to ror1 order for fun.
- - Config to blacklist/whitelist modded characters from the force-out config 
- - Config to straight up place survivors in any spot you please.
-
-Misc:
- - ~~Make an alternative or compat to/for ScrollableLobbyUI that keeps 8 surivors per row so you can get the satisfying-ass roster in these screenshots~~
 ___
 ### Changelog:
+`0.2.1`
+- updated custom sort order config flow
+  - now prints the full sorted order in console and in config so you can simply copy paste and change what you want
+  - thanks JavAngle for the idea
+- print sorting config now does nothing but paste the sort order in its description when the game runs
+  - its previous functionality is now always on
+- fixed a harmless error showing when custom sort was empty
+
+'0.2.0'
+ - added custom order config
+ - added support for new starstorms commandos
+ - moved HAN-D to his default spot in his mod even though my spot was better, based on the unlock
+   - config HANDOverclockedBody:8.1 to bring it back to how it was with this mod 
 
 `0.1.2` 
   - fixed survivors being before dlc survivors

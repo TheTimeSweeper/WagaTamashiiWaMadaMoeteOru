@@ -23,7 +23,7 @@ namespace FastArtiBolts {
     })]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.2.0")]
+    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.2.1")]
     public class FastBoltsMod : BaseUnityPlugin {
 
         public static FastBoltsMod instance;
@@ -89,9 +89,7 @@ namespace FastArtiBolts {
             };
 
             ContentAddition.AddSkillDef(mySkillDef);
-            bool uh;
-            ContentAddition.AddEntityState<FireFastBolt>(out uh);
-            Debug.Log(uh);
+            ContentAddition.AddEntityState<FireFastBolt>(out _);
         }
 
         private static SteppedSkillDef spoofFireBoltSkillDef(SteppedSkillDef firefireboltskill) {
@@ -111,26 +109,47 @@ namespace FastArtiBolts {
             mySkillDef.skillName = name;
             mySkillDef.skillNameToken = name;
             (mySkillDef as ScriptableObject).name = name;
-            mySkillDef.keywordTokens = firefireboltskill.keywordTokens;
+
+            mySkillDef.keywordTokens = new string[] { "KEYWORD_IGNITE" };
             mySkillDef.activationState = new SerializableEntityStateType(typeof(FireFastBolt));
-            mySkillDef.activationStateMachineName = firefireboltskill.activationStateMachineName;
-            mySkillDef.baseMaxStock = firefireboltskill.baseMaxStock;
-            mySkillDef.baseRechargeInterval = firefireboltskill.baseRechargeInterval;
-            mySkillDef.beginSkillCooldownOnSkillEnd = firefireboltskill.beginSkillCooldownOnSkillEnd;
-            mySkillDef.resetCooldownTimerOnUse = firefireboltskill.resetCooldownTimerOnUse;
-            mySkillDef.dontAllowPastMaxStocks = firefireboltskill.dontAllowPastMaxStocks;
-            mySkillDef.fullRestockOnAssign = firefireboltskill.fullRestockOnAssign;
-            mySkillDef.canceledFromSprinting = firefireboltskill.canceledFromSprinting;
-            mySkillDef.interruptPriority = firefireboltskill.interruptPriority;
-            mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
-            mySkillDef.isCombatSkill = firefireboltskill.isCombatSkill;
-            mySkillDef.mustKeyPress = firefireboltskill.mustKeyPress;
-            mySkillDef.cancelSprintingOnActivation = firefireboltskill.cancelSprintingOnActivation;
-            mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
-            mySkillDef.requiredStock = firefireboltskill.requiredStock;
-            mySkillDef.stockToConsume = firefireboltskill.stockToConsume;
-            //mySkillDef.resetStepsOnIdle = firefireboltskill.resetStepsOnIdle;
-            mySkillDef.stepCount = firefireboltskill.stepCount;
+            mySkillDef.activationStateMachineName = "Weapon";
+            mySkillDef.beginSkillCooldownOnSkillEnd = false;
+            mySkillDef.resetCooldownTimerOnUse = false;
+            mySkillDef.dontAllowPastMaxStocks = false;
+            mySkillDef.fullRestockOnAssign = true;
+            mySkillDef.canceledFromSprinting = false;
+            mySkillDef.interruptPriority = InterruptPriority.Any;
+            mySkillDef.rechargeStock = 1;
+            mySkillDef.isCombatSkill = true;
+            mySkillDef.mustKeyPress = false;
+            mySkillDef.cancelSprintingOnActivation = true;
+
+            mySkillDef.baseMaxStock = 4;
+            mySkillDef.baseRechargeInterval = 1.3f;
+            mySkillDef.rechargeStock = 1;
+            mySkillDef.requiredStock = 1;
+            mySkillDef.stockToConsume = 1;
+            mySkillDef.stepCount = 2;  
+
+            //mySkillDef.keywordTokens = firefireboltskill.keywordTokens;
+            //mySkillDef.activationState = new SerializableEntityStateType(typeof(FireFastBolt));
+            //mySkillDef.activationStateMachineName = firefireboltskill.activationStateMachineName;
+            //mySkillDef.baseMaxStock = firefireboltskill.baseMaxStock;
+            //mySkillDef.baseRechargeInterval = firefireboltskill.baseRechargeInterval;
+            //mySkillDef.beginSkillCooldownOnSkillEnd = firefireboltskill.beginSkillCooldownOnSkillEnd;
+            //mySkillDef.resetCooldownTimerOnUse = firefireboltskill.resetCooldownTimerOnUse;
+            //mySkillDef.dontAllowPastMaxStocks = firefireboltskill.dontAllowPastMaxStocks;
+            //mySkillDef.fullRestockOnAssign = firefireboltskill.fullRestockOnAssign;
+            //mySkillDef.canceledFromSprinting = firefireboltskill.canceledFromSprinting;
+            //mySkillDef.interruptPriority = firefireboltskill.interruptPriority;
+            //mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
+            //mySkillDef.isCombatSkill = firefireboltskill.isCombatSkill;
+            //mySkillDef.mustKeyPress = firefireboltskill.mustKeyPress;
+            //mySkillDef.cancelSprintingOnActivation = firefireboltskill.cancelSprintingOnActivation;
+            //mySkillDef.rechargeStock = firefireboltskill.rechargeStock;
+            //mySkillDef.requiredStock = firefireboltskill.requiredStock;
+            //mySkillDef.stockToConsume = firefireboltskill.stockToConsume;
+            //mySkillDef.stepCount = firefireboltskill.stepCount;
             return mySkillDef;
         }
 
