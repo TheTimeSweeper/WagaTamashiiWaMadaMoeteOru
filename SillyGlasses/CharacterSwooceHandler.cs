@@ -11,15 +11,13 @@ using UnityEngineInternal;
 namespace SillyGlasses
 {
     public class CharacterSwooceHandler : MonoBehaviour {
-        
-        private SillyGlassesPlugin _sillyGlasses;
 
         private bool _subscribedToEvents;
 
         #region StackingDisplays
-        private Dictionary<ItemIndex, int> _instantiatedSillyGlassAmounts = new Dictionary<ItemIndex, int>();
-        private Dictionary<ItemIndex, Transform> _instantiatedSillyGlassParents = new Dictionary<ItemIndex, Transform>();
-        private Dictionary<ItemIndex, List<Transform>> _extraGlassParentsLists = new Dictionary<ItemIndex, List<Transform>>();
+        private Dictionary<ItemIndex, int> _instantiatedSillyAmounts = new Dictionary<ItemIndex, int>();
+        private Dictionary<ItemIndex, Transform> _instantiatedSillyParents = new Dictionary<ItemIndex, Transform>();
+        private Dictionary<ItemIndex, List<Transform>> _extraParentsLists = new Dictionary<ItemIndex, List<Transform>>();
 
         private CharacterModel _swoocedCharacterModel;
         public CharacterModel swoocedCharacterModel {
@@ -30,28 +28,6 @@ namespace SillyGlasses
         private ChildLocator _swoocedChildLocator;
 
         private float _specialItemDistance;
-        #endregion
-
-        #region UpdatingMaterials
-        private List<ItemDisplay> _allSillyItemDisplays = new List<ItemDisplay>();
-
-        private MaterialPropertyBlock _propertyStorage = new MaterialPropertyBlock();
-
-        #region hopereflectionisasperformantasthiscausegoddamn
-        private float _pseudoFade = 1f;
-        public float pseudoFade {
-            get => _pseudoFade;
-            set => _pseudoFade = value;
-        }
-
-        private float _pseudoFirstPersonFade = 1f;
-        #endregion
-        private static readonly Color hitFlashBaseColor = new Color32(193, 108, 51, byte.MaxValue);
-        private static readonly Color hitFlashShieldColor = new Color32(132, 159, byte.MaxValue, byte.MaxValue);
-        private static readonly Color healFlashColor = new Color32(104, 196, 49, byte.MaxValue);
-
-        private static readonly float hitFlashDuration = 0.15f;
-        private static readonly float healFlashDuration = 0.35f;
         #endregion
 
         private int _cfgMaxItems {
@@ -65,27 +41,20 @@ namespace SillyGlasses
             }
         }
 
-        void Awake() {
-
-            if (_swoocedCharacterModel == null)
-            {
-                _swoocedCharacterModel = GetComponent<CharacterModel>();
-            }
-
-            FieldInfo fadeField = typeof(CharacterModel).GetField("fade", BindingFlags.NonPublic | BindingFlags.Instance);
-        }
-
-        public void Init(SillyGlassesPlugin sillyGlasses_, float distance_)
+        public void Init(float distance_)
         {
-            _sillyGlasses = sillyGlasses_;
-
             _specialItemDistance = distance_;
-            
+
+            _swoocedCharacterModel = GetComponent<CharacterModel>();
+            _swoocedCurrentInventory = _swoocedCharacterModel.body.inventory;
+
+            SillyGlassesPlugin.instance.swooceHandlers.Add(this);            
             SubscribeToEvents(true);
         }
 
         void OnDestroy()
         {
+            SillyGlassesPlugin.instance.swooceHandlers.Remove(this);
             SubscribeToEvents(false);
         }
 
@@ -98,34 +67,29 @@ namespace SillyGlasses
 
             if (subscribing)
             {
-                _sillyGlasses.updateItemDisplayEvent += onHookedUpdateItemDisplay;
-                _sillyGlasses.enableDisableDisplayEvent += onHookedEnableDisableDisplay;
-
-                _sillyGlasses.updateMaterialsEvent += onUpdateMaterials;
-                _sillyGlasses.updateCameraEvent += onUpdateCamera;
-
+                //SillyGlassesPlugin.instance.updateItemDisplayEvent += onHookedUpdateItemDisplay;
+                SillyGlassesPlugin.instance.enableDisableDisplayEvent += onHookedEnableDisableDisplay;
             }
             else
             {
-                _sillyGlasses.updateItemDisplayEvent -= onHookedUpdateItemDisplay;
-                _sillyGlasses.enableDisableDisplayEvent -= onHookedEnableDisableDisplay;
-
-                _sillyGlasses.updateMaterialsEvent -= onUpdateMaterials;
-                _sillyGlasses.updateCameraEvent -= onUpdateCamera;
+                //SillyGlassesPlugin.instance.updateItemDisplayEvent -= onHookedUpdateItemDisplay;
+                SillyGlassesPlugin.instance.enableDisableDisplayEvent -= onHookedEnableDisableDisplay;
             }
         }
 
-        private void onHookedUpdateItemDisplay(CharacterModel characterModel_, Inventory inventory_)
-        {
-            if (_swoocedCharacterModel == characterModel_ && _swoocedCurrentInventory == null)
-            {
-                _swoocedCurrentInventory = inventory_;
-            }
-        }
+        //private void onHookedUpdateItemDisplay(CharacterModel characterModel_, Inventory inventory_)
+        //{
+        //    if (_swoocedCharacterModel == characterModel_ && _swoocedCurrentInventory == null)
+        //    {
+        //        _swoocedCurrentInventory = inventory_;
+        //    }
+        //}
 
         public void onHookedEnableDisableDisplay(CharacterModel characterModel_, ItemIndex itemIndex_)
         {
-            if (characterModel_ && characterModel_.gameObject != gameObject)
+            if (characterModel_ == null)
+                return;
+            if (characterModel_.gameObject != gameObject)
                 return;
 
             if (characterModel_.itemDisplayRuleSet)
@@ -137,15 +101,13 @@ namespace SillyGlasses
         }
 
         #region StackingDisplays
-        private void PseudoInstantiateDisplayRuleGroup(CharacterModel CharacterModel_,
-                                                       DisplayRuleGroup displayRuleGroup_,
-                                                       ItemIndex itemIndex_)
+        private void PseudoInstantiateDisplayRuleGroup(CharacterModel characterModel_, DisplayRuleGroup displayRuleGroup_, ItemIndex itemIndex_)
         {
             //check if it breaks
             //pls don't break
             if (_swoocedCurrentInventory == null)
                 return;
-            if (CharacterModel_ != _swoocedCharacterModel)
+            if (characterModel_ != _swoocedCharacterModel)
                 return;
             if (displayRuleGroup_.rules == null || displayRuleGroup_.rules.Length == 0) 
                 return;
@@ -153,14 +115,14 @@ namespace SillyGlasses
                 return;
 
             //keep track of items
-            if (!_instantiatedSillyGlassAmounts.ContainsKey(itemIndex_))
+            if (!_instantiatedSillyAmounts.ContainsKey(itemIndex_))
             {
-                _instantiatedSillyGlassAmounts.Add(itemIndex_, 0);
+                _instantiatedSillyAmounts.Add(itemIndex_, 0);
             }
 
             int currentCount = _swoocedCurrentInventory.GetItemCount(itemIndex_);
 
-            int sillyItemDisplays = _instantiatedSillyGlassAmounts[itemIndex_];
+            int sillyItemDisplays = _instantiatedSillyAmounts[itemIndex_];
             int previousTotalItemDisplays = sillyItemDisplays + (currentCount > 0 ? 1 : 0);
 
             //find how many we're adding/removing
@@ -174,17 +136,17 @@ namespace SillyGlasses
             //(sadly i'm not rad enough to only destroy what is needed to be destroyed. i did the more retard friendly method)
             if (difference < 0) 
             {
-                //find the glassparent and destroy it
-                if (_instantiatedSillyGlassParents.ContainsKey(itemIndex_) && _instantiatedSillyGlassParents[itemIndex_] != null)
+                //find the parent and destroy it
+                if (_instantiatedSillyParents.ContainsKey(itemIndex_) && _instantiatedSillyParents[itemIndex_] != null)
                 {
-                    Destroy(_instantiatedSillyGlassParents[itemIndex_].gameObject);
-                    _instantiatedSillyGlassParents[itemIndex_] = null;
-                    _instantiatedSillyGlassAmounts[itemIndex_] = 0;
+                    Destroy(_instantiatedSillyParents[itemIndex_].gameObject);
+                    _instantiatedSillyParents[itemIndex_] = null;
+                    _instantiatedSillyAmounts[itemIndex_] = 0;
 
                     //find any subparents and destory them
-                    if (_extraGlassParentsLists.ContainsKey(itemIndex_) && _extraGlassParentsLists[itemIndex_] != null)
+                    if (_extraParentsLists.ContainsKey(itemIndex_) && _extraParentsLists[itemIndex_] != null)
                     {
-                        List<Transform> extraParents = _extraGlassParentsLists[itemIndex_];
+                        List<Transform> extraParents = _extraParentsLists[itemIndex_];
                         for (int i = extraParents.Count - 1; i >= 0; i--)
                         {
                             if (extraParents[i])
@@ -195,15 +157,23 @@ namespace SillyGlasses
                         }
                     }
 
+                    for (int i = characterModel_.parentedPrefabDisplays.Count - 1; i >= 0; i--)
+                    {
+                        if (characterModel_.parentedPrefabDisplays[i].instance == null)
+                        {
+                            characterModel_.parentedPrefabDisplays.RemoveAt(i);
+                        }
+                    }
+
                     //restart
-                    PseudoInstantiateDisplayRuleGroup(CharacterModel_, displayRuleGroup_, itemIndex_);
+                    PseudoInstantiateDisplayRuleGroup(characterModel_, displayRuleGroup_, itemIndex_);
                 }
                 return;
             }
             
             if (_swoocedChildLocator == null)
             {
-                _swoocedChildLocator = CharacterModel_.GetComponent<ChildLocator>();                
+                _swoocedChildLocator = characterModel_.GetComponent<ChildLocator>();                
             }
 
             //
@@ -219,7 +189,7 @@ namespace SillyGlasses
             
 
                 //Utils.Log($"swoocing new prefab {itemIndex_}: {i} of {extraItemDisplays} ");
-                _instantiatedSillyGlassAmounts[itemIndex_]++;
+                _instantiatedSillyAmounts[itemIndex_]++;
 
                 for (int j = 0; j < displayRuleGroup_.rules.Length; j++)
                 {
@@ -231,26 +201,29 @@ namespace SillyGlasses
                     if (bodyDisplayParent == null)
                         continue;
 
-                    //create item
-                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated, itemIndex_ == ItemCatalog.FindItemIndex("CritGlasses"));
+                    GameObject iterInstantiatedItem = InstantiateSillyItem(swoocedDisplayRule, _swoocedChildLocator, bodyDisplayParent, currentCountIterated, itemIndex_);
                     if (iterInstantiatedItem == null)
                         continue;
 
+                    characterModel_.parentedPrefabDisplays.Add(new CharacterModel.ParentedPrefabDisplay {
+                        instance = iterInstantiatedItem,
+                        itemDisplay = iterInstantiatedItem.GetComponent<ItemDisplay>(),
+                        itemIndex = itemIndex_,
+                    });
+
                     //parent item to correct parent transform
-                    Transform sillyGlassParent = GetSillyGlassParent(itemIndex_, bodyDisplayParent);
-
-                    iterInstantiatedItem.transform.parent = sillyGlassParent;
-
-                    if (sillyGlassParent == null)
+                    Transform sillyParent = GetSillyParent(itemIndex_, bodyDisplayParent);
+                    iterInstantiatedItem.transform.parent = sillyParent;
+                    if (sillyParent == null)
                     {
-                        Utils.Log("sillyGlassParent is null \nwait how \nmake that big ol' function good enough to eliminate this as a possibility. I should be pretty much covering all the bases there");
+                        Utils.Log("sillyParent is null \nwait how \nI should be pretty much covering all the bases there");
                     }
                 }
             }
         }
 
         //copied from CharacterModel.ParentedPrefabDisplay.Apply
-        private GameObject InstantiateSillyItem(ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform bodyDisplayParent_, int instanceMult_, bool glas)
+        private GameObject InstantiateSillyItem(ItemDisplayRule displayRule_, ChildLocator childLocator_, Transform bodyDisplayParent_, int instanceMult_, ItemIndex itemIndex_)
         {
             GameObject prefab = displayRule_.followerPrefab;
             if (prefab == null)
@@ -268,28 +241,30 @@ namespace SillyGlasses
 
             float forwardDistance = instanceMult_ * _cfgDistanceMultiplier * _specialItemDistance;
 
-            if (glas || !Utils.Cfg_ClassicStackType) {
-                if (glas) {
-                    forwardDistance = Mathf.Abs(forwardDistance);
-                }
+            Vector3 sillyOffset;
 
-                instantiatedDisplay.transform.position += instantiatedDisplay.transform.forward * forwardDistance;
+            if (!Utils.Cfg_OutwardStackType) {
+
+                sillyOffset = instantiatedDisplay.transform.forward * forwardDistance;
+
             } else {
 
                 if (displayRule_.childName != "Head") {
-                    Vector3 outwardVect = (instantiatedDisplay.transform.position - bodyDisplayParent_.position).normalized;
+                    Vector3 outwardVector = (instantiatedDisplay.transform.position - bodyDisplayParent_.position).normalized;
 
-                    Vector3 perpVec = Vector3.Cross(bodyDisplayParent_.transform.up, outwardVect).normalized;
+                    Vector3 perpendicularVector = Vector3.Cross(bodyDisplayParent_.transform.up, outwardVector).normalized;
 
-                    perpVec = Vector3.Cross(bodyDisplayParent_.transform.up, perpVec).normalized;
+                    perpendicularVector = Vector3.Cross(bodyDisplayParent_.transform.up, perpendicularVector).normalized;
 
-                    Vector3 adjustedDirection = ((outwardVect - perpVec) * 0.5f).normalized;
+                    Vector3 adjustedDirection = ((outwardVector - perpendicularVector) * 0.5f).normalized;
 
-                    instantiatedDisplay.transform.position += adjustedDirection * forwardDistance;
+                    sillyOffset = adjustedDirection * forwardDistance;
                 } else {
-                    instantiatedDisplay.transform.position += (instantiatedDisplay.transform.position - bodyDisplayParent_.position).normalized * forwardDistance;
+                    sillyOffset = (instantiatedDisplay.transform.position - bodyDisplayParent_.position).normalized * forwardDistance;
                 }
             }
+
+            instantiatedDisplay.transform.position += sillyOffset;
 
             if (Utils.Cfg_UseLogs) {
                 instantiatedDisplay.name = $"{instantiatedDisplay.name} {instanceMult_}";
@@ -298,53 +273,49 @@ namespace SillyGlasses
             LimbMatcher limbMatcher = instantiatedDisplay.GetComponent<LimbMatcher>();
             if (limbMatcher && childLocator_)
             {
-                limbMatcher.SetChildLocator(childLocator_);
+                instantiatedDisplay.AddComponent<BootlegLimbMatcher>().Init(limbMatcher, childLocator_, forwardDistance);
             }
-            
-            ItemDisplay itemDisplay = instantiatedDisplay.GetComponent<ItemDisplay>();
-            _allSillyItemDisplays.Add(itemDisplay);
+
+            //ItemDisplay itemDisplay = instantiatedDisplay.GetComponent<ItemDisplay>();
+            //_allSillyItemDisplays.Add(itemDisplay);
 
             return instantiatedDisplay;
         }
 
-        private Transform GetSillyGlassParent(ItemIndex itemIndex_, Transform bodyDisplayParent_)
+        private Transform GetSillyParent(ItemIndex itemIndex_, Transform bodyDisplayParent_)
         {
-            Transform sillyGlassParent = _instantiatedSillyGlassParents.ContainsKey(itemIndex_) ? _instantiatedSillyGlassParents[itemIndex_] : null;
+            Transform sillyParent = _instantiatedSillyParents.ContainsKey(itemIndex_) ? _instantiatedSillyParents[itemIndex_] : null;
 
-            bool hasNoSillyGlassParent = sillyGlassParent == null;
+            bool hasNoSillyParent = sillyParent == null;
 
             //if there's no parent, create one and return it
-            if (hasNoSillyGlassParent)
+            if (hasNoSillyParent)
             {
                 Transform parentTransform = CreateNewParentedTransform($"SillyItem_{itemIndex_.ToString()}_Parent", bodyDisplayParent_);
 
-                _instantiatedSillyGlassParents[itemIndex_] = parentTransform;
+                _instantiatedSillyParents[itemIndex_] = parentTransform;
 
                 return parentTransform;
             }
 
-            bool hasSillyGlassParent = sillyGlassParent != null && sillyGlassParent.parent == bodyDisplayParent_;
-
             //if there is an appropriate parent, return this one
-            if (hasSillyGlassParent)
+            if (sillyParent != null && sillyParent.parent == bodyDisplayParent_)
             {
-                return _instantiatedSillyGlassParents[itemIndex_];
+                return _instantiatedSillyParents[itemIndex_];
             }
 
-            bool sillyGlassParentIsDifferent = sillyGlassParent != null && sillyGlassParent.parent != bodyDisplayParent_;
-
             //if there is a parent but it's not on the right limb, look for an extra
-            if (sillyGlassParentIsDifferent)
+            if (sillyParent != null && sillyParent.parent != bodyDisplayParent_)
             {
                 List<Transform> extraParentList = null;
 
                 // if there are no list for these extras yet, create a list for them
-                if (!_extraGlassParentsLists.ContainsKey(itemIndex_))
+                if (!_extraParentsLists.ContainsKey(itemIndex_))
                 {
-                    _extraGlassParentsLists[itemIndex_] = new List<Transform>();
+                    _extraParentsLists[itemIndex_] = new List<Transform>();
                 }
 
-                extraParentList = _extraGlassParentsLists[itemIndex_];
+                extraParentList = _extraParentsLists[itemIndex_];
 
                 //search extras list and try to find one to return
                 Transform extraParent = extraParentList.Find((extra) => {
@@ -355,7 +326,7 @@ namespace SillyGlasses
                 if (extraParent == null)
                 {
                     extraParent = CreateNewParentedTransform($"SillyItem_{itemIndex_.ToString()}_ExtraParent", bodyDisplayParent_);
-                    _extraGlassParentsLists[itemIndex_].Add(extraParent);
+                    _extraParentsLists[itemIndex_].Add(extraParent);
                 }
 
                 return extraParent;
@@ -376,7 +347,7 @@ namespace SillyGlasses
         }
 
         //creates a cube in the place of where an item will spawn, so I can see in what direction its local transform is oriented
-        //not currently used. may be outdaded
+        //not currently used. basically just keeping for nostalgia
         private void ShowFunnyCube(Transform parent_, Vector3 displayRuleLocalPos_, Quaternion displayRuleLocalRotation_, float forwardDistance_) {
             GameObject cubeReference = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
@@ -397,107 +368,6 @@ namespace SillyGlasses
 
             Destroy(cubeReference);
         }
-        #endregion
-
-        #region UpdatingMaterials
-        private void onUpdateMaterials(CharacterModel characterModel_) 
-        {
-            if (characterModel_ != _swoocedCharacterModel)
-                return;
-
-            pseudoUpdateMaterials(characterModel_);
-        }
-
-        #region shouldJustUsedReflectionStupid
-        private void onUpdateCamera(CharacterModel characterModel, CameraRigController camera) {
-
-            if (characterModel != _swoocedCharacterModel)
-                return;
-
-            pseudoUpdateForCamera(camera);
-        }
-
-        private void pseudoUpdateForCamera(CameraRigController cameraRig) {
-
-            _swoocedCharacterModel.visibility = VisibilityLevel.Visible;
-            float target = 1f;
-            if (_swoocedCharacterModel.body) {
-                if (cameraRig.firstPersonTarget == _swoocedCharacterModel.body.gameObject) {
-                    target = 0f;
-                }
-                _swoocedCharacterModel.visibility = _swoocedCharacterModel.body.GetVisibilityLevel(cameraRig.targetTeamIndex);
-            }
-            _pseudoFirstPersonFade = Mathf.MoveTowards(_pseudoFirstPersonFade, target, Time.deltaTime / 0.25f);
-            _pseudoFade *= _pseudoFirstPersonFade;
-        }
-
-        private void pseudoRefreshCameraObstructors(CameraRigController cameraRig) {
-
-            Vector3 position = cameraRig.transform.position;
-            foreach (CharacterModel characterModel in InstanceTracker.GetInstancesList<CharacterModel>()) {
-                if (cameraRig.enableFading) {
-                    float nearestHurtBoxDistance = (position - _swoocedCharacterModel.transform.position).magnitude;
-                    _pseudoFade = Mathf.Clamp01(Util.Remap(nearestHurtBoxDistance, cameraRig.fadeStartDistance, cameraRig.fadeEndDistance, 0f, 1f));
-                } else {
-                    _pseudoFade = 1f;
-                }
-            }
-        }
-        #endregion
-
-        private void pseudoUpdateMaterials(CharacterModel characterModel_) {
-
-            _allSillyItemDisplays.RemoveAll((item) => {
-                return item == null;
-            });
-
-            if(_allSillyItemDisplays.Count <= 0) {
-                return;
-            }
-
-            //float fade = characterModel_.GetFieldValue<float>("fade");
-
-            float fade = (float)Utils.materialFadeField.GetValue(characterModel_);
-
-            for (int i = 0; i < _allSillyItemDisplays.Count; i++) {
-
-                ItemDisplay itemDisplay = _allSillyItemDisplays[i];
-                if(itemDisplay == null) {
-
-                    //Utils.Log($"itemDisplay {i} is null");
-                    continue;
-                }
-
-                itemDisplay.SetVisibilityLevel(characterModel_.visibility);
-
-                for (int l = 0; l < itemDisplay.rendererInfos.Length; l++) {
-                    Renderer renderer2 = itemDisplay.rendererInfos[l].renderer;
-                    renderer2.GetPropertyBlock(_propertyStorage);
-                    _propertyStorage.SetColor(CommonShaderProperties._FlashColor, getDisplayColor(characterModel_));
-                    _propertyStorage.SetFloat(CommonShaderProperties._Fade, fade);
-                    renderer2.SetPropertyBlock(_propertyStorage);
-                }
-            }
-        }
-
-        private Color getDisplayColor(CharacterModel characterModel_) {
-
-            Color color = Color.black;
-
-            if (characterModel_.body && characterModel_.body.healthComponent) {
-
-                float remainingHitFlash = Mathf.Clamp01(1f - characterModel_.body.healthComponent.timeSinceLastHit / hitFlashDuration);
-                float remainingHealFlash = Mathf.Pow(Mathf.Clamp01(1f - characterModel_.body.healthComponent.timeSinceLastHeal / healFlashDuration), 0.5f);
-                if (remainingHealFlash > remainingHitFlash) {
-                    color = healFlashColor * remainingHealFlash;
-                } else {
-                    color = ((characterModel_.body.healthComponent.shield > 0f) ? hitFlashShieldColor : hitFlashBaseColor) * remainingHitFlash;
-                }
-            }
-            return color;
-        }
-
-
         #endregion
 
         #region cheatsvol2

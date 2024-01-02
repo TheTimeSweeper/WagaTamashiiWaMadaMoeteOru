@@ -1,51 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
 using RoR2;
 using UnityEngine;
 //using R2API.Utils;
-
 using System.Security;
 using System.Security.Permissions;
 
-//can't believe I didn't have this til now
-//can I do a bunch of shit i didn't know i could do with this?
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-//[assembly: ManualNetworkRegistration]
-namespace SillyGlasses {
-#region sillydisplayrules
-    public class SillyItemDisplayRules : List<SillyItemDisplayRule> {
-        
-    }
-
-    public enum SillyItemDisplayBehavior {
-        DEFAULT,
-        DEFAULT_BOTH_WAYS,
-        OUTWARD,
-        SCATTER,
-        //SPIRAL
-        //GROW
-    }
-
-    public class SillyItemDisplayRule {
-        public string character;
-
-        public ItemIndex item; 
-
-        public Vector3 defaultStackDirection = Vector3.forward;
-        //public Vector3 rotationShift;
-        public float distanceMult = 1;
-        public SillyItemDisplayBehavior stackBehavior;
-    }
-    #endregion
-
+namespace SillyGlasses
+{
     //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    //[BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.2.3")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.3.0")]
     public class SillyGlassesPlugin : BaseUnityPlugin
     {
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
@@ -55,14 +24,16 @@ namespace SillyGlasses {
         public delegate void UpdateCameraEvent(CharacterModel self, CameraRigController cameraRig);
 
         public EnableDisableDisplayEvent enableDisableDisplayEvent;
-        public UpdateItemDisplayEvent updateItemDisplayEvent;
-
-        public UpdateMaterialsEvent updateMaterialsEvent;
-        public UpdateCameraEvent updateCameraEvent;
 
         private List<CharacterSwooceHandler> _swooceHandlers = new List<CharacterSwooceHandler>();
+        public List<CharacterSwooceHandler> swooceHandlers => _swooceHandlers;
 
-        private Inventory _copiedItemsInventory;
+        private string[] _turretGuyNames = new string[] {
+            "EngiBeamTurretBody",
+            "EngiTurretBody",
+            "EngiWalkerTurretBody",
+            "TeslaTowerBody",
+        };
 
         private string[] _scavGuyNames = new string[] {
             "ScavBody",
@@ -88,59 +59,56 @@ namespace SillyGlasses {
         private int _spawnedRedItems;
         #endregion
 
-        public void Awake() {
+        public static SillyGlassesPlugin instance;
+
+        public void Awake()
+        {
+            instance = this;
 
             InitConfig();
 
-            Utils.CacheReflection();
+            //On.RoR2.Inventory.CopyItemsFrom_Inventory += Inventory_CopyItemsFrom_Inventory; ;
 
-            On.RoR2.Inventory.CopyItemsFrom_Inventory += Inventory_CopyItemsFrom_Inventory; ;
+            //On.RoR2.CharacterBody.Awake += CharacterBody_Awake;
+            On.RoR2.CharacterBody.Start += CharacterBody_Start;
 
             On.RoR2.CharacterBody.OnInventoryChanged += InvChangedHook;
-
-            On.RoR2.CharacterModel.UpdateItemDisplay += UpdateItemDisplayHook;
 
             On.RoR2.CharacterModel.EnableItemDisplay += EnableItemDisplayHook;
 
             On.RoR2.CharacterModel.DisableItemDisplay += DisableItemDisplayHook;
-
-            On.RoR2.CharacterModel.UpdateMaterials += UpdateMaterialsHook;
         }
 
-        //check if this inventory is a turret
-        private void Inventory_CopyItemsFrom_Inventory(On.RoR2.Inventory.orig_CopyItemsFrom_Inventory orig, Inventory self, Inventory other) {
+        private void CharacterBody_Awake(On.RoR2.CharacterBody.orig_Awake orig, CharacterBody self)
+        {
+            orig(self);
 
-            CharacterBody copiedItemsBody;
+            float specialItemDistance = getSpecialItemDistance(self);
 
-            for (int i = 0; i < _swooceHandlers.Count; i++) {
-
-                if (_swooceHandlers[i] != null && _swooceHandlers[i].swoocedCharacterModel != null) {
-
-                    copiedItemsBody = _swooceHandlers[i].swoocedCharacterModel.body;
-
-                    if (copiedItemsBody.inventory == other) {
-
-                        _copiedItemsInventory = self;
-                        break;
-                    }
-                }
+            //make this happen once on init rather than using GetComponent every time an inventory changes
+            if (self.modelLocator.modelTransform == null)
+            {
+                return;
             }
 
-            orig(self, other);
+            CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
+            _swooceHandlers.Add(swooceHandler);
+            swooceHandler.Init(specialItemDistance);
         }
 
         #region config
 
-        private void InitConfig() {
+        private void InitConfig()
+        {
             string sectionName = "hope youre having a lovely day";
 
-            Utils.Cfg_ItemStackMax = 
+            Utils.Cfg_ItemStackMax =
                 Config.Bind(sectionName,
                             "ItemStacksMax",
-                            -1, 
+                            -1,
                             "Maximum item displays that can be spawned (-1 for infinite).").Value;
 
-            Utils.Cfg_ClassicStackType =
+            Utils.Cfg_OutwardStackType =
                 Config.Bind(sectionName,
                             "Outward Stacking",
                             false,
@@ -198,110 +166,81 @@ namespace SillyGlasses {
 
         #endregion
 
-        //old hook
-        private void CopyItemsHook(Inventory self, Inventory other) 
+        private void CharacterBody_Start(On.RoR2.CharacterBody.orig_Start orig, CharacterBody self)
         {
-            CharacterBody copiedItemsBody = null;
-
-            for (int i = 0; i < _swooceHandlers.Count; i++) {
-
-                if (_swooceHandlers[i] != null && _swooceHandlers[i].swoocedCharacterModel != null) {
-
-                    copiedItemsBody = _swooceHandlers[i].swoocedCharacterModel.body;
-
-                    if (copiedItemsBody.inventory == other) {
-
-                        _copiedItemsInventory = self;
-                        break;
-                    }
-                }
-            }
-
-            //orig(self, other);
-        }
-
-        private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self) {
-            _swooceHandlers.RemoveAll((handler) => {
-                return handler == null;
-            });
+            orig(self);
 
             float specialItemDistance = getSpecialItemDistance(self);
 
             //make this happen once on init rather than using GetComponent every time an inventory changes
-            if (self.modelLocator.modelTransform == null) {
+            if (self.modelLocator.modelTransform == null)
+            {
                 return;
             }
 
-            if (self.modelLocator.modelTransform.gameObject.GetComponent<CharacterSwooceHandler>() == null) {
+            CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
+            _swooceHandlers.Add(swooceHandler);
+            swooceHandler.Init(specialItemDistance);
+        }
+
+        private void InvChangedHook(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
+        {
+            float specialItemDistance = getSpecialItemDistance(self);
+
+            //make this happen once on init rather than using GetComponent every time an inventory changes
+            if (self.modelLocator.modelTransform == null)
+            {
+                return;
+            }
+
+            if (self.modelLocator.modelTransform.gameObject.GetComponent<CharacterSwooceHandler>() == null)
+            {
                 CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
                 _swooceHandlers.Add(swooceHandler);
-                swooceHandler.Init(this, specialItemDistance);
+                swooceHandler.Init(specialItemDistance);
             }
 
             orig(self);
         }
 
-        //move this to swoocehandler. 
-        private float getSpecialItemDistance(CharacterBody self) {
+        //move this to swoocehandler.
+        private float getSpecialItemDistance(CharacterBody self)
+        {
+            BodyIndex index = self.bodyIndex;
 
-            bool isCopiedInventory = self.inventory == _copiedItemsInventory;
-            _copiedItemsInventory = null;
-
-            if (isCopiedInventory) {
+            if (CheckNames(index, _turretGuyNames))
+            {
                 return Utils.Cfg_EngiTurretItemDistanceMultiplier;
             }
 
-            bool isScavenger = checkScavengerNames(self);
-            if (isScavenger) {
+            if (CheckNames(index, _scavGuyNames))
+            {
                 return Utils.Cfg_ScavengerItemDistanceMultiplier;
             }
 
-            bool isMoon = checkMoonNames(self);
-            if (isMoon) {
+            if (CheckNames(index, _moonGuyNames))
+            {
                 return Utils.Cfg_BrotherItemDistanceMultiplier;
             }
 
             return 1;
         }
 
-        private bool checkScavengerNames(CharacterBody self) 
+        private static bool CheckNames(BodyIndex index, string[] names)
         {
-            bool isScavenger = false;
-
-            for (int i = 0; i < _scavGuyNames.Length; i++) {
-
-                if (self.bodyIndex == BodyCatalog.FindBodyIndex(_scavGuyNames[i])) {
-                    isScavenger = true;
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (index == BodyCatalog.FindBodyIndex(names[i]))
+                {
+                    return true;
                 }
             }
-
-            return isScavenger;
+            return false;
         }
 
-        private bool checkMoonNames(CharacterBody self) {
-            bool isMoon = false;
 
-            for (int i = 0; i < _moonGuyNames.Length; i++) {
-
-                if (self.bodyIndex == BodyCatalog.FindBodyIndex(_moonGuyNames[i])) {
-                    isMoon = true;
-                }
-            }
-
-            return isMoon;
-        }
-
-        public void UpdateItemDisplayHook(On.RoR2.CharacterModel.orig_UpdateItemDisplay orig,
-                                          CharacterModel self,
-                                          Inventory inventory)
-        {
-            updateItemDisplayEvent?.Invoke(self, inventory);
-            
-            orig(self, inventory);
-        }
-
-        private void DisableItemDisplayHook(On.RoR2.CharacterModel.orig_DisableItemDisplay orig, 
-                                            CharacterModel self, 
+        private void DisableItemDisplayHook(On.RoR2.CharacterModel.orig_DisableItemDisplay orig,
+                                            CharacterModel self,
                                             ItemIndex itemIndex)
         {
             orig(self, itemIndex);
@@ -309,20 +248,13 @@ namespace SillyGlasses {
             enableDisableDisplayEvent?.Invoke(self, itemIndex);
         }
 
-        private void EnableItemDisplayHook(On.RoR2.CharacterModel.orig_EnableItemDisplay orig, 
-                                           CharacterModel self, 
+        private void EnableItemDisplayHook(On.RoR2.CharacterModel.orig_EnableItemDisplay orig,
+                                           CharacterModel self,
                                            ItemIndex itemIndex)
         {
             orig(self, itemIndex);
 
             enableDisableDisplayEvent?.Invoke(self, itemIndex);
-        }
-
-        private void UpdateMaterialsHook(On.RoR2.CharacterModel.orig_UpdateMaterials orig, CharacterModel self) 
-        {
-            orig(self);
-
-            updateMaterialsEvent?.Invoke(self);
         }
 
         #region cheats
@@ -429,4 +361,35 @@ namespace SillyGlasses {
         #endregion
 
     }
+
+    #region sillydisplayrules
+    public class SillyItemDisplayRules : List<SillyItemDisplayRule>
+    {
+
+    }
+
+    public enum SillyItemDisplayBehavior
+    {
+        DEFAULT,
+        DEFAULT_BOTH_WAYS,
+        OUTWARD,
+        SCATTER,
+        //SPIRAL
+        //GROW
+    }
+
+    public class SillyItemDisplayRule
+    {
+        public string character;
+
+        public ItemIndex item;
+
+        public Vector3 defaultStackDirection = Vector3.forward;
+        //public Vector3 rotationShift;
+        public float distanceMult = 1;
+        public SillyItemDisplayBehavior stackBehavior;
+    }
+
+    #endregion
+
 }

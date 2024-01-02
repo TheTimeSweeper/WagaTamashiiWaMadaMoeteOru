@@ -7,7 +7,7 @@ namespace SillyGlasses
     public class Utils
     {
         public static int Cfg_ItemStackMax = -1;
-        public static bool Cfg_ClassicStackType;
+        public static bool Cfg_OutwardStackType;
         public static float Cfg_ItemDistanceMultiplier = 0.0420f;
         public static float Cfg_EngiTurretItemDistanceMultiplier = 1.5f;
         public static float Cfg_ScavengerItemDistanceMultiplier = 6;
@@ -16,8 +16,6 @@ namespace SillyGlasses
         public static bool Cfg_PlantsForHire = false;
         public static int Cfg_CheatItem = 7; //glassiese
         public static int Cfg_CheatItemBoring = 58; //magayzenes
-
-        public static FieldInfo materialFadeField;
 
         public static void Log (string logString, bool chat = false)
         {
@@ -30,10 +28,6 @@ namespace SillyGlasses
                     Chat.AddMessage(logString);
                 }
             }
-        }
-
-        public static void CacheReflection() {
-            materialFadeField = typeof(CharacterModel).GetField("fade", BindingFlags.NonPublic | BindingFlags.Instance);
         }
     }
 }
