@@ -61,7 +61,7 @@ namespace SillyMod {
                             true,
                             "Set to true to separate out any other non-ror1 modded characters.\n"
                             + "Set to false to leave them where their mod placed them").Value;
-
+            
             //set your own custom order
             string customOrder =
                 plugin.Config.Bind("love ya",

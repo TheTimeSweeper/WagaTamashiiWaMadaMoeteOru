@@ -1,6 +1,6 @@
 {
     "name": "SurvivorSortOrder",
-    "version_number": "0.2.1",
+    "version_number": "1.0.0",
     "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
     "description": "Sorts all survivors to your configurable liking. Force modded characters to the end. Mix RoR1 survivors in with vanilla like they belong c:, or Group RoR1 survivors neatly after vanilla instead.",
     "dependencies": [

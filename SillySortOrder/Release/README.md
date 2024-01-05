@@ -28,12 +28,17 @@ ___
 <ins>CustomOrder:</ins>
 - Finally, place any character in any spot you want by specifying their desired sort position.
 - See Print Sorting config for existing order to copy paste and change. 
+- See the wiki tab on this thunderstore page for more info.
 ___
-### Plans:
- - Make code a little stronger to handle more situations without an update (namely nemeses)
+### Maybe Plans:
  - Option to order all survivors to ror1 order for fun.
 ___
 ### Changelog:
+
+`1.0.0`
+- wrote not stupid code to properly detect Nemesis survivors in the nemeses sorting
+  - this puts nemesis amp before amp in the "nemeses separate" config so uh lol
+
 `0.2.1`
 - updated custom sort order config flow
   - now prints the full sorted order in console and in config so you can simply copy paste and change what you want

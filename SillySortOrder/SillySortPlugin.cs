@@ -13,16 +13,17 @@ using BepInEx.Logging;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "0.2.1")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.0.0")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
-        public static Dictionary<string, float> NewSurivorSortings = new Dictionary<string, float>();
+        public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
         public static Dictionary<string, float> VanillaSurivorSortings = new Dictionary<string, float>();
         //public static List<string> forceOutWhitelist;
 
         public static ManualLogSource Log;
 
         public const float AFTER_VANILLA_INDEX = 20f;
+        public const float NEMESES_INDEX = 21f;
         public const float AFTER_END_INDEX = 25f;
 
         void Awake() {
@@ -33,7 +34,7 @@ namespace SillyMod {
 
             SetSurvivorSortings();
 
-            On.RoR2.SurvivorCatalog.SetSurvivorDefs += SurvivorCatalog_SetSurvivorDefs; ;
+            On.RoR2.SurvivorCatalog.SetSurvivorDefs += SurvivorCatalog_SetSurvivorDefs;
         }
 
         /*
@@ -84,30 +85,30 @@ namespace SillyMod {
             //todo: check vanilla content packs if you wanna be legit about it
 
             if (ConFag.MixRor1Survivors) {
-                NewSurivorSortings["HANDOverclockedBody"] = 4.1f;
-                NewSurivorSortings["EnforcerBody"] = 5.1f;
-                NewSurivorSortings["SniperClassicBody"] = 7.1f;
-                NewSurivorSortings["CHEF"] = 8.2f;
-                NewSurivorSortings["MinerBody"] = 9.1f;
+                ClassicSurivorSortings["HANDOverclockedBody"] = 4.1f;
+                ClassicSurivorSortings["EnforcerBody"] = 5.1f;
+                ClassicSurivorSortings["SniperClassicBody"] = 7.1f;
+                ClassicSurivorSortings["CHEF"] = 8.2f;
+                ClassicSurivorSortings["MinerBody"] = 9.1f;
             } else {
-                NewSurivorSortings["EnforcerBody"] = AFTER_VANILLA_INDEX + 0.1f;
-                NewSurivorSortings["SniperClassicBody"] = AFTER_VANILLA_INDEX + 0.2f;
-                NewSurivorSortings["HANDOverclockedBody"] = AFTER_VANILLA_INDEX + 0.3f;
-                NewSurivorSortings["CHEF"] = AFTER_VANILLA_INDEX + 0.4f;
-                NewSurivorSortings["MinerBody"] = AFTER_VANILLA_INDEX + 0.5f;
+                ClassicSurivorSortings["EnforcerBody"] = AFTER_VANILLA_INDEX + 0.1f;
+                ClassicSurivorSortings["SniperClassicBody"] = AFTER_VANILLA_INDEX + 0.2f;
+                ClassicSurivorSortings["HANDOverclockedBody"] = AFTER_VANILLA_INDEX + 0.3f;
+                ClassicSurivorSortings["CHEF"] = AFTER_VANILLA_INDEX + 0.4f;
+                ClassicSurivorSortings["MinerBody"] = AFTER_VANILLA_INDEX + 0.5f;
             }
 
-            if (ConFag.NemesesSeparate) {
-                NewSurivorSortings["NemmandoBody"] = AFTER_VANILLA_INDEX + 1 + 0.1f;
-                NewSurivorSortings["SS2UNemmandoBody"] = AFTER_VANILLA_INDEX + 1 + 0.1f;
-                NewSurivorSortings["NemCommandoBody"] = AFTER_VANILLA_INDEX + 1 + 0.15f;
-                NewSurivorSortings["NemesisEnforcerBody"] = AFTER_VANILLA_INDEX + 1 + 0.2f;
-            } else {
-                NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
-                NewSurivorSortings["SS2UNemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
-                NewSurivorSortings["NemCommandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.0015f;
-                NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.001f;
-            }
+            //if (ConFag.NemesesSeparate) {
+            //    NewSurivorSortings["NemmandoBody"] = NEMESES_INDEX + 0.1f;
+            //    NewSurivorSortings["SS2UNemmandoBody"] = NEMESES_INDEX + 0.1f;
+            //    NewSurivorSortings["NemCommandoBody"] = NEMESES_INDEX + 0.15f;
+            //    NewSurivorSortings["NemesisEnforcerBody"] = NEMESES_INDEX + 0.2f;
+            //} else {
+            //    NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
+            //    NewSurivorSortings["SS2UNemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
+            //    NewSurivorSortings["NemCommandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.0015f;
+            //    NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.001f;
+            //}
 
         }
 
@@ -116,23 +117,66 @@ namespace SillyMod {
             Log.LogMessage("[Before Sort]");
             PrintOrder(newSurvivorDefs);
 
+            Dictionary<string, float> fullNamePositions = new Dictionary<string, float>();
+
+            //sort modded survivors
             for (int i = newSurvivorDefs.Length - 1; i >= 0; i--) {
                 string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
 
                 //force other modded characters
                 if (ConFag.ForceModdedCharactersOut) {
-                    if (!NewSurivorSortings.ContainsKey(BodyPrefabName) && !VanillaSurivorSortings.ContainsKey(BodyPrefabName)) {
-                        newSurvivorDefs[i].desiredSortPosition = AFTER_END_INDEX + newSurvivorDefs[i].desiredSortPosition / 10000;
+                    if (!ClassicSurivorSortings.ContainsKey(BodyPrefabName) && !VanillaSurivorSortings.ContainsKey(BodyPrefabName)) {
+                        newSurvivorDefs[i].desiredSortPosition = AFTER_END_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.001f;
                     }
                 }
 
-                //is new survivor (ror1 or nemesis)
-                if (NewSurivorSortings.ContainsKey(BodyPrefabName)) {
-                    newSurvivorDefs[i].desiredSortPosition = NewSurivorSortings[BodyPrefabName];
+                //is new survivor (ror1)
+                if (ClassicSurivorSortings.ContainsKey(BodyPrefabName)) {
+                    newSurvivorDefs[i].desiredSortPosition = ClassicSurivorSortings[BodyPrefabName];
                 }
 
-                //finally, set custom order
-                if(ConFag.CustomOrderSortings.ContainsKey(BodyPrefabName)) {
+                string fullName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
+                fullNamePositions[fullName] = newSurvivorDefs[i].desiredSortPosition;
+            }
+
+            //handle nemeses
+            for (int i = 0; i < newSurvivorDefs.Length; i++)
+            {
+                string nemesisName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
+
+                if (nemesisName.Contains("nemesis"))
+                {
+                    //say you make a nemesis faceless joe and just call it nemesis joe
+                    //think I'd definitely call chrono legionnaire nemesis legionnaire
+                    //idk just trying to cover some bases here
+                    string[] nemesisNameWords = nemesisName.Replace("nemesis ", "").Split(' ');
+
+                    for (int j = 0; j < nemesisNameWords.Length; j++)
+                    {
+                        foreach (string fullNameKey in fullNamePositions.Keys)
+                        {
+                            if (nemesisNameWords[j].Contains(fullNameKey.ToLowerInvariant()))
+                            {
+                                if (ConFag.NemesesSeparate)
+                                {
+                                    newSurvivorDefs[i].desiredSortPosition = NEMESES_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.01f;
+                                }
+                                else
+                                {
+                                    newSurvivorDefs[i].desiredSortPosition = fullNamePositions[fullNameKey] + 0.00001f;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //finally, set custom order
+            for (int i = 0; i < newSurvivorDefs.Length; i++)
+            {
+                string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
+                if (ConFag.CustomOrderSortings.ContainsKey(BodyPrefabName))
+                {
                     newSurvivorDefs[i].desiredSortPosition = ConFag.CustomOrderSortings[BodyPrefabName];
                     ConFag.CustomOrderSortings.Remove(BodyPrefabName);
                 }
