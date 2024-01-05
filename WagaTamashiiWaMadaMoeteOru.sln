@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BetterHudLite", "BetterHudL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiggerCSS", "BiggerCSS\BiggerCSS.csproj", "{B0FE0DAF-CF42-47CE-9462-EA8A8D0FE983}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SillyItemCensor", "SillyItemCensor\SillyItemCensor.csproj", "{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -281,6 +283,26 @@ Global
 		{B0FE0DAF-CF42-47CE-9462-EA8A8D0FE983}.Release|x64.Build.0 = Release|Any CPU
 		{B0FE0DAF-CF42-47CE-9462-EA8A8D0FE983}.Release|x86.ActiveCfg = Release|Any CPU
 		{B0FE0DAF-CF42-47CE-9462-EA8A8D0FE983}.Release|x86.Build.0 = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|ARM.Build.0 = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|x64.Build.0 = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Debug|x86.Build.0 = Debug|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|ARM.ActiveCfg = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|ARM.Build.0 = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|ARM64.Build.0 = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|x64.ActiveCfg = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|x64.Build.0 = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|x86.ActiveCfg = Release|Any CPU
+		{7BEC48CB-9DFC-4E1E-9C21-D616F69181B1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,10 @@
+{
+    "name": "ItemCensorer",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+    "description": "Replaces syringe model (or any other item in config) with a cube if you're afraid of needles or something like that",
+    "dependencies": [
+        "bbepis-BepInExPack-5.4.9",
+        "RiskofThunder-HookGenPatcher-1.2.3"
+    ]
+}
