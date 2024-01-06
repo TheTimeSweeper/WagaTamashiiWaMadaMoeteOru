@@ -34,6 +34,11 @@ ___
  - Option to order all survivors to ror1 order for fun.
 ___
 ### Changelog:
+`1.0.2`
+- fixed survivors with spaces in their bodynames being un-custom-sort-able
+
+`1.0.1`
+- fixed a freeze on startup
 
 `1.0.0`
 - wrote not stupid code to properly detect Nemesis survivors in the nemeses sorting

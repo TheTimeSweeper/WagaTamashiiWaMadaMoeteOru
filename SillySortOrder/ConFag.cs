@@ -87,7 +87,7 @@ namespace SillyMod {
         private static Dictionary<string, float> ParseCustomOrder(string customOrder) {
             Dictionary<string, float> CustomOrderDictionary = new Dictionary<string, float>();
 
-            customOrder = customOrder.Replace(" ", "");
+            customOrder = customOrder.Replace(", ", ",");
 
             string[] entries = customOrder.Split(',');
 

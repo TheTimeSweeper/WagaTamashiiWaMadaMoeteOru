@@ -13,7 +13,7 @@ using BepInEx.Logging;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.0.0")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.0.2")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
@@ -135,6 +135,9 @@ namespace SillyMod {
                     newSurvivorDefs[i].desiredSortPosition = ClassicSurivorSortings[BodyPrefabName];
                 }
 
+                if (string.IsNullOrEmpty(newSurvivorDefs[i].displayNameToken))
+                    continue;
+
                 string fullName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
                 fullNamePositions[fullName] = newSurvivorDefs[i].desiredSortPosition;
             }
@@ -142,6 +145,8 @@ namespace SillyMod {
             //handle nemeses
             for (int i = 0; i < newSurvivorDefs.Length; i++)
             {
+                if (string.IsNullOrEmpty(newSurvivorDefs[i].displayNameToken))
+                    continue;
                 string nemesisName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
 
                 if (nemesisName.Contains("nemesis"))
@@ -209,7 +214,7 @@ namespace SillyMod {
             });
             string configString = "Printed Sort Order:\n";
             for (int i = 0; i < sortedDefs.Count; i++) {
-                //Language.GetString((newSurvivorDefs[i].displayNameToken), "EN_US")
+                //Language.GetString((newSurvivorDefs[i].displayNameToken), "en")
                 Log.LogMessage(sortedDefs[i].bodyPrefab.name + " sort position: " + sortedDefs[i].desiredSortPosition);
                 string comma = i == 0 ? "" : ", ";
                 configString += $"{comma}{sortedDefs[i].bodyPrefab.name}:{sortedDefs[i].desiredSortPosition}";
