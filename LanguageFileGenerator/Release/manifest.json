@@ -1,0 +1,11 @@
+{
+    "author": "TheTimesweeper",
+    "name": "LanguageFileGenerator",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+    "description": "Generates .language files for mods that use LanguageAPI to add their tokens.",
+    "dependencies": [
+        "bbepis-BepInExPack-5.3.1",
+        "RiskofThunder-R2API_Language-1.0.1"
+    ]
+}
