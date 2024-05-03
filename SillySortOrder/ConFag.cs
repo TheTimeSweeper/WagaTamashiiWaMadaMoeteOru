@@ -67,7 +67,7 @@ namespace SillyMod {
                 plugin.Config.Bind("love ya",
                                    "Custom Order",
                                    "",
-                                   "List of characters to apply a custom order, comma separasted. ."
+                                   "List of characters to apply a custom order, comma separated. ."
                                    + "\nFormat is BodyName:Number. Number can be decimal between two values to place your character in between."
                                    + "\nExample: EngiBody:69,HereticBody:2,EnforcerBody:6.5,HANDOverclockedBody:8.1"
                                    + "\nYou can copy from Print Sorting config below.").Value;
@@ -87,8 +87,6 @@ namespace SillyMod {
         private static Dictionary<string, float> ParseCustomOrder(string customOrder) {
             Dictionary<string, float> CustomOrderDictionary = new Dictionary<string, float>();
 
-            customOrder = customOrder.Replace(", ", ",");
-
             string[] entries = customOrder.Split(',');
 
             for (int i = 0; i < entries.Length; i++) {
@@ -99,17 +97,20 @@ namespace SillyMod {
 
                 string[] entrySet = entry.Split(':');
 
-                float entryValue;
                 if (entrySet.Length >= 2) {
-
+                    
                     try {
-                        entryValue = float.Parse(entrySet[1]);
-                        CustomOrderDictionary[entrySet[0]] = entryValue;
+                        string body = entrySet[0].TrimStart().TrimEnd();
+                        CustomOrderDictionary[body] = float.Parse(entrySet[1].TrimStart().TrimEnd());
                     } catch (Exception e) {
-                        ParseErrorLog.Add($"Custom Sort could not find sort position for entry: {entry}");
+                        ParseErrorLog.Add($"Custom Sort could not find sort position for entry: {entry}\n{e}");
                     }
                 } else {
-                    ParseErrorLog.Add($"Custom Sort Entry Invalid: {entry}. Should be a BodyName:Number");
+                    ParseErrorLog.Add($"Custom Sort Entry Invalid: {entry}. Should be BodyName:Number");
+                    if (entrySet.Length > 2)
+                    {
+                        ParseErrorLog.Add($"If someone put : in their bodyname there's nothing I can do. Reach out to the mod creator, tell them Timesweeper sent you.");
+                    }
                 }
             }
 

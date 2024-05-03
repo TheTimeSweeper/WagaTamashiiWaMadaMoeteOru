@@ -3,10 +3,10 @@ using RiskOfOptions.Options;
 using UnityEngine;
 
 namespace SillyHitboxViewer {
+
     public static class RiskOfOptionsCompat {
 
-        public static Sprite icon;
-
+        #region enabled
         private static bool? _enabled;
 
         public static bool enabled {
@@ -17,9 +17,12 @@ namespace SillyHitboxViewer {
                 return (bool)_enabled;
             }
         }
+        #endregion enabled
+
+        public static Sprite icon;
 
         public static void doOptions() {
-
+            
             ModSettingsManager.SetModIcon(icon);
             ModSettingsManager.AddOption(new CheckBoxOption(Utils.doHitbox));
             ModSettingsManager.AddOption(new CheckBoxOption(Utils.doHurtbox));

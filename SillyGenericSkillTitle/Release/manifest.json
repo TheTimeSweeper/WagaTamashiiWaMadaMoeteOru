@@ -1,0 +1,12 @@
+{
+    "author": "TheTimesweeper",
+    "name": "LoadoutSkillTitles",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+    "description": "Changes some characters with extra skill slots from 'Misc.' to more fitting names",
+    "dependencies": [
+        "bbepis-BepInExPack-5.4.9",
+        "RiskofThunder-HookGenPatcher-1.2.3",
+        "RiskofThunder-R2API_Language-1.0.1"
+    ]
+}

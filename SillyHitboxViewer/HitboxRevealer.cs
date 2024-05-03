@@ -36,12 +36,12 @@ namespace SillyHitboxViewer {
 
         public static bool bulletModeEnabled = false;
 
-
         [SerializeField] 
         private Renderer rend;
 
         private MaterialPropertyBlock _matProperties;
         private Color _matColor;
+        private Transform _overlapAttackTransform;
 
         void Awake() {
             _matProperties = new MaterialPropertyBlock();
@@ -74,10 +74,12 @@ namespace SillyHitboxViewer {
 
         public HitboxRevealer init(boxType box, Transform boxParentTransform, bool isMerc = false) {
 
+            _overlapAttackTransform = boxParentTransform;
             transform.parent = boxParentTransform;
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
             transform.localScale = Vector3.one;
+            if (VRCompat.enabled && box == boxType.HIT) transform.parent = null;
 
             float setAlpha = getBoxAlpha(box); 
             float setLum = 0.6f;
@@ -129,10 +131,19 @@ namespace SillyHitboxViewer {
                 rend.enabled = active;
             }
         }
+
+        void FixedUpdate() {
+            if (VRCompat.enabled && rend.enabled && _overlapAttackTransform) {
+
+                transform.position = _overlapAttackTransform.position;
+                transform.rotation = _overlapAttackTransform.rotation;
+            }
+        }
         #endregion
 
         #region hurtbox
-        public HitboxRevealer initHurtbox(Transform capsuleTransform, CapsuleCollider capsuleCollider) {
+        public HitboxRevealer initKino(Transform capsuleTransform, CapsuleCollider capsuleCollider) => initHurtbox(capsuleTransform, capsuleCollider, true);
+        public HitboxRevealer initHurtbox(Transform capsuleTransform, CapsuleCollider capsuleCollider, bool kino = false) {
             init(boxType.HURT, capsuleTransform);
 
             transform.localPosition = capsuleCollider.center;
@@ -148,8 +159,14 @@ namespace SillyHitboxViewer {
                     transform.localEulerAngles = new Vector3(90, 0, 0);
                     break;
             }
-
-            hurtboxShow(true);
+            if (kino)
+            {
+                kinoShow(true);
+            }
+            else
+            {
+                hurtboxShow(true);
+            }
             return this;
         }
 
@@ -178,6 +195,16 @@ namespace SillyHitboxViewer {
             active &= showingAnyBoxes && showingHurtBoxes;
             //Color color = active ? onColor : offColor;
             if (rend) {
+                rend.enabled = active;
+            }
+        }
+
+        public void kinoShow(bool active)
+        {
+            active &= showingAnyBoxes && showingKinos;
+            //Color color = active ? onColor : offColor;
+            if (rend)
+            {
                 rend.enabled = active;
             }
         }

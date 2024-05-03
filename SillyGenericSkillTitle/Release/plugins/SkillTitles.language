@@ -1,0 +1,12 @@
+{
+    "strings": {
+        "LOADOUT_SKILL_PASSIVE" : "Passive",
+        "LOADOUT_SKILL_CAPTAIN_BEACON1" : "Beacon 1",
+        "LOADOUT_SKILL_CAPTAIN_BEACON2" : "Beacon 2",
+    },
+    "en": {
+        "LOADOUT_SKILL_PASSIVE" : "Passive",
+        "LOADOUT_SKILL_CAPTAIN_BEACON1" : "Beacon 1",
+        "LOADOUT_SKILL_CAPTAIN_BEACON2" : "Beacon 2",
+    }
+}

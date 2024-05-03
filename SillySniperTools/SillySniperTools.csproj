@@ -30,65 +30,63 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
-	<ItemGroup>
-		<Reference Include="Assembly-CSharp">
-			<HintPath>..\_lib\Assembly-CSharp.dll</HintPath>
-		</Reference>
-		<Reference Include="BepInEx">
-			<HintPath>..\_lib\BepInEx.dll</HintPath>
-		</Reference>
-		<Reference Include="HGCSharpUtils">
-			<HintPath>..\_lib\HGCSharpUtils.dll</HintPath>
-		</Reference>
-		<Reference Include="HGUnityUtils">
-			<HintPath>..\_lib\HGUnityUtils.dll</HintPath>
-		</Reference>
-		<Reference Include="MMHOOK_Assembly-CSharp">
-			<HintPath>..\_lib\MMHOOK_Assembly-CSharp.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Cecil">
-			<HintPath>..\_lib\Mono.Cecil.dll</HintPath>
-		</Reference>
-		<Reference Include="MonoMod.RuntimeDetour">
-			<HintPath>..\_lib\MonoMod.RuntimeDetour.dll</HintPath>
-		</Reference>
-		<Reference Include="MonoMod.Utils">
-			<HintPath>..\_lib\MonoMod.Utils.dll</HintPath>
-		</Reference>
-		<Reference Include="R2API">
-			<HintPath>..\_lib\R2API.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.TextMeshPro">
-			<HintPath>..\_lib\Unity.TextMeshPro.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine">
-			<HintPath>..\_lib\UnityEngine.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AnimationModule">
-			<HintPath>..\_lib\UnityEngine.AnimationModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AssetBundleModule">
-			<HintPath>..\_lib\UnityEngine.AssetBundleModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.CoreModule">
-			<HintPath>..\_lib\UnityEngine.CoreModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.Networking">
-			<HintPath>..\_lib\UnityEngine.Networking.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.PhysicsModule">
-			<HintPath>..\_lib\UnityEngine.PhysicsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UI">
-			<HintPath>..\_lib\UnityEngine.UI.dll</HintPath>
-		</Reference>
-		<Reference Include="Wwise">
-			<HintPath>..\_lib\Wwise.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\_lib\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>..\_lib\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="HGCSharpUtils">
+      <HintPath>..\_lib\HGCSharpUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="HGUnityUtils">
+      <HintPath>..\_lib\HGUnityUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="MMHOOK_Assembly-CSharp">
+      <HintPath>..\_lib\MMHOOK_Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\_lib\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\_lib\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils">
+      <HintPath>..\_lib\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="R2API">
+      <HintPath>..\_lib\R2API.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>..\_lib\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\_lib\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\_lib\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\_lib\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\_lib\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Networking">
+      <HintPath>..\_lib\UnityEngine.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\_lib\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\_lib\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Wwise">
+      <HintPath>..\_lib\Wwise.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="sillySniperToolsPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

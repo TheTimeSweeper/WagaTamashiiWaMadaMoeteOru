@@ -27,6 +27,10 @@ namespace SillyHitboxViewer {
                 }
             }
 
+            if (hitboxGroup_.GetComponent<RoR2.Projectile.ProjectileDotZone>()) {
+                _isMerc = true;
+            }
+
             initVisaulizinators();
         }
 

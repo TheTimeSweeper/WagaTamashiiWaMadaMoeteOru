@@ -14,10 +14,10 @@ namespace SillyGlasses
 
         private bool _subscribedToEvents;
 
-        #region StackingDisplays
         private Dictionary<ItemIndex, int> _instantiatedSillyAmounts = new Dictionary<ItemIndex, int>();
         private Dictionary<ItemIndex, Transform> _instantiatedSillyParents = new Dictionary<ItemIndex, Transform>();
         private Dictionary<ItemIndex, List<Transform>> _extraParentsLists = new Dictionary<ItemIndex, List<Transform>>();
+        private Dictionary<ItemIndex, List<CharacterModel.ParentedPrefabDisplay>> _sillyParentedPrefabDisplays = new Dictionary<ItemIndex, List<CharacterModel.ParentedPrefabDisplay>>();
 
         private CharacterModel _swoocedCharacterModel;
         public CharacterModel swoocedCharacterModel {
@@ -28,7 +28,7 @@ namespace SillyGlasses
         private ChildLocator _swoocedChildLocator;
 
         private float _specialItemDistance;
-        #endregion
+        private MaterialPropertyBlock propertyStorage;
 
         private int _cfgMaxItems {
             get {
@@ -40,21 +40,59 @@ namespace SillyGlasses
                 return Utils.Cfg_ItemDistanceMultiplier;
             }
         }
-
+        
         public void Init(float distance_)
         {
+            propertyStorage = new MaterialPropertyBlock();
+
             _specialItemDistance = distance_;
 
             _swoocedCharacterModel = GetComponent<CharacterModel>();
             _swoocedCurrentInventory = _swoocedCharacterModel.body.inventory;
 
-            SillyGlassesPlugin.instance.swooceHandlers.Add(this);            
+            //SillyGlassesPlugin.instance.swooceHandlers.Add(this);            
             SubscribeToEvents(true);
+        }
+
+        void Update()
+        {
+            Color value = Color.black;
+            if (_swoocedCharacterModel.body && _swoocedCharacterModel.body.healthComponent)
+            {
+                float num = Mathf.Clamp01(1f - _swoocedCharacterModel.body.healthComponent.timeSinceLastHit / CharacterModel.hitFlashDuration);
+                float num2 = Mathf.Pow(Mathf.Clamp01(1f - _swoocedCharacterModel.body.healthComponent.timeSinceLastHeal / CharacterModel.healFlashDuration), 0.5f);
+                if (num2 > num)
+                {
+                    value = CharacterModel.healFlashColor * num2;
+                }
+                else
+                {
+                    value = ((_swoocedCharacterModel.body.healthComponent.shield > 0f) ? CharacterModel.hitFlashShieldColor : CharacterModel.hitFlashBaseColor) * num;
+                }
+            }
+            foreach (List<CharacterModel.ParentedPrefabDisplay> parentedPrefabDisplays in _sillyParentedPrefabDisplays.Values)
+            {
+                for (int i = 0; i < parentedPrefabDisplays.Count; i++)
+                {
+                    ItemDisplay itemDisplay = parentedPrefabDisplays[i].itemDisplay;
+                    if (itemDisplay == null)
+                        continue;
+                    itemDisplay.SetVisibilityLevel(_swoocedCharacterModel.visibility);
+                    for (int l = 0; l < itemDisplay.rendererInfos.Length; l++)
+                    {
+                        Renderer renderer2 = itemDisplay.rendererInfos[l].renderer;
+                        renderer2.GetPropertyBlock(this.propertyStorage);
+                        this.propertyStorage.SetColor(CommonShaderProperties._FlashColor, value);
+                        this.propertyStorage.SetFloat(CommonShaderProperties._Fade, _swoocedCharacterModel.fade);
+                        renderer2.SetPropertyBlock(this.propertyStorage);
+                    }
+                }
+            }
         }
 
         void OnDestroy()
         {
-            SillyGlassesPlugin.instance.swooceHandlers.Remove(this);
+            //SillyGlassesPlugin.instance.swooceHandlers.Remove(this);
             SubscribeToEvents(false);
         }
 
@@ -156,13 +194,14 @@ namespace SillyGlasses
                             extraParents.RemoveAt(i);
                         }
                     }
-
-                    for (int i = characterModel_.parentedPrefabDisplays.Count - 1; i >= 0; i--)
+                    if (_sillyParentedPrefabDisplays.ContainsKey(itemIndex_))
                     {
-                        if (characterModel_.parentedPrefabDisplays[i].instance == null)
+                        for (int i = _sillyParentedPrefabDisplays[itemIndex_].Count - 1; i >= 0; i--)
                         {
-                            characterModel_.parentedPrefabDisplays.RemoveAt(i);
+                            _sillyParentedPrefabDisplays[itemIndex_][i].Undo();
                         }
+
+                        _sillyParentedPrefabDisplays[itemIndex_].Clear();
                     }
 
                     //restart
@@ -205,7 +244,11 @@ namespace SillyGlasses
                     if (iterInstantiatedItem == null)
                         continue;
 
-                    characterModel_.parentedPrefabDisplays.Add(new CharacterModel.ParentedPrefabDisplay {
+                    if (!_sillyParentedPrefabDisplays.ContainsKey(itemIndex_))
+                    {
+                        _sillyParentedPrefabDisplays[itemIndex_] = new List<CharacterModel.ParentedPrefabDisplay>();
+                    }
+                    _sillyParentedPrefabDisplays[itemIndex_].Add(new CharacterModel.ParentedPrefabDisplay {
                         instance = iterInstantiatedItem,
                         itemDisplay = iterInstantiatedItem.GetComponent<ItemDisplay>(),
                         itemIndex = itemIndex_,
@@ -371,7 +414,8 @@ namespace SillyGlasses
         #endregion
 
         #region cheatsvol2
-        void Update()
+
+        private static void RunCheats()
         {
             if (Utils.Cfg_PlantsForHire)
             {

@@ -14,7 +14,7 @@ using System.Security.Permissions;
 namespace SillyGlasses
 {
     //[NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.3.0")]
+    [BepInPlugin("com.TheTimeSweeper.SillyItem", "Silly Items", "1.3.2")]
     public class SillyGlassesPlugin : BaseUnityPlugin
     {
         public delegate void UpdateItemDisplayEvent(CharacterModel self, Inventory inventory);
@@ -25,8 +25,8 @@ namespace SillyGlasses
 
         public EnableDisableDisplayEvent enableDisableDisplayEvent;
 
-        private List<CharacterSwooceHandler> _swooceHandlers = new List<CharacterSwooceHandler>();
-        public List<CharacterSwooceHandler> swooceHandlers => _swooceHandlers;
+        //private List<CharacterSwooceHandler> _swooceHandlers = new List<CharacterSwooceHandler>();
+        //public List<CharacterSwooceHandler> swooceHandlers => _swooceHandlers;
 
         private string[] _turretGuyNames = new string[] {
             "EngiBeamTurretBody",
@@ -70,15 +70,16 @@ namespace SillyGlasses
             //On.RoR2.Inventory.CopyItemsFrom_Inventory += Inventory_CopyItemsFrom_Inventory; ;
 
             //On.RoR2.CharacterBody.Awake += CharacterBody_Awake;
-            On.RoR2.CharacterBody.Start += CharacterBody_Start;
+            //On.RoR2.CharacterBody.Start += CharacterBody_Start;
 
             On.RoR2.CharacterBody.OnInventoryChanged += InvChangedHook;
 
             On.RoR2.CharacterModel.EnableItemDisplay += EnableItemDisplayHook;
-
+            
             On.RoR2.CharacterModel.DisableItemDisplay += DisableItemDisplayHook;
         }
 
+        //dont work. something else needs to awake first idk what
         private void CharacterBody_Awake(On.RoR2.CharacterBody.orig_Awake orig, CharacterBody self)
         {
             orig(self);
@@ -86,13 +87,13 @@ namespace SillyGlasses
             float specialItemDistance = getSpecialItemDistance(self);
 
             //make this happen once on init rather than using GetComponent every time an inventory changes
-            if (self.modelLocator.modelTransform == null)
+            if (self.modelLocator?.modelTransform == null)
             {
                 return;
             }
 
             CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
-            _swooceHandlers.Add(swooceHandler);
+            //_swooceHandlers.Add(swooceHandler);
             swooceHandler.Init(specialItemDistance);
         }
 
@@ -173,13 +174,15 @@ namespace SillyGlasses
             float specialItemDistance = getSpecialItemDistance(self);
 
             //make this happen once on init rather than using GetComponent every time an inventory changes
-            if (self.modelLocator.modelTransform == null)
+            //nvm this broke everything
+                //getcomponentphobia is pretty bad sometimes
+            if (self.modelLocator?.modelTransform == null)
             {
                 return;
             }
 
             CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
-            _swooceHandlers.Add(swooceHandler);
+            //_swooceHandlers.Add(swooceHandler);
             swooceHandler.Init(specialItemDistance);
         }
 
@@ -196,7 +199,7 @@ namespace SillyGlasses
             if (self.modelLocator.modelTransform.gameObject.GetComponent<CharacterSwooceHandler>() == null)
             {
                 CharacterSwooceHandler swooceHandler = self.modelLocator.modelTransform.gameObject.AddComponent<CharacterSwooceHandler>();
-                _swooceHandlers.Add(swooceHandler);
+                //_swooceHandlers.Add(swooceHandler);
                 swooceHandler.Init(specialItemDistance);
             }
 

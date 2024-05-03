@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="BepInEx.Core" Version="5.*" />
+		<PackageReference Include="RiskOfRain2.GameLibs" Version="1.2.4-r.0" />
+		<PackageReference Include="UnityEngine.Modules" Version="2019.4.26" />
+		<PackageReference Include="MMHOOK.RoR2" Version="2022.4.19">
+			<NoWarn>NU1701</NoWarn>
+		</PackageReference>
+		<PackageReference Include="R2API.Core" Version="5.*" />
+		<PackageReference Include="R2API.CommandHelper" Version="1.*" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)Release\plugins&quot;&#xD;&#xA;Xcopy /E /I /Y &quot;$(ProjectDir)Release\plugins&quot; &quot;E:\r2Profiles\Blinx Returns\BepInEx\plugins\TheTimesweeper-SillyMod2\&quot;" />
+	</Target>
+	
+</Project>

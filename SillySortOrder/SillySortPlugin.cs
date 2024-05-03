@@ -13,7 +13,7 @@ using BepInEx.Logging;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.0.2")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.0.4")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
@@ -113,96 +113,107 @@ namespace SillyMod {
         }
 
         private void SurvivorCatalog_SetSurvivorDefs(On.RoR2.SurvivorCatalog.orig_SetSurvivorDefs orig, SurvivorDef[] newSurvivorDefs) {
-
-            Log.LogMessage("[Before Sort]");
-            PrintOrder(newSurvivorDefs);
-
-            Dictionary<string, float> fullNamePositions = new Dictionary<string, float>();
-
-            //sort modded survivors
-            for (int i = newSurvivorDefs.Length - 1; i >= 0; i--) {
-                string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
-
-                //force other modded characters
-                if (ConFag.ForceModdedCharactersOut) {
-                    if (!ClassicSurivorSortings.ContainsKey(BodyPrefabName) && !VanillaSurivorSortings.ContainsKey(BodyPrefabName)) {
-                        newSurvivorDefs[i].desiredSortPosition = AFTER_END_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.001f;
-                    }
-                }
-
-                //is new survivor (ror1)
-                if (ClassicSurivorSortings.ContainsKey(BodyPrefabName)) {
-                    newSurvivorDefs[i].desiredSortPosition = ClassicSurivorSortings[BodyPrefabName];
-                }
-
-                if (string.IsNullOrEmpty(newSurvivorDefs[i].displayNameToken))
-                    continue;
-
-                string fullName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
-                fullNamePositions[fullName] = newSurvivorDefs[i].desiredSortPosition;
-            }
-
-            //handle nemeses
-            for (int i = 0; i < newSurvivorDefs.Length; i++)
+            //i have accepted failure
+            try
             {
-                if (string.IsNullOrEmpty(newSurvivorDefs[i].displayNameToken))
-                    continue;
-                string nemesisName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
+                Log.LogMessage("[Before Sort]");
+                PrintOrder(newSurvivorDefs);
+                Dictionary<string, float> fullNamePositions = new Dictionary<string, float>();
 
-                if (nemesisName.Contains("nemesis"))
+                //sort modded survivors
+                for (int i = newSurvivorDefs.Length - 1; i >= 0; i--)
                 {
-                    //say you make a nemesis faceless joe and just call it nemesis joe
-                    //think I'd definitely call chrono legionnaire nemesis legionnaire
-                    //idk just trying to cover some bases here
-                    string[] nemesisNameWords = nemesisName.Replace("nemesis ", "").Split(' ');
+                    string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
 
-                    for (int j = 0; j < nemesisNameWords.Length; j++)
+                    //force other modded characters
+                    if (ConFag.ForceModdedCharactersOut)
                     {
-                        foreach (string fullNameKey in fullNamePositions.Keys)
+                        if (!ClassicSurivorSortings.ContainsKey(BodyPrefabName) && !VanillaSurivorSortings.ContainsKey(BodyPrefabName))
                         {
-                            if (nemesisNameWords[j].Contains(fullNameKey.ToLowerInvariant()))
+                            newSurvivorDefs[i].desiredSortPosition = AFTER_END_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.001f;
+                        }
+                    }
+
+                    //is new survivor (ror1)
+                    if (ClassicSurivorSortings.ContainsKey(BodyPrefabName))
+                    {
+                        newSurvivorDefs[i].desiredSortPosition = ClassicSurivorSortings[BodyPrefabName];
+                    }
+
+                    if (string.IsNullOrEmpty(newSurvivorDefs[i].displayNameToken))
+                        continue;
+                    string fullName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
+                    fullNamePositions[fullName] = newSurvivorDefs[i].desiredSortPosition;
+                }
+
+                //handle nemeses
+                for (int i = 0; i < newSurvivorDefs.Length; i++)
+                {
+                    if (string.IsNullOrEmpty(newSurvivorDefs[i].displayNameToken))
+                        continue;
+                    string nemesisName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
+
+                    if (nemesisName.Contains("nemesis"))
+                    {
+                        //say you make a nemesis faceless joe and just call it nemesis joe
+                        //think I'd definitely call chrono legionnaire nemesis legionnaire
+                        //idk just trying to cover some bases here
+                        string[] nemesisNameWords = nemesisName.Replace("nemesis ", "").Split(' ');
+
+                        for (int j = 0; j < nemesisNameWords.Length; j++)
+                        {
+                            foreach (string fullNameKey in fullNamePositions.Keys)
                             {
-                                if (ConFag.NemesesSeparate)
+                                if (nemesisNameWords[j].Contains(fullNameKey.ToLowerInvariant()))
                                 {
-                                    newSurvivorDefs[i].desiredSortPosition = NEMESES_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.01f;
-                                }
-                                else
-                                {
-                                    newSurvivorDefs[i].desiredSortPosition = fullNamePositions[fullNameKey] + 0.00001f;
+                                    if (ConFag.NemesesSeparate)
+                                    {
+                                        newSurvivorDefs[i].desiredSortPosition = NEMESES_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.01f;
+                                    }
+                                    else
+                                    {
+                                        newSurvivorDefs[i].desiredSortPosition = fullNamePositions[fullNameKey] + 0.00001f;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            //finally, set custom order
-            for (int i = 0; i < newSurvivorDefs.Length; i++)
-            {
-                string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
-                if (ConFag.CustomOrderSortings.ContainsKey(BodyPrefabName))
+                //finally, set custom order
+                for (int i = 0; i < newSurvivorDefs.Length; i++)
                 {
-                    newSurvivorDefs[i].desiredSortPosition = ConFag.CustomOrderSortings[BodyPrefabName];
-                    ConFag.CustomOrderSortings.Remove(BodyPrefabName);
+                    string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
+                    if (ConFag.CustomOrderSortings.ContainsKey(BodyPrefabName))
+                    {
+                        newSurvivorDefs[i].desiredSortPosition = ConFag.CustomOrderSortings[BodyPrefabName];
+                        ConFag.CustomOrderSortings.Remove(BodyPrefabName);
+                    }
+                }
+
+                //sort is no longer a word
+                Log.LogMessage("[After Sort]");
+                PrintOrder(newSurvivorDefs, true);
+
+                string log = "";
+                foreach (KeyValuePair<string, float> remainingEntry in ConFag.CustomOrderSortings)
+                {
+                    log += $"{remainingEntry.Key}, ";
+                }
+                if (!string.IsNullOrEmpty(log))
+                {
+                    Log.LogWarning($"Could not find body to sort for: {log}\nEither these characters don't exist or you messed up typing lol.");
+                }
+
+                for (int i = 0; i < ConFag.ParseErrorLog.Count; i++)
+                {
+                    Log.LogError(ConFag.ParseErrorLog[i]);
                 }
             }
-            
-            //sort is no longer a word
-            Log.LogMessage("[After Sort]");
-            PrintOrder(newSurvivorDefs, true);
-
-            string log = "";
-            foreach (KeyValuePair<string, float> remainingEntry in ConFag.CustomOrderSortings) {
-                log += $"{remainingEntry.Key}, ";
+            catch (Exception e)
+            {
+                Log.LogError("Failed to sort survivors. Reach out to `thetimesweeper` on discord and send this error pls\n" + e);
             }
-            if (!string.IsNullOrEmpty(log)) {
-                Log.LogWarning($"Could not find body to sort for: {log}\nEither these characters don't exist or you messed up typing lol.");
-            }
-
-            for (int i = 0; i < ConFag.ParseErrorLog.Count; i++) {
-                Log.LogError(ConFag.ParseErrorLog[i]);
-            }
-
             orig(newSurvivorDefs);
         }
 

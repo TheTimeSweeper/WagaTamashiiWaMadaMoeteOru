@@ -5,14 +5,12 @@ using System.Reflection;
 using UnityEngine;
 using System;
 using R2API.Utils;
-using R2API;
 
 namespace SillyHitboxViewer {
 
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [R2APISubmoduleDependency(nameof(CommandHelper))]
     [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.3")]
     public class HitboxViewerMod : BaseUnityPlugin {
         
@@ -43,8 +41,6 @@ namespace SillyHitboxViewer {
         private HitboxRevealer _hitboxNotBoxPrefabTallFlat;
         private HitboxRevealer _hitboxNotBoxPrefabTallFlatSmol;
 
-        private bool _keysDisable;
-
         void Awake() {
 
             instance = this;
@@ -61,6 +57,7 @@ namespace SillyHitboxViewer {
 
             setShowingHitboxes(Utils.cfg_doHitbox);
             setShowingHurtboxes(Utils.cfg_doHurtbox, false);
+            setShowingKinos(Utils.cfg_doKinos, false);
 
             if (RiskOfOptionsCompat.enabled) {
                 RiskOfOptionsCompat.doOptions();
@@ -83,7 +80,6 @@ namespace SillyHitboxViewer {
             On.RoR2.BulletAttack.InitBulletHitFromRaycastHit += BulletAttack_InitBulletHitFromRaycastHit;
 
             On.RoR2.CharacterMotor.Awake += CharacterMotor_Awake;
-
         }
 
         private void DoHitbox_SettingChanged(object sender, EventArgs e) {
@@ -293,8 +289,8 @@ namespace SillyHitboxViewer {
 
             if (!HitboxRevealer.bulletModeEnabled) {
 
-                //Instantiate(self.radius < 0.1f? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
-                Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f);
+                Instantiate(self.radius < 0.1f? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
+                //Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f);
             }
 
             //code repeated to avoid uncesseary allocation of a new gameobject in memory
@@ -326,10 +322,10 @@ namespace SillyHitboxViewer {
         private void CharacterMotor_Awake(On.RoR2.CharacterMotor.orig_Awake orig, CharacterMotor self) {
             orig(self);
 
-            if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingAnyBoxes || !HitboxRevealer.showingHurtBoxes))
+            if (Utils.cfg_unDynamicHurtboxes && (!HitboxRevealer.showingAnyBoxes || !HitboxRevealer.showingKinos))
                 return;
 
-            _kinoRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initHurtbox(self.Motor.Capsule.transform, self.Motor.Capsule as CapsuleCollider));
+            _kinoRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initKino(self.Motor.Capsule.transform, self.Motor.Capsule));
         }
 
 
@@ -367,20 +363,17 @@ namespace SillyHitboxViewer {
             if (!Utils.cfg_useDebug)
                 return;
 
-            //debug hotkeys
-            if (Input.GetKeyDown(KeyCode.Quote)) {
-                _keysDisable = !_keysDisable;
-                Utils.Log($"hitbox debug hotkeys toggled {!_keysDisable}", true);
-
-                if (_keysDisable && Time.timeScale != 1) {
-                    setTimeScale(1);
+            if(RoR2.Console.instance && RoR2.Console.instance.enabled)
+            {
+                for (int i = 0; i < LocalUserManager.readOnlyLocalUsersList.Count; i++)
+                {
+                    if (LocalUserManager.readOnlyLocalUsersList[i] != null && LocalUserManager.readOnlyLocalUsersList[i].currentNetworkUser && LocalUserManager.readOnlyLocalUsersList[i].currentNetworkUser.localPlayerAuthority)
+                    {
+                        if (LocalUserManager.readOnlyLocalUsersList[i].isUIFocused)
+                            return;
+                    }
                 }
             }
-
-            //ability to disable keys because keyboard focus is on console window
-            //  should have just looked up how to check keyboard focus lol
-            if (_keysDisable)
-                return;
 
             //time keys
             if (Input.GetKeyDown(KeyCode.I)) {
@@ -470,7 +463,7 @@ namespace SillyHitboxViewer {
                     _kinoRevealers.RemoveAt(i);
                     continue;
                 }
-                _kinoRevealers[i].hurtboxShow(shouldShow);
+                _kinoRevealers[i].kinoShow(shouldShow);
             }
         }
 

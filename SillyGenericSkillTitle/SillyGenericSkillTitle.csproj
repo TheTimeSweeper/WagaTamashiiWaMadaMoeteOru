@@ -2,15 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>LoadoutSkillTitles</AssemblyName>
+    <RootNamespace>LoadoutSkillTitles</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="sillyhitbox" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="sillyhitbox" />
-  </ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
@@ -23,18 +17,16 @@
 		<PackageReference Include="MMHOOK.RoR2" Version="2022.4.19">
 			<NoWarn>NU1701</NoWarn>
 		</PackageReference>
-		<PackageReference Include="R2API.Core" Version="*" />
-		<PackageReference Include="R2API.CommandHelper" Version="*" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Reference Include="RiskOfOptions">
-	    <HintPath>..\_lib\compat\RiskOfOptions.dll</HintPath>
+	    <HintPath>..\..\RedGuyMod\RedGuyProject\libs\RiskOfOptions.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
-	
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)Release&quot;&#xD;&#xA;if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;E:\r2Profiles\Blinx Returns\BepInEx\plugins\TheTimesweeper-HitboxViewerMod&quot;" />
-  </Target>
 
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)Release\plugins&quot;&#xD;&#xA;Xcopy /E /I /Y &quot;$(ProjectDir)Release\plugins&quot; &quot;E:\r2Profiles\Blinx Returns\BepInEx\plugins\TheTimesweeper-LoadoutSkillTitles\&quot;" />
+	</Target>
+	
 </Project>

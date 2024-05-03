@@ -34,6 +34,13 @@ ___
  - Option to order all survivors to ror1 order for fun.
 ___
 ### Changelog:
+`1.0.4`
+- improved whitespace trimming in custom sort config 
+
+`1.0.3`
+- put all my code in a big try catch so it doesn't break all survivors
+  - i have accepted failure
+
 `1.0.2`
 - fixed survivors with spaces in their bodynames being un-custom-sort-able
 

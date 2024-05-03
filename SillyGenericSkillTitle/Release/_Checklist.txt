@@ -1,0 +1,13 @@
+>icon
+>manifest
+ - version
+ - deeps
+ - website
+>dll
+ - tested n shit
+ - version
+>readme
+
+>categories
+ - client-side
+ - mods
