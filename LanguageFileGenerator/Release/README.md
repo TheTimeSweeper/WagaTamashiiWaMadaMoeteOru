@@ -6,3 +6,14 @@
 5. don't forget to disable this mod when you're done. it is no longer needed.
 
 ping/message `thetimesweeper` on discord if you have any questions or issues. love ya
+
+Changelog
+
+`1.0.2`
+- did more than just add a null check. should actually work now
+
+`1.0.1`
+- added a null check
+
+`1.0.0`
+- c:

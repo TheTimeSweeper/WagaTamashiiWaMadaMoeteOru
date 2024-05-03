@@ -17,7 +17,7 @@ using UnityEngine;
 namespace LanguageFileGenerator
 {
     [BepInDependency("com.bepis.r2api.language")]
-    [BepInPlugin("AAA.TheTimeSweeper.LanguageFileGenerator", "LanguageFileGenerator", "0.0.1")]
+    [BepInPlugin("AAA.TheTimeSweeper.LanguageFileGenerator", "LanguageFileGenerator", "1.0.2")]
     public class LanguageFileGeneratorPlugin : BaseUnityPlugin
     {
         private Hook languageHook;
@@ -25,6 +25,7 @@ namespace LanguageFileGenerator
         public static ManualLogSource Log;
 
         public static Dictionary<Assembly, string> assemblyModNames = new Dictionary<Assembly, string>();
+        public const string nullMod = "UNKNOWN";
 
         void Awake()
         {
@@ -46,26 +47,16 @@ namespace LanguageFileGenerator
             orig(token, text, language);
         }
 
-        //credit to R2API.ContentManagement
         private static Assembly GetAssembly()
         {
-            bool returnNext = false;
-            for (int i = 0; i < 99; i++)
-            {//Empty frame will stop loop early when the stack runs out.
-                var asm = new System.Diagnostics.StackFrame(i, false).GetMethod()?.DeclaringType.Assembly;
+            Assembly asm = new System.Diagnostics.StackFrame(3, false).GetMethod()?.DeclaringType.Assembly;
 
-                if (returnNext)
-                {
-                    //instance.Logger.LogMessage("found assembly: " + asm.FullName);
-                    return asm;
-                }
-
-                if (asm.FullName.Contains("R2API.Language"))
-                {
-                    returnNext = true;
-                }
+            if (asm != null && asm.FullName.Contains("R2API.Language"))
+            {
+                asm = new System.Diagnostics.StackFrame(4, false).GetMethod()?.DeclaringType.Assembly;
             }
-            return null;
+
+            return asm;
         }
 
 
@@ -73,15 +64,14 @@ namespace LanguageFileGenerator
         //credit to R2API.ContentManagement
         private static string GetModName(Assembly assembly)
         {
+            if(assembly == null)
+            {
+                return nullMod;
+            }
+
             //If the assembly that's adding the item has not been cached, find the GUID of the assembly and cache it.
             if (!assemblyModNames.TryGetValue(assembly, out string modName))
             {
-                if(assembly == null)
-                {
-                    assemblyModNames[assembly] = "UNKNOWN";
-                    return assemblyModNames[assembly];
-                }
-
                 var location = assembly.Location;
                 modName = Chainloader.PluginInfos.FirstOrDefault(x => location == x.Value.Location).Key;
                 if (modName == null)
