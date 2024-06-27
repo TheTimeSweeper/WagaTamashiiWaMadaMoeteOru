@@ -2,7 +2,7 @@
 
 No longer are we prey to the arbitrary whimsy of mod makers' choice of whatever-at-the-time.  
 
-Ping me (`TheTimesweeper#5727`) on the ror2 modding discord or the enforcer discord (https://discord.gg/csaEQDnMH8) if you have any issues/feedback.  
+Ping me (`thetimesweeper`) on the ror2 modding discord or the enforcer discord (https://discord.gg/csaEQDnMH8) if you have any issues/feedback.  
 or if you just want to send (or even recieve) some nice words of encouragement
 ___
 ## Default: Mixes ror1 survivors with the rest of the cast
@@ -29,11 +29,20 @@ ___
 - Finally, place any character in any spot you want by specifying their desired sort position.
 - See Print Sorting config for existing order to copy paste and change. 
 - See the wiki tab on this thunderstore page for more info.
+
+<ins>Variants:</ins>
+- if you have the Survariants mod, you can set automatically set nemeses as variants of their counterparts
+- Similar to CustomOrder, you can set any survivor as a variant of any other survivor. read config entry for more info
 ___
 ### Maybe Plans:
  - Option to order all survivors to ror1 order for fun.
+ - Option to set a variant as *not* a variant
+ - Option to order variants. right now they're just in the order that they were added I think
 ___
 ### Changelog:
+`1.1.0`
+- added support for Survariants mod
+
 `1.0.4`
 - improved whitespace trimming in custom sort config 
 
@@ -59,7 +68,7 @@ ___
   - its previous functionality is now always on
 - fixed a harmless error showing when custom sort was empty
 
-'0.2.0'
+`0.2.0`
  - added custom order config
  - added support for new starstorms commandos
  - moved HAN-D to his default spot in his mod even though my spot was better, based on the unlock

@@ -91,21 +91,29 @@ namespace LoadoutSkillTitles
             cursor.EmitDelegate<Func<string, BodyIndex, int, GenericSkill, string>>((originalString, bodyIndex, skillSlotIndex, genericSkill) =>
             {
                 string bodyName = BodyCatalog.GetBodyName(bodyIndex);
+
                 if (titleTokens.ContainsKey(bodyName) && titleTokens[bodyName].ContainsKey(skillSlotIndex))
                 {
                     return titleTokens[bodyName][skillSlotIndex];
                 }
-                if (genericSkill.skillName.StartsWith("LOADOUT"))
+
+                if (genericSkill == null)
+                    return originalString;
+
+                if (!string.IsNullOrEmpty(genericSkill.skillName) && genericSkill.skillName.StartsWith("LOADOUT"))
                 {
                     return genericSkill.skillName;
                 }
+
                 if (firstSkillPassive.Value && skillSlotIndex == 0 && genericSkill.GetComponent<SkillLocator>().primary != genericSkill)
                 {
                     return "LOADOUT_SKILL_PASSIVE";
                 }
-                if (fallbackToSkillName.Value) {
+
+                if (!string.IsNullOrEmpty(genericSkill.skillName) && fallbackToSkillName.Value) {
                     return genericSkill.skillName;
                 }
+
                 return originalString;
             });
         }

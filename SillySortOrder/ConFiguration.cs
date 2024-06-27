@@ -8,16 +8,20 @@ using System.Security.Permissions;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
-    public class ConFag {
+    public class ConFiguration {
 
         public static bool MixRor1Survivors;
         public static Ror1MixType Ror1Mix;
         public static bool NemesesSeparate;
         public static bool ForceModdedCharactersOut;
         public static string ForceOutWhiteList;
-        public static Dictionary<string, float> CustomOrderSortings;
+        public static Dictionary<string, float> CustomOrderSortings = new Dictionary<string, float>();
+        public static Dictionary<string, string> CustomVariants = new Dictionary<string, string>();
+        public static Dictionary<string, string> CustomVariantDescriptions = new Dictionary<string, string>();
+        public static bool NemesesVariants;
+
         public static List<string> ParseErrorLog = new List<string>();
-        public static BaseUnityPlugin plugin;
+        private static BaseUnityPlugin plugin;
 
         public static bool Debug;
 
@@ -29,7 +33,7 @@ namespace SillyMod {
 
         public static void DoConfig(BaseUnityPlugin plugin) {
 
-            ConFag.plugin = plugin;
+            ConFiguration.plugin = plugin;
 
             MixRor1Survivors =
                 plugin.Config.Bind<bool>("love ya",
@@ -67,12 +71,27 @@ namespace SillyMod {
                 plugin.Config.Bind("love ya",
                                    "Custom Order",
                                    "",
-                                   "List of characters to apply a custom order, comma separated. ."
+                                   "List of characters to apply a custom order, comma separated."
                                    + "\nFormat is BodyName:Number. Number can be decimal between two values to place your character in between."
                                    + "\nExample: EngiBody:69,HereticBody:2,EnforcerBody:6.5,HANDOverclockedBody:8.1"
                                    + "\nYou can copy from Print Sorting config below.").Value;
+            ParseCustomOrder(customOrder);
 
-            CustomOrderSortings = ParseCustomOrder(customOrder);
+            string variants =
+                plugin.Config.Bind("Variants",
+                                    "Custom Variants",
+                                    "",
+                                    "Requires Survariants mod. List of characters to set as variants of other characters."
+                                    + "\nFormat is BodyName(of Variant):BodyName (of target)."
+                                    + "\nOptionally set a description with another : (BodyName:BodyName:Description)."
+                                    + "\nex: NemCommandoBody:CommandoBody, NemesisEnforcerBody:EnforcerBody:Heavy TF2.").Value;
+            ParseVariants(variants);
+
+            NemesesVariants =
+                plugin.Config.Bind<bool>("Variants",
+                            "Nemesis variants",
+                            false,
+                            "Requires Survariants mod. Set to true to put nemesis survivors as variants of the original").Value;
         }
 
         public static void PrintSortingConfig(string log) {
@@ -84,8 +103,7 @@ namespace SillyMod {
                             $"This config does nothing. just shows what the game's current order is when you run the game so you can copy paste\n{log}").Value;
         }
 
-        private static Dictionary<string, float> ParseCustomOrder(string customOrder) {
-            Dictionary<string, float> CustomOrderDictionary = new Dictionary<string, float>();
+        private static void ParseCustomOrder(string customOrder) {
 
             string[] entries = customOrder.Split(',');
 
@@ -97,24 +115,58 @@ namespace SillyMod {
 
                 string[] entrySet = entry.Split(':');
 
-                if (entrySet.Length >= 2) {
+                if (entrySet.Length == 2) {
                     
                     try {
                         string body = entrySet[0].TrimStart().TrimEnd();
-                        CustomOrderDictionary[body] = float.Parse(entrySet[1].TrimStart().TrimEnd());
+                        CustomOrderSortings[body] = float.Parse(entrySet[1].TrimStart().TrimEnd());
                     } catch (Exception e) {
                         ParseErrorLog.Add($"Custom Sort could not find sort position for entry: {entry}\n{e}");
                     }
                 } else {
                     ParseErrorLog.Add($"Custom Sort Entry Invalid: {entry}. Should be BodyName:Number");
-                    if (entrySet.Length > 2)
-                    {
-                        ParseErrorLog.Add($"If someone put : in their bodyname there's nothing I can do. Reach out to the mod creator, tell them Timesweeper sent you.");
-                    }
+                }
+
+                if (entrySet.Length > 2)
+                {
+                    ParseErrorLog.Add($"If someone put : in their bodyname there's nothing I can do. Reach out to the mod creator, tell them Timesweeper sent you.");
                 }
             }
+        }
 
-            return CustomOrderDictionary;
+        private static void ParseVariants(string variants)
+        {
+            string[] entries = variants.Split(',');
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                string entry = entries[i];
+                if (string.IsNullOrEmpty(entry))
+                    continue;
+
+                string[] entrySet = entry.Split(':');
+
+                if (entrySet.Length >= 2)
+                {
+                    try
+                    {
+                        string body = entrySet[0].TrimStart().TrimEnd();
+                        CustomVariants[body] = entrySet[1].TrimStart().TrimEnd();
+                        if (entrySet.Length > 2)
+                        {
+                            CustomVariantDescriptions[body] = entrySet[2].TrimStart().TrimEnd();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        ParseErrorLog.Add($"Custom Variants could not find Variant Set for entry: {entry}\n{e}");
+                    }
+                }
+                else
+                {
+                    ParseErrorLog.Add($"Custom Variant Entry Invalid: {entry}. Should be BodyName:BodyName or BodyName:BodyName:Description");
+                }
+            }
         }
     }
 }

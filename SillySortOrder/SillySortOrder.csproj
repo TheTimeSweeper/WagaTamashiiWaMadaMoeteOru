@@ -38,7 +38,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ConFag.cs" />
+    <Compile Include="ConFiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SillySortPlugin.cs" />
   </ItemGroup>
@@ -75,6 +75,9 @@
     </Reference>
     <Reference Include="RoR2">
       <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\RoR2.dll</HintPath>
+    </Reference>
+    <Reference Include="Survariants">
+      <HintPath>E:\Abbas's stuff VII I think\1337 haxx\ror2lol\Chikara ga minegitte kuru\WagaTamashiiWaMadaMoeteOru\_lib\compat\Survariants.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\_lib\Unity.TextMeshPro.dll</HintPath>

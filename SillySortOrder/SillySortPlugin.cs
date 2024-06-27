@@ -8,16 +8,21 @@ using UnityEngine;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx.Logging;
+using Survariants;
+using System.Runtime.CompilerServices;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.0.4")]
+    [BepInDependency("pseudopulse.Survariants", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.0")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
         public static Dictionary<string, float> VanillaSurivorSortings = new Dictionary<string, float>();
+
+        public static List<SurvivorDef> HackMakeSureOff = new List<SurvivorDef>();
         //public static List<string> forceOutWhitelist;
 
         public static ManualLogSource Log;
@@ -30,11 +35,13 @@ namespace SillyMod {
 
             Log = Logger;
 
-            ConFag.DoConfig(this);
+            ConFiguration.DoConfig(this);
 
             SetSurvivorSortings();
 
             On.RoR2.SurvivorCatalog.SetSurvivorDefs += SurvivorCatalog_SetSurvivorDefs;
+
+            On.RoR2.CharacterSelectBarController.Awake += CharacterSelectBarController_Awake;
         }
 
         /*
@@ -84,7 +91,7 @@ namespace SillyMod {
             VanillaSurivorSortings["VoidSurvivorBody"] = 15f;
             //todo: check vanilla content packs if you wanna be legit about it
 
-            if (ConFag.MixRor1Survivors) {
+            if (ConFiguration.MixRor1Survivors) {
                 ClassicSurivorSortings["HANDOverclockedBody"] = 4.1f;
                 ClassicSurivorSortings["EnforcerBody"] = 5.1f;
                 ClassicSurivorSortings["SniperClassicBody"] = 7.1f;
@@ -97,19 +104,6 @@ namespace SillyMod {
                 ClassicSurivorSortings["CHEF"] = AFTER_VANILLA_INDEX + 0.4f;
                 ClassicSurivorSortings["MinerBody"] = AFTER_VANILLA_INDEX + 0.5f;
             }
-
-            //if (ConFag.NemesesSeparate) {
-            //    NewSurivorSortings["NemmandoBody"] = NEMESES_INDEX + 0.1f;
-            //    NewSurivorSortings["SS2UNemmandoBody"] = NEMESES_INDEX + 0.1f;
-            //    NewSurivorSortings["NemCommandoBody"] = NEMESES_INDEX + 0.15f;
-            //    NewSurivorSortings["NemesisEnforcerBody"] = NEMESES_INDEX + 0.2f;
-            //} else {
-            //    NewSurivorSortings["NemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
-            //    NewSurivorSortings["SS2UNemmandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.001f;
-            //    NewSurivorSortings["NemCommandoBody"] = VanillaSurivorSortings["CommandoBody"] + 0.0015f;
-            //    NewSurivorSortings["NemesisEnforcerBody"] = NewSurivorSortings["EnforcerBody"] + 0.001f;
-            //}
-
         }
 
         private void SurvivorCatalog_SetSurvivorDefs(On.RoR2.SurvivorCatalog.orig_SetSurvivorDefs orig, SurvivorDef[] newSurvivorDefs) {
@@ -119,6 +113,7 @@ namespace SillyMod {
                 Log.LogMessage("[Before Sort]");
                 PrintOrder(newSurvivorDefs);
                 Dictionary<string, float> fullNamePositions = new Dictionary<string, float>();
+                Dictionary<string, string> fullNameBodies = new Dictionary<string, string>();
 
                 //sort modded survivors
                 for (int i = newSurvivorDefs.Length - 1; i >= 0; i--)
@@ -126,7 +121,7 @@ namespace SillyMod {
                     string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
 
                     //force other modded characters
-                    if (ConFag.ForceModdedCharactersOut)
+                    if (ConFiguration.ForceModdedCharactersOut)
                     {
                         if (!ClassicSurivorSortings.ContainsKey(BodyPrefabName) && !VanillaSurivorSortings.ContainsKey(BodyPrefabName))
                         {
@@ -144,6 +139,7 @@ namespace SillyMod {
                         continue;
                     string fullName = RoR2.Language.GetString(newSurvivorDefs[i].displayNameToken, "en").ToLowerInvariant();
                     fullNamePositions[fullName] = newSurvivorDefs[i].desiredSortPosition;
+                    fullNameBodies[fullName] = newSurvivorDefs[i].bodyPrefab.name;
                 }
 
                 //handle nemeses
@@ -166,13 +162,21 @@ namespace SillyMod {
                             {
                                 if (nemesisNameWords[j].Contains(fullNameKey.ToLowerInvariant()))
                                 {
-                                    if (ConFag.NemesesSeparate)
+                                    if (ConFiguration.NemesesSeparate)
                                     {
                                         newSurvivorDefs[i].desiredSortPosition = NEMESES_INDEX + newSurvivorDefs[i].desiredSortPosition * 0.01f;
                                     }
                                     else
                                     {
                                         newSurvivorDefs[i].desiredSortPosition = fullNamePositions[fullNameKey] + 0.00001f;
+                                    }
+
+                                    if (ConFiguration.NemesesVariants)
+                                    {
+                                        if (!ConFiguration.CustomVariants.ContainsKey(newSurvivorDefs[i].bodyPrefab.name))
+                                        {
+                                            ConFiguration.CustomVariants[newSurvivorDefs[i].bodyPrefab.name] = fullNameBodies[fullNameKey];
+                                        }
                                     }
                                 }
                             }
@@ -184,10 +188,10 @@ namespace SillyMod {
                 for (int i = 0; i < newSurvivorDefs.Length; i++)
                 {
                     string BodyPrefabName = newSurvivorDefs[i].bodyPrefab.name;
-                    if (ConFag.CustomOrderSortings.ContainsKey(BodyPrefabName))
+                    if (ConFiguration.CustomOrderSortings.ContainsKey(BodyPrefabName))
                     {
-                        newSurvivorDefs[i].desiredSortPosition = ConFag.CustomOrderSortings[BodyPrefabName];
-                        ConFag.CustomOrderSortings.Remove(BodyPrefabName);
+                        newSurvivorDefs[i].desiredSortPosition = ConFiguration.CustomOrderSortings[BodyPrefabName];
+                        ConFiguration.CustomOrderSortings.Remove(BodyPrefabName);
                     }
                 }
 
@@ -196,7 +200,7 @@ namespace SillyMod {
                 PrintOrder(newSurvivorDefs, true);
 
                 string log = "";
-                foreach (KeyValuePair<string, float> remainingEntry in ConFag.CustomOrderSortings)
+                foreach (KeyValuePair<string, float> remainingEntry in ConFiguration.CustomOrderSortings)
                 {
                     log += $"{remainingEntry.Key}, ";
                 }
@@ -205,16 +209,84 @@ namespace SillyMod {
                     Log.LogWarning($"Could not find body to sort for: {log}\nEither these characters don't exist or you messed up typing lol.");
                 }
 
-                for (int i = 0; i < ConFag.ParseErrorLog.Count; i++)
+                for (int i = 0; i < ConFiguration.ParseErrorLog.Count; i++)
                 {
-                    Log.LogError(ConFag.ParseErrorLog[i]);
+                    Log.LogError(ConFiguration.ParseErrorLog[i]);
                 }
             }
             catch (Exception e)
             {
                 Log.LogError("Failed to sort survivors. Reach out to `thetimesweeper` on discord and send this error pls\n" + e);
             }
+
+            //variants
+            if(BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("pseudopulse.Survariants"))
+            {
+                TrySetVariants(newSurvivorDefs);
+            }
             orig(newSurvivorDefs);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private static void TrySetVariants(SurvivorDef[] newSurvivorDefs)
+        {
+
+            List<SurvivorDef> sortedDefs = newSurvivorDefs.ToList();
+            sortedDefs.Sort((def1, def2) => {
+                return def1.desiredSortPosition >= def2.desiredSortPosition ? 1 : -1;
+            });
+
+            foreach (string customVariantname in ConFiguration.CustomVariants.Keys)
+            {
+                SurvivorDef variantSurvivor = sortedDefs.Where((def) => def.bodyPrefab.name.ToLowerInvariant() == customVariantname.ToLowerInvariant()).FirstOrDefault();
+                if(variantSurvivor == null)
+                {
+                    Log.LogWarning($"Could not set variant {customVariantname}. Could not find body");
+                    continue;
+                }
+
+                if (SurvivorVariantCatalog.SurvivorVariantDefs.Find((variantDef) => { return variantDef.VariantSurvivor == variantSurvivor; }) != null)
+                {
+                    Log.LogDebug($"Did not set variant {customVariantname}. Survivor already set as a variant");
+                    continue;
+                }
+
+                SurvivorDef variantee = sortedDefs.Where((def) => def.bodyPrefab.name.ToLowerInvariant() == ConFiguration.CustomVariants[customVariantname].ToLowerInvariant()).FirstOrDefault();
+                if (variantee == null)
+                {
+                    Log.LogWarning($"Could not set variant {customVariantname}. Could not find target body {ConFiguration.CustomVariants[customVariantname]}");
+                    continue;
+                }
+                try
+                {
+                    SurvivorVariantDef variant = ScriptableObject.CreateInstance<SurvivorVariantDef>(); // create a new variant
+                    (variant as ScriptableObject).name = customVariantname + "Variant";
+                    //variant.DisplayName = variantSurvivor.displayNameToken;
+                    variant.VariantSurvivor = variantSurvivor; // the SurvivorDef of your variant
+                    variant.TargetSurvivor = variantee;  // the survivor the variant is for
+                                                         //variant.RequiredUnlock = variantSurvivor.unlockableDef; // optional: unlock requirement
+                                                         //variant.Color = variantSurvivor.bodyPrefab.GetComponent<CharacterBody>().bodyColor; //woops most modded characters probably dont' have a survivor color
+
+                    if (ConFiguration.CustomVariantDescriptions.ContainsKey(customVariantname) && !string.IsNullOrEmpty(ConFiguration.CustomVariantDescriptions[customVariantname]))
+                    {
+                        variant.Description = ConFiguration.CustomVariantDescriptions[customVariantname]; // the flavor text of your variant in the variants tab
+                    }
+                    else
+                    {
+                        variant.Description = variantSurvivor.bodyPrefab.GetComponent<CharacterBody>().subtitleNameToken;
+                    }
+
+                    HackMakeSureOff.Add(variantSurvivor);
+                    variantSurvivor.hidden = true; // make your survivor not appear in the css bar
+
+                    SurvivorVariantCatalog.AddSurvivorVariant(variant); // add your variant!
+                }
+                catch (Exception e)
+                {
+                    Log.LogError($"Failed to add Variant {customVariantname}\n" + e);
+                    ConFiguration.CustomVariants.Remove(customVariantname);
+                }
+            }
         }
 
         private void PrintOrder(SurvivorDef[] newSurvivorDefs, bool toConfig = false) {
@@ -233,7 +305,7 @@ namespace SillyMod {
 
             if (toConfig) {
                 Log.LogMessage(configString);
-                ConFag.PrintSortingConfig(configString);
+                ConFiguration.PrintSortingConfig(configString);
             }
 
             //PrintStats(sortedDefs);
@@ -245,6 +317,16 @@ namespace SillyMod {
                 CharacterBody survivor = newSurvivorDefs[i].bodyPrefab.GetComponent<CharacterBody>();
 
                 Log.LogInfo($"{newSurvivorDefs[i]._cachedName}: Health {survivor.baseMaxHealth}, Regen: {survivor.baseRegen}, Armor {survivor.baseArmor}");
+            }
+        }
+
+        private void CharacterSelectBarController_Awake(On.RoR2.CharacterSelectBarController.orig_Awake orig, CharacterSelectBarController self)
+        {
+            orig(self);
+            //make sure nemeses are hidden because those mods will set them unhidden again
+            for (int i = 0; i < HackMakeSureOff.Count; i++)
+            {
+                HackMakeSureOff[i].hidden = true;
             }
         }
     }
