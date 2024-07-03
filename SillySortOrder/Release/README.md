@@ -40,6 +40,12 @@ ___
  - Option to order variants. right now they're just in the order that they were added I think
 ___
 ### Changelog:
+`1.1.1`
+- somehow fixed some modded survivors not being able to be set as variants
+- fixed dlc survivors appearing when you don't have the dlc
+    - *they could be selected but you would spawn as commando so you couldn't use my mod to circumvent dlc I didn't break the law yay*
+    - *they will still be selectable when the expansion is disabled in lobby but same as above you won't be able to spawn as them*
+
 `1.1.0`
 - added support for Survariants mod
 

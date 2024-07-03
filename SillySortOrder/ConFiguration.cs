@@ -82,8 +82,8 @@ namespace SillyMod {
                                     "Custom Variants",
                                     "",
                                     "Requires Survariants mod. List of characters to set as variants of other characters."
-                                    + "\nFormat is BodyName(of Variant):BodyName (of target)."
-                                    + "\nOptionally set a description with another : (BodyName:BodyName:Description)."
+                                    + "\nFormat is VariantBodyName:TargetBodyName."
+                                    + "\nOptionally set a description with another : (VariantBodyName:TargetBodyName:Description)."
                                     + "\nex: NemCommandoBody:CommandoBody, NemesisEnforcerBody:EnforcerBody:Heavy TF2.").Value;
             ParseVariants(variants);
 

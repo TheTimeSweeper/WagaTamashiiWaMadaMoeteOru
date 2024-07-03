@@ -10,13 +10,14 @@ using System.Security.Permissions;
 using BepInEx.Logging;
 using Survariants;
 using System.Runtime.CompilerServices;
+using UnityEngine.EventSystems;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyMod {
     [BepInDependency("pseudopulse.Survariants", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.0")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.1")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
@@ -30,6 +31,8 @@ namespace SillyMod {
         public const float AFTER_VANILLA_INDEX = 20f;
         public const float NEMESES_INDEX = 21f;
         public const float AFTER_END_INDEX = 25f;
+
+        private bool _didVariants;
 
         void Awake() {
 
@@ -219,22 +222,18 @@ namespace SillyMod {
                 Log.LogError("Failed to sort survivors. Reach out to `thetimesweeper` on discord and send this error pls\n" + e);
             }
 
-            //variants
-            if(BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("pseudopulse.Survariants"))
-            {
-                TrySetVariants(newSurvivorDefs);
-            }
             orig(newSurvivorDefs);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        private static void TrySetVariants(SurvivorDef[] newSurvivorDefs)
+        private static void SetVariants(SurvivorDef[] newSurvivorDefs)
         {
-
             List<SurvivorDef> sortedDefs = newSurvivorDefs.ToList();
             sortedDefs.Sort((def1, def2) => {
                 return def1.desiredSortPosition >= def2.desiredSortPosition ? 1 : -1;
             });
+            
+            LocalUser localUser = LocalUserManager.GetFirstLocalUser();
 
             foreach (string customVariantname in ConFiguration.CustomVariants.Keys)
             {
@@ -244,10 +243,21 @@ namespace SillyMod {
                     Log.LogWarning($"Could not set variant {customVariantname}. Could not find body");
                     continue;
                 }
+                if (string.IsNullOrEmpty(variantSurvivor.displayNameToken)) {
+
+                    Log.LogWarning($"Could not set variant {customVariantname}. SurvivorDef displayNameToken is invalid");
+                    continue;
+                }
 
                 if (SurvivorVariantCatalog.SurvivorVariantDefs.Find((variantDef) => { return variantDef.VariantSurvivor == variantSurvivor; }) != null)
                 {
                     Log.LogDebug($"Did not set variant {customVariantname}. Survivor already set as a variant");
+                    continue;
+                }
+
+                if (!variantSurvivor.CheckUserHasRequiredEntitlement(localUser))
+                {
+                    Log.LogWarning($"Could not set variant {customVariantname}. User does not have required expansion");
                     continue;
                 }
 
@@ -276,15 +286,43 @@ namespace SillyMod {
                         variant.Description = variantSurvivor.bodyPrefab.GetComponent<CharacterBody>().subtitleNameToken;
                     }
 
+                    SurvivorVariantCatalog.AddSurvivorVariant(variant); // add your variant!
                     HackMakeSureOff.Add(variantSurvivor);
                     variantSurvivor.hidden = true; // make your survivor not appear in the css bar
-
-                    SurvivorVariantCatalog.AddSurvivorVariant(variant); // add your variant!
                 }
                 catch (Exception e)
                 {
                     Log.LogError($"Failed to add Variant {customVariantname}\n" + e);
-                    ConFiguration.CustomVariants.Remove(customVariantname);
+                }
+            } 
+        }
+
+        private void CharacterSelectBarController_Awake(On.RoR2.CharacterSelectBarController.orig_Awake orig, CharacterSelectBarController self)
+        {
+            TrySetVariants();
+
+            orig(self);
+
+            //make sure nemeses are hidden because those mods will set them unhidden again
+            for (int i = 0; i < HackMakeSureOff.Count; i++)
+            {
+                HackMakeSureOff[i].hidden = true;
+            }
+        }
+
+        private void TrySetVariants()
+        {
+            //variants
+            if (!_didVariants && BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("pseudopulse.Survariants"))
+            {
+                _didVariants = true;
+                try
+                {
+                    SetVariants(SurvivorCatalog.survivorDefs);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogError("catastrophic failure I guess while adding variants:\n" + ex);
                 }
             }
         }
@@ -317,16 +355,6 @@ namespace SillyMod {
                 CharacterBody survivor = newSurvivorDefs[i].bodyPrefab.GetComponent<CharacterBody>();
 
                 Log.LogInfo($"{newSurvivorDefs[i]._cachedName}: Health {survivor.baseMaxHealth}, Regen: {survivor.baseRegen}, Armor {survivor.baseArmor}");
-            }
-        }
-
-        private void CharacterSelectBarController_Awake(On.RoR2.CharacterSelectBarController.orig_Awake orig, CharacterSelectBarController self)
-        {
-            orig(self);
-            //make sure nemeses are hidden because those mods will set them unhidden again
-            for (int i = 0; i < HackMakeSureOff.Count; i++)
-            {
-                HackMakeSureOff[i].hidden = true;
             }
         }
     }

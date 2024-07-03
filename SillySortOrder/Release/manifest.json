@@ -1,9 +1,9 @@
 {
     "name": "SurvivorSortOrder",
     "author": "TheTimesweeper",
-    "version_number": "1.1.0",
+    "version_number": "1.1.1",
     "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
-    "description": "Sorts all survivors to your configurable liking. Force modded characters to the end, individually set survivor's sort order | now supports custom survariants.",
+    "description": "Sorts all survivors to your configurable liking. Force modded characters to the end, individually set survivor's sort order, etc | now supports custom survariants.",
     "dependencies": [
         "bbepis-BepInExPack-5.4.2113",
         "RiskofThunder-HookGenPatcher-1.2.3"
