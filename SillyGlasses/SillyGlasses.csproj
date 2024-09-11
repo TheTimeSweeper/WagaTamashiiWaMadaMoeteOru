@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SillyGlasses</RootNamespace>
     <AssemblyName>SillyGlasses</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,7 +39,7 @@
     <PackageReference Include="BepInEx.Core" Version="5.4.19" />
     <PackageReference Include="RiskOfRain2.GameLibs" Version="1.2.3.1-r.0" />
     <PackageReference Include="UnityEngine.Modules" Version="2019.4.26" />
-    <PackageReference Include="MMHOOK.RoR2" Version="2022.4.19">
+    <PackageReference Include="MMHOOK.RoR2" Version="2024.8.28">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
   </ItemGroup>

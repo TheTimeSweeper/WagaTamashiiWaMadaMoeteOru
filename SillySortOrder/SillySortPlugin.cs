@@ -17,7 +17,7 @@ using UnityEngine.EventSystems;
 
 namespace SillyMod {
     [BepInDependency("pseudopulse.Survariants", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.1")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.2")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
@@ -92,13 +92,16 @@ namespace SillyMod {
             VanillaSurivorSortings["HereticBody"] = 13f;
             VanillaSurivorSortings["RailgunnerBody"] = 14f;
             VanillaSurivorSortings["VoidSurvivorBody"] = 15f;
+            VanillaSurivorSortings["SeekerBody"] = 16f;
+            VanillaSurivorSortings["FalseSonBody"] = 17f;
+            VanillaSurivorSortings["ChefBody"] = 18f;
             //todo: check vanilla content packs if you wanna be legit about it
 
             if (ConFiguration.MixRor1Survivors) {
                 ClassicSurivorSortings["HANDOverclockedBody"] = 4.1f;
                 ClassicSurivorSortings["EnforcerBody"] = 5.1f;
                 ClassicSurivorSortings["SniperClassicBody"] = 7.1f;
-                ClassicSurivorSortings["CHEF"] = 8.2f;
+                ClassicSurivorSortings["CHEF"] = 19f;
                 ClassicSurivorSortings["MinerBody"] = 9.1f;
             } else {
                 ClassicSurivorSortings["EnforcerBody"] = AFTER_VANILLA_INDEX + 0.1f;

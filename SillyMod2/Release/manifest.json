@@ -1,0 +1,11 @@
+{
+  "author": "TheTimesweeper",
+  "name": "SillyMod2",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+  "description": "does a thing",
+  "dependencies": [
+    "bbepis-BepInExPack-5.4.9",
+    "RiskofThunder-HookGenPatcher-1.2.3"
+  ]
+}

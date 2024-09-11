@@ -1,0 +1,11 @@
+{
+  "author": "TheTimesweeper",
+  "name": "CursorFreedom2",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
+  "description": "Free your cursor/mouse from the confines of the application window! originally by JustDerb.",
+  "dependencies": [
+    "bbepis-BepInExPack-5.4.9",
+    "RiskofThunder-HookGenPatcher-1.2.3"
+  ]
+}

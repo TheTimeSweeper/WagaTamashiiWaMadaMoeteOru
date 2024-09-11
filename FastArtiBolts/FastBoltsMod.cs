@@ -4,24 +4,16 @@ using RoR2;
 using RoR2.Projectile;
 using RoR2.Skills;
 using System;
-using R2API;
 using UnityEngine;
 using System.Security;
 using System.Security.Permissions;
-using R2API.Utils;
+using R2API;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace FastArtiBolts {
 
-    [R2APISubmoduleDependency(new string[]
-    {
-        "LoadoutAPI",
-        "LanguageAPI",
-        "PrefabAPI",
-    })]
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
     [BepInDependency("com.bepis.r2api")]
     [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.2.1")]
     public class FastBoltsMod : BaseUnityPlugin {
@@ -66,7 +58,8 @@ namespace FastArtiBolts {
 
             //Debug.LogWarning("created" + (fastFireBoltPrefab != null));
 
-            ContentAddition.AddProjectile(fastFireBoltPrefab);
+            //ContentAddition.AddProjectile(fastFireBoltPrefab);
+            Modules.ContentPacks.projectilePrefabs.Add(fastFireBoltPrefab);
             FireFastBolt.fastProjectilePrefab = fastFireBoltPrefab;
         }
 
@@ -88,8 +81,11 @@ namespace FastArtiBolts {
                 viewableNode = new ViewablesCatalog.Node(mySkillDef.skillNameToken, false, null)
             };
 
-            ContentAddition.AddSkillDef(mySkillDef);
-            ContentAddition.AddEntityState<FireFastBolt>(out _);
+            Modules.ContentPacks.skillDefs.Add(mySkillDef);
+            Modules.ContentPacks.entityStates.Add(typeof(FireFastBolt));
+
+            //ContentAddition.AddSkillDef(mySkillDef);
+            //ContentAddition.AddEntityState<FireFastBolt>(out _);
         }
 
         private static SteppedSkillDef spoofFireBoltSkillDef(SteppedSkillDef firefireboltskill) {
@@ -153,7 +149,7 @@ namespace FastArtiBolts {
             return mySkillDef;
         }
 
-        void Update() {
+        //void Update() {
             //if (Input.GetKeyDown(KeyCode.U)) {
 
             //    FireFastBolt._originShiftForward += 0.1f;
@@ -164,7 +160,7 @@ namespace FastArtiBolts {
             //    FireFastBolt._originShiftForward -= 0.1f;
             //    Chat.AddMessage(FireFastBolt._originShiftForward.ToString("0.00"));
             //}
-        }
+        //}
 
 
     }

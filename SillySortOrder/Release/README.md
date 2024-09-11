@@ -40,6 +40,9 @@ ___
  - Option to order variants. right now they're just in the order that they were added I think
 ___
 ### Changelog:
+`1.1.2`
+- added dlc survivors to the vanilla list so the mod doesn't think they're modded characters lol
+
 `1.1.1`
 - somehow fixed some modded survivors not being able to be set as variants
 - fixed dlc survivors appearing when you don't have the dlc

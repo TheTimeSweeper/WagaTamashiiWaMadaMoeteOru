@@ -4,14 +4,13 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using System;
-using R2API.Utils;
+
+[assembly: HG.Reflection.SearchableAttribute.OptIn]
 
 namespace SillyHitboxViewer {
 
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.3")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.4")]
     public class HitboxViewerMod : BaseUnityPlugin {
         
         public static HitboxViewerMod instance;
@@ -46,27 +45,29 @@ namespace SillyHitboxViewer {
             instance = this;
 
             log = Logger;
+            log.LogWarning("uh1");
 
             populateAss();
 
             Utils.doConfig();
-
+            log.LogWarning("uh2");
             Utils.doHitbox.SettingChanged += DoHitbox_SettingChanged;
             Utils.doHurtbox.SettingChanged += DoHurtbox_SettingChanged;
             Utils.doKinos.SettingChanged += DoKinos_SettingChanged;
+            log.LogWarning("uh3");
 
             setShowingHitboxes(Utils.cfg_doHitbox);
             setShowingHurtboxes(Utils.cfg_doHurtbox, false);
             setShowingKinos(Utils.cfg_doKinos, false);
+            log.LogWarning("uh4");
 
             if (RiskOfOptionsCompat.enabled) {
                 RiskOfOptionsCompat.doOptions();
             }
-
-            CommandHelper.AddToConsoleWhenReady();
+            log.LogWarning("uh5");
 
             //createPool(hitPoolStart, _revealerPool, false);
-            //createPool(blastPoolStart, _blastPool, true); 
+            //createPool(blastPoolStart, _blastPool, true);
 
             On.RoR2.BodyCatalog.Init += BodyCatalog_Init;
 
@@ -228,10 +229,12 @@ namespace SillyHitboxViewer {
         }
 
         #region hooks
-        private void BodyCatalog_Init(On.RoR2.BodyCatalog.orig_Init orig) {
-            orig();
+        private System.Collections.IEnumerator BodyCatalog_Init(On.RoR2.BodyCatalog.orig_Init orig)
+        {
+            var nip = orig();
 
             Utils.setSoftenedCharacters();
+            return nip;
         }
 
         //hit box
@@ -244,6 +247,12 @@ namespace SillyHitboxViewer {
             });
 
             if (hitboxGroupRevealer == null) {
+
+                if(self.hitBoxGroup == null)
+                {
+                    Logger.LogError("could not show hitbox. hitboxgroup is null");
+                    return didAHit;
+                }
 
                 hitboxGroupRevealer = self.hitBoxGroup.gameObject.AddComponent<HitboxGroupRevealer>();
                 _hitboxGroupRevealers.Add(hitboxGroupRevealer);
@@ -327,7 +336,6 @@ namespace SillyHitboxViewer {
 
             _kinoRevealers.Add(Instantiate(_hitboxNotBoxPrefabTall).initKino(self.Motor.Capsule.transform, self.Motor.Capsule));
         }
-
 
         #endregion
 
