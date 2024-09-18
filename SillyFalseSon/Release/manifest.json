@@ -1,9 +1,9 @@
 {
   "author": "TheTimesweeper",
   "name": "SillyFalseSon",
-  "version_number": "1.0.0",
+  "version_number": "2.0.0",
   "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
-  "description": "Vanilla-adjacent tweaks and silliness. size, effects, etc | now including adding stocks to crosshair and more",
+  "description": "Tweaks and silliness. Size, effects, stocks on crosshair, dash while charging, and m1+m2 air slam stuff",
   "dependencies": [
     "bbepis-BepInExPack-5.4.9",
     "RiskofThunder-R2API_Prefab-1.0.1",

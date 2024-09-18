@@ -14,8 +14,7 @@ using R2API;
 
 namespace FastArtiBolts {
 
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.2.1")]
+    [BepInPlugin(MODUID, "Fast Artificer Bolts", "2.2.2")]
     public class FastBoltsMod : BaseUnityPlugin {
 
         public static FastBoltsMod instance;

@@ -16,7 +16,7 @@ using System.Security.Permissions;
 
 namespace SillyFalseSon
 {
-    [BepInPlugin("com.TheTimeSweeper.SillyFalseSon", "Silly False Son", "1.1.0")]
+    [BepInPlugin("com.TheTimeSweeper.SillyFalseSon", "Silly False Son", "2.0.0")]
     public class SillyFalseSonPlugin : BaseUnityPlugin
     {
         private const string configSection = "hi";
@@ -131,7 +131,7 @@ namespace SillyFalseSon
             nip.transform.GetChild(0).localPosition = new Vector3(0, 1, -2.5f);
 
             GameObject falseSonGroundSlaem = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/FalseSon/FalseSonGroundSlam.prefab").WaitForCompletion();
-            falseSonGroundSlaem.transform.Find("Debris/Spikes, Small").localScale = new Vector3(4, 4, 2);
+            falseSonGroundSlaem.transform.Find("Debris/Spikes, Small").localScale = new Vector3(3.5f, 3.5f, 2);
             falseSonGroundSlaem.transform.Find("Debris/Particle System").localScale = new Vector3(2, 2, 2);
             falseSonGroundSlaem.GetComponent<DestroyOnTimer>().duration = 2;
 
