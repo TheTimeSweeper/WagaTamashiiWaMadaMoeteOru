@@ -69,7 +69,7 @@ internal static partial class Configuration
             }
             catch (System.Exception e)
             {
-                Debug.LogError("error adding ROO mod icon for aliem\n" + e);
+                Debug.LogError("error adding ROO mod icon\n" + e);
             }
         }
     }

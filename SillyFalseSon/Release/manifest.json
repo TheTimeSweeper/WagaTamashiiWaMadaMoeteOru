@@ -3,9 +3,10 @@
   "name": "SillyFalseSon",
   "version_number": "1.0.0",
   "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
-  "description": "Makes him 1.12x bigger (configurable), increases club hitbox size (configurable), lowers swing effects size so they make sense (not configurable)",
+  "description": "Vanilla-adjacent tweaks and silliness. size, effects, etc | now including adding stocks to crosshair and more",
   "dependencies": [
     "bbepis-BepInExPack-5.4.9",
+    "RiskofThunder-R2API_Prefab-1.0.1",
     "RiskofThunder-HookGenPatcher-1.2.3"
   ]
 }
