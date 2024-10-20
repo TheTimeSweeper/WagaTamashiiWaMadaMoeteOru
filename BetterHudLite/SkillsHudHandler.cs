@@ -54,6 +54,9 @@ namespace BetterHudLite {
                 im.color = col;
             }
 
+            //move UtilityArea (where seeker has her lotus thingy display)
+            skillsScaler.Find("UtilityArea").transform.localPosition = new Vector3(-363, 0, 0);
+
             //Fixing tooltips
             #region component migration
 

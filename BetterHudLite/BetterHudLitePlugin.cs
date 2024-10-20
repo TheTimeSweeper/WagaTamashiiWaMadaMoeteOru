@@ -10,8 +10,7 @@ using UnityEngine.UI;
 
 namespace BetterHudLite {
 
-    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.1.4")]
-    //[R2API.Utils.NetworkCompatibility(R2API.Utils.CompatibilityLevel.NoNeedForSync)] time to add this back?
+    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.2.0")]
     public class BetterHudLitePlugin : BaseUnityPlugin {
 
         public static BetterHudLitePlugin instance;
@@ -23,6 +22,8 @@ namespace BetterHudLite {
             Confug.doConfig();
             
             On.RoR2.UI.HUD.Awake += HUD_Awake;
+
+            On.EntityStates.Seeker.MeditationUI.SetupInputUIIcons += MeditationUI_SetupInputUIIcons;
         }
 
         private void HUD_Awake(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
@@ -37,6 +38,16 @@ namespace BetterHudLite {
 
             if (Confug.doSkills) {
                 self.gameObject.AddComponent<SkillsHudHandler>().Init(self);
+            }
+        }
+
+        private void MeditationUI_SetupInputUIIcons(On.EntityStates.Seeker.MeditationUI.orig_SetupInputUIIcons orig, EntityStates.Seeker.MeditationUI self)
+        {
+            orig(self);
+
+            if (Confug.doSkills)
+            {
+                self.overlayInstanceChildLocator.transform.localPosition = new Vector3(0, 120, 0);
             }
         }
 

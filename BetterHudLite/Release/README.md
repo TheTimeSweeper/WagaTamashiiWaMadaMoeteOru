@@ -2,8 +2,7 @@
 
 Somewhat inspired by the BetterHud mod of old, by DekuDesu.
 
-Ping me (`TheTimesweeper#5727`) on the ror2 modding discord or the enforcer discord (https://discord.gg/csaEQDnMH8) if you have any issues/feedback.  
-I know there's gonna be a lot of issues lol
+Ping me (`thetimesweeper`) on the ror2 modding discord or the enforcer discord (https://discord.gg/csaEQDnMH8) if you have any issues/feedback.  
 
 ___
 ## Health Bar and Skills Moved to Center:
@@ -20,7 +19,7 @@ ___
  - lot of cases untested. don't be shy letting me know
 ___
 ### Plans:
- - risk of options
+ - ~~risk of options~~
  - move buffs to health bar (config)
  - move sprint and inv buttons (config)
  - move level below health bar to give skills more room, 
@@ -32,13 +31,18 @@ ___
    - More of the crazy custom features that the old BetterHud mod had, namely moving/hiding the other ui elements
    - Would like the cool little skill cooldowns around the crosshair thingys, little prettier more readable less intrusive and such, 
      - would take a bit of work that I won't get around to but I'd love to see it
-     - Played doom eternal recently and dang that shit's great  
+     - Played doom eternal and dang that shit's great  
 ___
   
-He'd put this in his readmes for his old mods so I'd like to do the same:  
+Callback to DekuDesu's mods' readmes:  
 If you like this mod, consider donating to the Autism Research Institute https://www.autism.org/donate-autism-research-institute/  
 ___
 ### Changelog:
+
+`0.2.0`
+- moved seeker's stratagem inputs up (when skills are centered)
+- moved seeker's lotus flower to the side (when skills are centered)
+- added riskofoptions
 
 `0.1.4`
  - moving of the hud now happens a frame after `RoR2.UI.HUD.Awake`
