@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace BetterHudLite {
+namespace BetterHudLite
+{
     public class SkillsHudHandler : BaseHudHandler {
 
         protected override void MoveHud() {
@@ -43,6 +44,13 @@ namespace BetterHudLite {
             Transform rect;
             Image im;
             foreach (InputBindingDisplayController bindingDisplay in skillsScaler.GetComponentsInChildren<InputBindingDisplayController>()) {
+
+                if (Confug.HideSkillKeys)
+                {
+                    bindingDisplay.transform.parent.gameObject.SetActive(false);
+                    continue;
+                }
+
                 rect = bindingDisplay.transform.parent;
                 Vector3 anch = rect.localPosition;
                 anch.y += 9;

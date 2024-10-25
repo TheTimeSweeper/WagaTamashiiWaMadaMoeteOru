@@ -10,6 +10,8 @@ using System.IO;
 namespace BetterHudLite {
     public class Confug
     {
+        private static bool loadedIcon;
+
         private static ConfigEntry<bool> _doBar;
         public static bool doBar
         {
@@ -27,6 +29,26 @@ namespace BetterHudLite {
             {
                 reloadConfig();
                 return _doSkills.Value;
+            }
+        }
+
+        private static ConfigEntry<bool> _hideSkillKeys;
+        public static bool HideSkillKeys
+        {
+            get
+            {
+                reloadConfig();
+                return _hideSkillKeys.Value;
+            }
+        }
+
+        private static ConfigEntry<bool> _doNuke;
+        public static bool doNuke
+        {
+            get
+            {
+                reloadConfig();
+                return _doNuke.Value;
             }
         }
 
@@ -72,10 +94,20 @@ namespace BetterHudLite {
                         true,
                         "Brings the skills to the center above where the health bar is (if that's also enabled)");
 
-            
-        }
+            _hideSkillKeys =
+                BindAndOptions(skillsSection,
+                        "Hide Skill Keys",
+                        false,
+                        "Hide the M1, M2, etc under your skills. Woops oversight requires Do The Skills enabled, don't have time to fix sorry");
 
-        private static bool loadedIcon;
+            string otherSection = "Other";
+
+            _doNuke =
+                BindAndOptions(otherSection,
+                        "Nuke all transparent boxes",
+                        false,
+                        "Finds all transparent boxes on the hud (like the one around inventory and currencies) and hides them.");
+        }
 
         public static ConfigEntry<T> BindAndOptions<T>(string section, string name, T defaultValue, string description = "", bool restartRequired = false) =>
             BindAndOptions(section, name, defaultValue, 0, 20, description, restartRequired);

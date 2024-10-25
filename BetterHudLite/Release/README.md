@@ -34,10 +34,14 @@ ___
      - Played doom eternal and dang that shit's great  
 ___
   
-Callback to DekuDesu's mods' readmes:  
+Calling back to DekuDesu's mods' readmes:  
 If you like this mod, consider donating to the Autism Research Institute https://www.autism.org/donate-autism-research-institute/  
 ___
 ### Changelog:
+
+`0.3.0`
+- per request, added option to hide the Keybind label (M1, Shift, etc) under the skills icons. off by default.
+- per request, added option to hide all the transparent boxes around stuff. not really in the style of the mod but whatever. off by default.
 
 `0.2.0`
 - moved seeker's stratagem inputs up (when skills are centered)

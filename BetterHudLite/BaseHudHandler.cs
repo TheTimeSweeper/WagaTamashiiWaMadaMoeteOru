@@ -3,7 +3,7 @@ using UnityEngine;
 
 
 namespace BetterHudLite {
-    public class BaseHudHandler : MonoBehaviour {
+    public abstract class BaseHudHandler : MonoBehaviour {
 
         protected RoR2.UI.HUD _hud;
 
@@ -18,12 +18,12 @@ namespace BetterHudLite {
             MoveHud();
         }
 
-        void Update() {
-            //if (Input.GetKeyDown(KeyCode.G)) {
-            //    MoveHud();
-            //}
-        }
+        //void Update() {
+        //if (Input.GetKeyDown(KeyCode.G)) {
+        //    MoveHud();
+        //}
+        //}
 
-        protected virtual void MoveHud() { }
+        protected abstract void MoveHud();
     }
 }

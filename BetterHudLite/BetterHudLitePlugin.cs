@@ -5,12 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
 
 namespace BetterHudLite {
 
-    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.2.0")]
+    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.3.0")]
     public class BetterHudLitePlugin : BaseUnityPlugin {
 
         public static BetterHudLitePlugin instance;
@@ -38,6 +39,12 @@ namespace BetterHudLite {
 
             if (Confug.doSkills) {
                 self.gameObject.AddComponent<SkillsHudHandler>().Init(self);
+            }
+            
+            if (Confug.doNuke)
+            {
+                BoxNukerHudHandler.frame = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/UI/texUIHighlightHeader.png").WaitForCompletion();
+                self.gameObject.AddComponent<BoxNukerHudHandler>().Init(self);
             }
         }
 
