@@ -1,12 +1,11 @@
 {
-  "name": "Timesweeper_is_a_slut",
-  "version_number": "0.6.9",
+  "name": "Timesweepers_work",
+  "version_number": "6.9.0",
   "website_url": "https://thunderstore.io/package/TheTimesweeper/",
   "description": "I've worked on some mods.",
   "dependencies": [
     "EnforcerGang-Enforcer-3.11.2",
     "EnforcerGang-SniperClassic-1.5.15",
-    "Smooth_Salad-ShaderSwapper-1.0.1",
     "EnforcerGang-Pilot-0.3.18",
     "EnforcerGang-HAND_OVERCLOCKED-1.4.15",
     "EnforcerGang-Rocket-1.0.8",
@@ -19,7 +18,6 @@
     "TheTimesweeper-HenryMod-2.2.0",
     "shooty-EngineerWithAShotgun-1.2.0",
     "amogus_lovers-StandaloneAncientScepter-1.1.34",
-    "DarkLordLui-LoreFriendlyRegigigas-1.0.0",
     "rob_gaming-Regigigas-1.5.3",
     "Risky_Lives-Videogame_Mod_2_Unofficial-0.21.8",
     "rob_gaming-Ravager-1.4.1",
