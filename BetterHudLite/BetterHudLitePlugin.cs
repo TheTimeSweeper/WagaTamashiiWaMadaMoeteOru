@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace BetterHudLite {
 
-    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.3.0")]
+    [BepInPlugin("com.TheTimeSweeper.BetterHudLite", "BetterHudLite", "0.4.0")]
     public class BetterHudLitePlugin : BaseUnityPlugin {
 
         public static BetterHudLitePlugin instance;

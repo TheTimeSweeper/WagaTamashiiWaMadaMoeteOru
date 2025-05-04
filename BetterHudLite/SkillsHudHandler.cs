@@ -35,9 +35,10 @@ namespace BetterHudLite
             skillsScaler.pivot = new Vector2(0.5f, 0.0f);
 
             skillsScaler.sizeDelta = new Vector2(-639, -234);
-            float barsHeight = Confug.healthBarHeight - 1;
+            float barsHeight = Confug.healthBarHeight.Value - 1;
             float skillHeightFactor = 72 * 0.25f;
-            skillsScaler.anchoredPosition = new Vector2(60, 80 + barsHeight * skillHeightFactor);
+            skillsScaler.localScale *= Confug.skillScale.Value;
+            skillsScaler.anchoredPosition = new Vector2(60 + Confug.skillsX.Value, 80 + barsHeight * skillHeightFactor + Confug.skillsY.Value);
             //presto! I bet you've never seen so much magic in your life!
 
             //move up the skill slot fields to give the section room to move lower

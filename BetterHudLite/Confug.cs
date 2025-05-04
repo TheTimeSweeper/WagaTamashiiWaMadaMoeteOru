@@ -11,7 +11,7 @@ namespace BetterHudLite {
     public class Confug
     {
         private static bool loadedIcon;
-
+        
         private static ConfigEntry<bool> _doBar;
         public static bool doBar
         {
@@ -52,8 +52,15 @@ namespace BetterHudLite {
             }
         }
 
-        public static float healthBarWidth = 1;
-        public static float healthBarHeight = 1;
+        public static ConfigEntry<float> healthBarWidth;
+        public static ConfigEntry<float> healthBarHeight;
+        
+        public static ConfigEntry<float> healthBarX;
+        public static ConfigEntry<float> healthBarY;
+
+        public static ConfigEntry<float> skillScale;
+        public static ConfigEntry<float> skillsY;
+        public static ConfigEntry<float> skillsX;
 
         private static BetterHudLitePlugin plugin => BetterHudLitePlugin.instance;
 
@@ -77,14 +84,29 @@ namespace BetterHudLite {
                         "Health Bar Width Factor",
                         1f,
                         "size of health bar, range 0 to 4.5, 0 making it nonexistent, 4.5 making it cover the screen\n"
-                        + "less than 0 just shifts it to the right, higher than 4.5 goes off screen obviously").Value;
-
+                        + "less than 0 just shifts it to the right, higher than 4.5 goes off screen obviously");
+            
             healthBarHeight =
                 BindAndOptions(barSection,
                         "Health Bar Height Multiplier",
                         1f,
                         "multiply health bar height by this value\n"
-                        + "expands both up and down. attempts to move skills with it").Value;
+                        + "expands both up and down. attempts to move skills with it");
+
+            healthBarX =
+                BindAndOptions(barSection,
+                        "Health Bar X",
+                        0f,
+                        -1000,
+                        1000,
+                        "move the health bar left or right");
+            healthBarY =
+                BindAndOptions(barSection,
+                        "Health Bar Y",
+                        0f,
+                        -1000,
+                        2000,
+                        "move the health bar up or down\n600 is right above crosshair, 400 is right under crosshair");
 
             string skillsSection = "Skills UI";
 
@@ -93,6 +115,28 @@ namespace BetterHudLite {
                         "Do the skills",
                         true,
                         "Brings the skills to the center above where the health bar is (if that's also enabled)");
+
+            skillScale =
+                BindAndOptions(skillsSection,
+                        "skills Scale",
+                        1f,
+                        "scale (size) of whole skills section");
+
+            skillsX =
+                BindAndOptions(skillsSection,
+                        "Skills X",
+                        0f,
+                        -1000,
+                        1000,
+                        "move skills left or right");
+
+            skillsY =
+                BindAndOptions(skillsSection,
+                        "Skills Y",
+                        0f,
+                        -1000,
+                        2000,
+                        "move skills up or down. automatically adjusted by Health Bar Height Multiplier config\n500 is right above crosshair 300 is right under crosshair");
 
             _hideSkillKeys =
                 BindAndOptions(skillsSection,
