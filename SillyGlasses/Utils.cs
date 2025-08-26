@@ -6,22 +6,25 @@ namespace SillyGlasses
 {
     public class Utils
     {
-        public static int Cfg_ItemStackMax = -1;
-        public static bool Cfg_OutwardStackType;
-        public static float Cfg_ItemDistanceMultiplier = 0.0420f;
-        public static float Cfg_EngiTurretItemDistanceMultiplier = 1.5f;
-        public static float Cfg_ScavengerItemDistanceMultiplier = 6;
-        public static float Cfg_BrotherItemDistanceMultiplier = 2;
-        public static bool Cfg_UseLogs = false;
+        public static ConfigEntry<int> Cfg_ItemStackMax;
+        public static ConfigEntry<bool> Cfg_OutwardStackType;
+        public static ConfigEntry<float> Cfg_ItemDistanceMultiplier;
+        public static ConfigEntry<float> Cfg_EngiTurretItemDistanceMultiplier;
+        public static ConfigEntry<float> Cfg_ScavengerItemDistanceMultiplier;
+        public static ConfigEntry<float> Cfg_BrotherItemDistanceMultiplier;
+        public static ConfigEntry<bool> Cfg_NoMaterialUpdate;
+        public static ConfigEntry<bool> Cfg_SlightlyUnstable;
+        public static ConfigEntry<bool> Cfg_UseLogs;
         public static bool Cfg_PlantsForHire = false;
         public static int Cfg_CheatItem = 7; //glassiese
         public static int Cfg_CheatItemBoring = 58; //magayzenes
+        public static bool wegetit;
 
         public static void Log (string logString, bool chat = false)
         {
             if (Cfg_UseLogs)
             {
-                Debug.LogWarning($"[SillyLog] {logString}");
+                SillyGlassesPlugin.logger.LogMessage($"[SillyLog] {logString}");
 
                 if (chat)
                 {

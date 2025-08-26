@@ -7,6 +7,7 @@ using UnityEngine;
 //using R2API.Utils;
 using System.Security;
 using System.Security.Permissions;
+using BepInEx.Logging;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
@@ -60,10 +61,12 @@ namespace SillyGlasses
         #endregion
 
         public static SillyGlassesPlugin instance;
+        public static ManualLogSource logger;
 
         public void Awake()
         {
             instance = this;
+            logger = base.Logger;
 
             InitConfig();
 
@@ -104,45 +107,65 @@ namespace SillyGlasses
             string sectionName = "hope youre having a lovely day";
 
             Utils.Cfg_ItemStackMax =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "ItemStacksMax",
                             -1,
-                            "Maximum item displays that can be spawned (-1 for infinite).").Value;
-
+                            -1,
+                            100,
+                            "Maximum item displays that can be spawned (-1 for infinite).");
+            
             Utils.Cfg_OutwardStackType =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "Outward Stacking",
                             false,
-                            "Makes item stacks outward from the bone it's attached to, rather than their object's forward facing direction.").Value;
+                            "Makes item stacks outward from the bone it's attached to, rather than their object's forward facing direction.");
 
             Utils.Cfg_ItemDistanceMultiplier =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "ItemDistanceMultiplier",
                             0.0480f,
-                            "The distance between extra displays that spawns.").Value;
+                            -5,
+                            5,
+                            "The distance between extra displays that spawns.");
             Utils.Cfg_EngiTurretItemDistanceMultiplier =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "EngiTurretItemDistanceMultiplier",
                             1.5f,
-                            "Items are a little bigger on Engis Turrets. Spread them out a bit more.").Value;
+                            -20,
+                            20,
+                            "Items are a little bigger on Engis Turrets. Spread them out a bit more.");
 
             Utils.Cfg_ScavengerItemDistanceMultiplier =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "ScavItemDistanceMultiplier",
                             6f,
-                            "Items are a also bigger on Scavengers I think").Value;
+                            -20,
+                            20,
+                            "Items are a also bigger on Scavengers I think");
 
             Utils.Cfg_BrotherItemDistanceMultiplier =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "BrotherItemDistanceMultiplier",
                             2f,
-                            "Big Spikes.").Value;
+                            -20,
+                            20,
+                            "Big Spikes.");
 
+            Utils.Cfg_NoMaterialUpdate =
+                SillyGlasses.Config.BindAndOptions(sectionName,
+                            "No Material Update",
+                            false,
+                            "Experimental: Disables item materials updating properly with invisibility, dither, and hit/heal flashes (bet you didn't notice those were a thing).\nIn my testing this had 0 effect on performance, but let me know if it helps you\nDoes not require restart, but does require respawn/stage transition");
+            Utils.Cfg_SlightlyUnstable =
+                SillyGlasses.Config.BindAndOptions(sectionName,
+                            "Slightly Unstable Mode",
+                            false,
+                            "Removes a try catch from one of the common hooks. May reduce lag on inventory change, but there is a very low chance that this function breaks if your mod list is crazy enough. (2 years and I never had anyone report to me, but I am implementing this safety to try to be super duper safe)");
             Utils.Cfg_UseLogs =
-                Config.Bind(sectionName,
+                SillyGlasses.Config.BindAndOptions(sectionName,
                             "Output Logs",
                             false,
-                            "because I keep forgetting to remove logs from my builds haha woops.").Value;
+                            "because I keep forgetting to remove logs from my builds haha woops.\nIf you run into a big error in this mod, you can enable this to try to get that error more reliably. Otherwise, keep this off to reduce error text spam (therefore lag)");
 
             string cheatSection = "liar liar plants for hire";
 
@@ -191,6 +214,7 @@ namespace SillyGlasses
             float specialItemDistance = getSpecialItemDistance(self);
 
             //make this happen once on init rather than using GetComponent every time an inventory changes
+            //nah fuck you just make it data driven with one list of inventories and iterate through all of them (I think that's how that works right)
             if (self.modelLocator.modelTransform == null)
             {
                 return;

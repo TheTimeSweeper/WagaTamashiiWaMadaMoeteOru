@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
+using BepInEx.Logging;
+
 //using R2API.Utils;
 using RoR2;
 using UnityEngine;
 using UnityEngineInternal;
+using HG;
 
 namespace SillyGlasses
 {
@@ -40,7 +43,7 @@ namespace SillyGlasses
                 return Utils.Cfg_ItemDistanceMultiplier;
             }
         }
-        
+
         public void Init(float distance_)
         {
             propertyStorage = new MaterialPropertyBlock();
@@ -48,7 +51,14 @@ namespace SillyGlasses
             _specialItemDistance = distance_;
 
             _swoocedCharacterModel = GetComponent<CharacterModel>();
+
+            if (!_swoocedCharacterModel) { Destroy(this); return; }
+            if (!_swoocedCharacterModel.body) { Destroy(this); return; }
+            if (!_swoocedCharacterModel.body.inventory) { Destroy(this); return; }
+
             _swoocedCurrentInventory = _swoocedCharacterModel.body.inventory;
+
+            if (!_swoocedCurrentInventory) { Destroy(this); return; }
 
             //SillyGlassesPlugin.instance.swooceHandlers.Add(this);            
             SubscribeToEvents(true);
@@ -56,8 +66,11 @@ namespace SillyGlasses
 
         void Update()
         {
+            if (Utils.Cfg_NoMaterialUpdate)
+                return;
+
             Color value = Color.black;
-            if (_swoocedCharacterModel.body && _swoocedCharacterModel.body.healthComponent)
+            if (_swoocedCharacterModel && _swoocedCharacterModel.body && _swoocedCharacterModel.body.healthComponent)
             {
                 float num = Mathf.Clamp01(1f - _swoocedCharacterModel.body.healthComponent.timeSinceLastHit / CharacterModel.hitFlashDuration);
                 float num2 = Mathf.Pow(Mathf.Clamp01(1f - _swoocedCharacterModel.body.healthComponent.timeSinceLastHeal / CharacterModel.healFlashDuration), 0.5f);
@@ -105,27 +118,41 @@ namespace SillyGlasses
 
             if (subscribing)
             {
-                //SillyGlassesPlugin.instance.updateItemDisplayEvent += onHookedUpdateItemDisplay;
                 SillyGlassesPlugin.instance.enableDisableDisplayEvent += onHookedEnableDisableDisplay;
             }
             else
             {
-                //SillyGlassesPlugin.instance.updateItemDisplayEvent -= onHookedUpdateItemDisplay;
                 SillyGlassesPlugin.instance.enableDisableDisplayEvent -= onHookedEnableDisableDisplay;
             }
         }
 
-        //private void onHookedUpdateItemDisplay(CharacterModel characterModel_, Inventory inventory_)
-        //{
-        //    if (_swoocedCharacterModel == characterModel_ && _swoocedCurrentInventory == null)
-        //    {
-        //        _swoocedCurrentInventory = inventory_;
-        //    }
-        //}
-
         public void onHookedEnableDisableDisplay(CharacterModel characterModel_, ItemIndex itemIndex_)
         {
-            if (characterModel_ == null)
+
+            if (Utils.Cfg_SlightlyUnstable)
+            {
+                onHookedEnableDisableDisplaySpooky(characterModel_, itemIndex_);
+                return;
+            }
+
+            try
+            {
+                onHookedEnableDisableDisplaySpooky(characterModel_, itemIndex_);
+            }
+            catch (Exception e)
+            {
+                //making sure this only happens once. to avoid performance dunk if it is being spammed.
+                if (!Utils.wegetit || Utils.Cfg_UseLogs)
+                {
+                    Utils.wegetit = true;
+                    SillyGlassesPlugin.logger.LogError($"WELP IT HAPPENED.\n\n[Please send this log to thetimesweeper]\n\n {e}");
+                }
+            }
+        }
+
+        public void onHookedEnableDisableDisplaySpooky(CharacterModel characterModel_, ItemIndex itemIndex_)
+        {
+            if (!characterModel_)
                 return;
             if (characterModel_.gameObject != gameObject)
                 return;
@@ -143,7 +170,7 @@ namespace SillyGlasses
         {
             //check if it breaks
             //pls don't break
-            if (_swoocedCurrentInventory == null)
+            if (!_swoocedCurrentInventory)
                 return;
             if (characterModel_ != _swoocedCharacterModel)
                 return;
@@ -171,7 +198,7 @@ namespace SillyGlasses
                 return;
 
             //we're removing. destroy all the displays and spawn the right amount 
-            //(sadly i'm not rad enough to only destroy what is needed to be destroyed. i did the more retard friendly method)
+            //(sadly i'm not rad enough to only destroy what is needed to be destroyed. i did the more silly method)
             if (difference < 0) 
             {
                 //find the parent and destroy it
@@ -194,14 +221,17 @@ namespace SillyGlasses
                             extraParents.RemoveAt(i);
                         }
                     }
-                    if (_sillyParentedPrefabDisplays.ContainsKey(itemIndex_))
+                    if (!Utils.Cfg_NoMaterialUpdate)
                     {
-                        for (int i = _sillyParentedPrefabDisplays[itemIndex_].Count - 1; i >= 0; i--)
+                        if (_sillyParentedPrefabDisplays.ContainsKey(itemIndex_))
                         {
-                            _sillyParentedPrefabDisplays[itemIndex_][i].Undo();
-                        }
+                            for (int i = _sillyParentedPrefabDisplays[itemIndex_].Count - 1; i >= 0; i--)
+                            {
+                                _sillyParentedPrefabDisplays[itemIndex_][i].Undo();
+                            }
 
-                        _sillyParentedPrefabDisplays[itemIndex_].Clear();
+                            _sillyParentedPrefabDisplays[itemIndex_].Clear();
+                        }
                     }
 
                     //restart
@@ -244,15 +274,19 @@ namespace SillyGlasses
                     if (iterInstantiatedItem == null)
                         continue;
 
-                    if (!_sillyParentedPrefabDisplays.ContainsKey(itemIndex_))
+                    if (!Utils.Cfg_NoMaterialUpdate)
                     {
-                        _sillyParentedPrefabDisplays[itemIndex_] = new List<CharacterModel.ParentedPrefabDisplay>();
+                        if (!_sillyParentedPrefabDisplays.ContainsKey(itemIndex_))
+                        {
+                            _sillyParentedPrefabDisplays[itemIndex_] = new List<CharacterModel.ParentedPrefabDisplay>();
+                        }
+                        _sillyParentedPrefabDisplays[itemIndex_].Add(new CharacterModel.ParentedPrefabDisplay
+                        {
+                            instance = iterInstantiatedItem,
+                            itemDisplay = iterInstantiatedItem.GetComponent<ItemDisplay>(),
+                            itemIndex = itemIndex_,
+                        });
                     }
-                    _sillyParentedPrefabDisplays[itemIndex_].Add(new CharacterModel.ParentedPrefabDisplay {
-                        instance = iterInstantiatedItem,
-                        itemDisplay = iterInstantiatedItem.GetComponent<ItemDisplay>(),
-                        itemIndex = itemIndex_,
-                    });
 
                     //parent item to correct parent transform
                     Transform sillyParent = GetSillyParent(itemIndex_, bodyDisplayParent);
