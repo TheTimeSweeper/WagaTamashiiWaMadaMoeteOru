@@ -106,8 +106,8 @@ namespace SillyMod {
                 ClassicSurivorSortings["GnomeChefBody"] = 19f;
                 ClassicSurivorSortings["MinerBody"] = 9.1f;
                 ClassicSurivorSortings["MoffeinPilotBody"] = 10.1f;
+                ClassicSurivorSortings["RocketSurvivorBody"] = 11.1f;
                 ClassicSurivorSortings["RobomandoBody"] = 13.1f; ;
-                ClassicSurivorSortings["RocketSurvivorBody"] = 21.1f; ;
             } else {
                 ClassicSurivorSortings["EnforcerBody"] = AFTER_VANILLA_INDEX + 0.1f;
                 ClassicSurivorSortings["SniperClassicBody"] = AFTER_VANILLA_INDEX + 0.2f;
