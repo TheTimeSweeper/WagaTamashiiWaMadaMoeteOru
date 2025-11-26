@@ -28,9 +28,9 @@ namespace SillyMod {
 
         public static ManualLogSource Log;
 
-        public const float AFTER_VANILLA_INDEX = 20f;
-        public const float NEMESES_INDEX = 21f;
-        public const float AFTER_END_INDEX = 25f;
+        public const float AFTER_VANILLA_INDEX = 22f;
+        public const float NEMESES_INDEX = 23f;
+        public const float AFTER_END_INDEX = 27f;
 
         private bool _didVariants;
 
@@ -95,20 +95,28 @@ namespace SillyMod {
             VanillaSurivorSortings["SeekerBody"] = 16f;
             VanillaSurivorSortings["FalseSonBody"] = 17f;
             VanillaSurivorSortings["ChefBody"] = 18f;
+            VanillaSurivorSortings["DroneTechBody"] = 20f;
+            VanillaSurivorSortings["DritferBody"] = 21f;
             //todo: check vanilla content packs if you wanna be legit about it
 
             if (ConFiguration.MixRor1Survivors) {
                 ClassicSurivorSortings["HANDOverclockedBody"] = 4.1f;
                 ClassicSurivorSortings["EnforcerBody"] = 5.1f;
                 ClassicSurivorSortings["SniperClassicBody"] = 7.1f;
-                ClassicSurivorSortings["CHEF"] = 19f;
+                ClassicSurivorSortings["GnomeChefBody"] = 19f;
                 ClassicSurivorSortings["MinerBody"] = 9.1f;
+                ClassicSurivorSortings["MoffeinPilotBody"] = 10.1f;
+                ClassicSurivorSortings["RobomandoBody"] = 13.1f; ;
+                ClassicSurivorSortings["RocketSurvivorBody"] = 21.1f; ;
             } else {
                 ClassicSurivorSortings["EnforcerBody"] = AFTER_VANILLA_INDEX + 0.1f;
                 ClassicSurivorSortings["SniperClassicBody"] = AFTER_VANILLA_INDEX + 0.2f;
                 ClassicSurivorSortings["HANDOverclockedBody"] = AFTER_VANILLA_INDEX + 0.3f;
-                ClassicSurivorSortings["CHEF"] = AFTER_VANILLA_INDEX + 0.4f;
+                ClassicSurivorSortings["GnomeChefBody"] = AFTER_VANILLA_INDEX + 0.4f;
                 ClassicSurivorSortings["MinerBody"] = AFTER_VANILLA_INDEX + 0.5f;
+                ClassicSurivorSortings["MoffeinPilotBody"] = AFTER_VANILLA_INDEX + 0.6f;
+                ClassicSurivorSortings["RobomandoBody"] = AFTER_VANILLA_INDEX + 0.7f;
+                ClassicSurivorSortings["RocketSurvivorBody"] = AFTER_VANILLA_INDEX + 0.8f;
             }
         }
 
