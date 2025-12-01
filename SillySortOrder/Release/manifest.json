@@ -1,7 +1,7 @@
 {
     "name": "SurvivorSortOrder",
     "author": "TheTimesweeper",
-    "version_number": "1.1.2",
+    "version_number": "1.1.3",
     "website_url": "https://github.com/TheTimeSweeper/WagaTamashiiWaMadaMoeteOru",
     "description": "Sorts all survivors to your configurable liking. Force modded characters to the end, individually set survivor's sort order, etc | now supports custom survariants.",
     "dependencies": [

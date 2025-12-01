@@ -40,7 +40,7 @@ namespace SillyMod {
                             "Mix ror1 surivors",
                             true,
                             "Modded ror1 survivors will be mixed in with the rest of the cast, loosely based on their unlock condition.\n"
-                            + "Set to false to separate them out and neatly place them together right after Vanilla\n"
+                            + "Set to false to separate them out and neatly place them together right after Vanilla. This setting includes Pilot, Robomando, and Rocket\n"
                             + "Overrides those mods' original configs").Value;
 
             //Ror1Mix =

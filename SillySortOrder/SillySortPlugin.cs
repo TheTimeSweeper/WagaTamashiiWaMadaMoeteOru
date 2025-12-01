@@ -17,7 +17,7 @@ using UnityEngine.EventSystems;
 
 namespace SillyMod {
     [BepInDependency("pseudopulse.Survariants", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.2")]
+    [BepInPlugin("com.TheTimeSweeper.SurvivorSortOrder", "SurvivorSortOrder", "1.1.3")]
     public class SillySortPlugin : BaseUnityPlugin {            //there's really no reason to call this one silly. just branding at this point
 
         public static Dictionary<string, float> ClassicSurivorSortings = new Dictionary<string, float>();
@@ -28,9 +28,9 @@ namespace SillyMod {
 
         public static ManualLogSource Log;
 
-        public const float AFTER_VANILLA_INDEX = 22f;
-        public const float NEMESES_INDEX = 23f;
-        public const float AFTER_END_INDEX = 27f;
+        public const float AFTER_VANILLA_INDEX = 30f;
+        public const float NEMESES_INDEX = 31f;
+        public const float AFTER_END_INDEX = 40f;
 
         private bool _didVariants;
 
@@ -48,29 +48,34 @@ namespace SillyMod {
         }
 
         /*
-         CommandoBody sort position: 1
-         HuntressBody sort position: 2
-         Bandit2Body sort position: 3
-         ToolbotBody sort position: 4
+ [Before Sort]
+ CommandoBody sort position: 1
+ HuntressBody sort position: 2
+ Bandit2Body sort position: 3
+ ToolbotBody sort position: 4
             HANDOverclockedBody sort position: 100
-         EngiBody sort position: 5
-            EnforcerBody sort position: 4.005
-         MageBody sort position: 6
-         MercBody sort position: 7
+ EngiBody sort position: 5
+            EnforcerBody sort position: 5.1
+            NemesisEnforcerBody sort position: 5.101
+ MageBody sort position: 6
+ MercBody sort position: 7
             SniperClassicBody sort position: 5.5
-         TreebotBody sort position: 8
-            CHEF sort position: 99
-         LoaderBody sort position: 9
+ RobPaladinBody sort position: 7.001
+ TreebotBody sort position: 8
+ LoaderBody sort position: 9
             MinerBody sort position: 17
-         CrocoBody sort position: 10
-         CaptainBody sort position: 11
-         HereticBody sort position: 13
-         RailgunnerBody sort position: 14
-         VoidSurvivorBody sort position: 15
-
-            NemesisEnforcerBody sort position: 4.010
-         JoeBody sort position: 69
-         V1Body sort position: 101
+ CrocoBody sort position: 10
+ CaptainBody sort position: 11
+ HereticBody sort position: 13
+ RailgunnerBody sort position: 14
+ VoidSurvivorBody sort position: 15
+ SeekerBody sort position: 16
+ FalseSonBody sort position: 17
+ ChefBody sort position: 18
+            GnomeChefBody sort position: 99
+ DroneTechBody sort position: 20
+ DrifterBody sort position: 21
+ HenryBody sort position: 100 
         */
 
         private void SetSurvivorSortings() {
@@ -83,7 +88,6 @@ namespace SillyMod {
             VanillaSurivorSortings["ToolbotBody"] = 4f;
             VanillaSurivorSortings["EngiBody"] = 5f;
             VanillaSurivorSortings["MageBody"] = 6f;
-
             VanillaSurivorSortings["MercBody"] = 7f;
             VanillaSurivorSortings["TreebotBody"] = 8f;
             VanillaSurivorSortings["LoaderBody"] = 9f;
@@ -96,14 +100,14 @@ namespace SillyMod {
             VanillaSurivorSortings["FalseSonBody"] = 17f;
             VanillaSurivorSortings["ChefBody"] = 18f;
             VanillaSurivorSortings["DroneTechBody"] = 20f;
-            VanillaSurivorSortings["DritferBody"] = 21f;
+            VanillaSurivorSortings["DrifterBody"] = 21f;
             //todo: check vanilla content packs if you wanna be legit about it
 
             if (ConFiguration.MixRor1Survivors) {
                 ClassicSurivorSortings["HANDOverclockedBody"] = 4.1f;
                 ClassicSurivorSortings["EnforcerBody"] = 5.1f;
                 ClassicSurivorSortings["SniperClassicBody"] = 7.1f;
-                ClassicSurivorSortings["GnomeChefBody"] = 19f;
+                ClassicSurivorSortings["GnomeChefBody"] = 18.1f;
                 ClassicSurivorSortings["MinerBody"] = 9.1f;
                 ClassicSurivorSortings["MoffeinPilotBody"] = 10.1f;
                 ClassicSurivorSortings["RocketSurvivorBody"] = 11.1f;
