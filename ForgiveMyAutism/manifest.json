@@ -1,6 +1,6 @@
 {
   "name": "Timesweepers_Grubby_Hands",
-  "version_number": "6.9.0",
+  "version_number": "6.9.2",
   "website_url": "https://thunderstore.io/package/TheTimesweeper/",
   "description": "I've worked on some mods.",
   "dependencies": [
@@ -8,6 +8,7 @@
     "TheTimesweeper-Red_Alert-3.1.1",
     "TheTimesweeper-Alien_Hominid-1.2.3",
     "TheTimesweeper-Faceless_Joe-0.2.0",
+    "TheTimesweeper-MatchMaker-0.1.0",
     "EnforcerGang-Enforcer-3.11.2",
     "EnforcerGang-MinerUnearthed-1.9.19",
     "TeamCloudburst-Cloudburst-0.4.1",
