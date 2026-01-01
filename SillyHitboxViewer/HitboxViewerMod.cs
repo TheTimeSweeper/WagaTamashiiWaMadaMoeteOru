@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using System;
+using static UnityEngine.UI.Image;
+using System.Security.Permissions;
 
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace SillyHitboxViewer {
 
@@ -81,6 +84,31 @@ namespace SillyHitboxViewer {
             On.RoR2.BulletAttack.InitBulletHitFromRaycastHit += BulletAttack_InitBulletHitFromRaycastHit;
 
             On.RoR2.CharacterMotor.Awake += CharacterMotor_Awake;
+        }
+
+        private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, BulletAttack.FireSingleArgs args)
+        {
+            orig(self, args);
+
+            Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabTallFlatSmol : _hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, args.ray.direction, self.maxDistance, self.radius);
+        }
+
+        private void BulletAttack_InitBulletHitFromRaycastHit(On.RoR2.BulletAttack.orig_InitBulletHitFromRaycastHit orig, BulletAttack self, ref BulletAttack.BulletHit bulletHit, Ray ray, ref RaycastHit raycastHit)
+        {
+            orig(self, ref bulletHit, ray, ref raycastHit);
+
+            if (Vector3.Distance(self.origin, bulletHit.point) < 0.5f)
+                return;
+
+            if (!HitboxRevealer.bulletModeEnabled)
+            {
+                Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
+                //Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f);
+            }
+
+            //code repeated to avoid uncesseary allocation of a new gameobject in memory
+            //immediately point and laugh at me publicly if that is wrong so I know
+            _bulletHitPointRevealers.Add(Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f));
         }
 
         private void DoHitbox_SettingChanged(object sender, EventArgs e) {
@@ -284,29 +312,11 @@ namespace SillyHitboxViewer {
         }
 
         //hit bullet
-        private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, Vector3 normal, int muzzleIndex) {
-            orig(self, normal, muzzleIndex);
+        //private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, Vector3 normal, int muzzleIndex) {
+        //    orig(self, normal, muzzleIndex);
 
-            Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabTallFlatSmol : _hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, normal, self.maxDistance, self.radius);
-        }
-
-        private void BulletAttack_InitBulletHitFromRaycastHit(On.RoR2.BulletAttack.orig_InitBulletHitFromRaycastHit orig, BulletAttack self, ref BulletAttack.BulletHit bulletHit, Vector3 origin, Vector3 direction, ref RaycastHit raycastHit) {
-            orig(self, ref bulletHit, origin, direction, ref raycastHit);
-            
-            if (Vector3.Distance(self.origin, bulletHit.point) < 0.5f)
-                return;
-
-            if (!HitboxRevealer.bulletModeEnabled) {
-
-                Instantiate(self.radius < 0.1f? _hitboxNotBoxPrefabSmol : _hitboxNotBoxPrefab).initBulletPoint(bulletHit.point, self.radius);
-                //Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f);
-            }
-
-            //code repeated to avoid uncesseary allocation of a new gameobject in memory
-                //immediately point and laugh at me publicly if that is wrong so I know
-            _bulletHitPointRevealers.Add(Instantiate(_hitboxNotBoxPrefabSmol).initBulletPoint(bulletHit.point, 0.1f));
-
-        }
+        //    Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabTallFlatSmol : _hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, normal, self.maxDistance, self.radius);
+        //}
 
         //hurt
         private void HurtBox_Awake(On.RoR2.HurtBox.orig_Awake orig, HurtBox self) {
