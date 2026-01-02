@@ -18,9 +18,9 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="BepInEx.Core" Version="5.*" />
-		<PackageReference Include="RiskOfRain2.GameLibs" Version="1.2.4-r.0" />
+		<PackageReference Include="RiskOfRain2.GameLibs" Version="*-*" />
 		<PackageReference Include="UnityEngine.Modules" Version="2019.4.26" />
-		<PackageReference Include="MMHOOK.RoR2" Version="2024.8.28">
+		<PackageReference Include="MMHOOK.RoR2" Version="*">
 			<NoWarn>NU1701</NoWarn>
 		</PackageReference>
 	</ItemGroup>
@@ -32,7 +32,7 @@
 	</ItemGroup>
 	
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)Release&quot;&#xD;&#xA;if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;E:\r2Profiles\Blinx Returns\BepInEx\plugins\TheTimesweeper-HitboxViewerMod&quot;" />
+    <Exec Command="if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)Release&quot;&#xD;&#xA;if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;E:\r2Profiles\Blinx Returns\BepInEx\plugins\TheTimesweeper-HitboxViewerMod&quot;&#xD;&#xA;if &quot;$(Username)&quot; == &quot;Erikbir&quot; copy &quot;$(TargetPath)&quot; &quot;E:\r2Profiles\Blinx Hardware Test\BepInEx\plugins\TheTimesweeper-HitboxViewerMod&quot;&#xD;&#xA;&#xD;&#xA;" />
   </Target>
 
 </Project>

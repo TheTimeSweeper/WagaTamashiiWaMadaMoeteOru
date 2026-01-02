@@ -39,6 +39,9 @@ namespace SillyHitboxViewer {
         [SerializeField] 
         private Renderer rend;
 
+        [SerializeField]
+        private Transform[] capTransforms;
+
         private MaterialPropertyBlock _matProperties;
         private Color _matColor;
         private Transform _overlapAttackTransform;
@@ -275,6 +278,10 @@ namespace SillyHitboxViewer {
             // i'm picking the retarded version anyway cause it's special to me
 
             transform.localScale = new Vector3(radius * 2f, radius * 2f, distance);
+            for (int i = 0; i < capTransforms.Length; i++)
+            {
+                capTransforms[i].localScale = new Vector3(1, radius * 2f / distance, 1);
+            }
 
             blastboxShow(true, cfg_BulletShowTime);
             return this;

@@ -4,13 +4,17 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using System;
+using System.Security.Permissions;
+using System.Security;
 
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
 
 namespace SillyHitboxViewer {
 
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.4")]
+    [BepInPlugin("com.TheTimeSweeper.HitboxViewer", "Silly Hitbox Viewer", "1.5.5")]
     public class HitboxViewerMod : BaseUnityPlugin {
         
         public static HitboxViewerMod instance;
@@ -41,30 +45,24 @@ namespace SillyHitboxViewer {
         private HitboxRevealer _hitboxNotBoxPrefabTallFlatSmol;
 
         void Awake() {
-
             instance = this;
 
             log = Logger;
-            log.LogWarning("uh1");
 
             populateAss();
 
             Utils.doConfig();
-            log.LogWarning("uh2");
             Utils.doHitbox.SettingChanged += DoHitbox_SettingChanged;
             Utils.doHurtbox.SettingChanged += DoHurtbox_SettingChanged;
             Utils.doKinos.SettingChanged += DoKinos_SettingChanged;
-            log.LogWarning("uh3");
 
             setShowingHitboxes(Utils.cfg_doHitbox);
             setShowingHurtboxes(Utils.cfg_doHurtbox, false);
             setShowingKinos(Utils.cfg_doKinos, false);
-            log.LogWarning("uh4");
 
             if (RiskOfOptionsCompat.enabled) {
                 RiskOfOptionsCompat.doOptions();
             }
-            log.LogWarning("uh5");
 
             //createPool(hitPoolStart, _revealerPool, false);
             //createPool(blastPoolStart, _blastPool, true);
@@ -77,7 +75,7 @@ namespace SillyHitboxViewer {
 
             On.RoR2.HurtBox.Awake += HurtBox_Awake;
 
-            On.RoR2.BulletAttack.FireSingle += BulletAttack_FireSingle;
+            On.RoR2.BulletAttack.FireSingle += BulletAttack_FireSingle; ;
             On.RoR2.BulletAttack.InitBulletHitFromRaycastHit += BulletAttack_InitBulletHitFromRaycastHit;
 
             On.RoR2.CharacterMotor.Awake += CharacterMotor_Awake;
@@ -284,15 +282,17 @@ namespace SillyHitboxViewer {
         }
 
         //hit bullet
-        private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, Vector3 normal, int muzzleIndex) {
-            orig(self, normal, muzzleIndex);
+        private void BulletAttack_FireSingle(On.RoR2.BulletAttack.orig_FireSingle orig, BulletAttack self, BulletAttack.FireSingleArgs args)
+        {
+            orig(self, args);
 
-            Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabTallFlatSmol : _hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, normal, self.maxDistance, self.radius);
+            Instantiate(self.radius < 0.1f ? _hitboxNotBoxPrefabTallFlatSmol : _hitboxNotBoxPrefabTallFlat).initBulletBox(self.origin, args.ray.direction, self.maxDistance, self.radius);
         }
 
-        private void BulletAttack_InitBulletHitFromRaycastHit(On.RoR2.BulletAttack.orig_InitBulletHitFromRaycastHit orig, BulletAttack self, ref BulletAttack.BulletHit bulletHit, Vector3 origin, Vector3 direction, ref RaycastHit raycastHit) {
-            orig(self, ref bulletHit, origin, direction, ref raycastHit);
-            
+        private void BulletAttack_InitBulletHitFromRaycastHit(On.RoR2.BulletAttack.orig_InitBulletHitFromRaycastHit orig, BulletAttack self, ref BulletAttack.BulletHit bulletHit, Ray ray, ref RaycastHit raycastHit)
+        {
+            orig(self, ref bulletHit, ray, ref raycastHit);
+
             if (Vector3.Distance(self.origin, bulletHit.point) < 0.5f)
                 return;
 
